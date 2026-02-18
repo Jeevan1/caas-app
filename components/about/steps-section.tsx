@@ -1,4 +1,4 @@
-import { UserPlus, Rocket, BarChart3 } from "lucide-react"
+import { UserPlus, Rocket, BarChart3 } from "lucide-react";
 
 const steps = [
   {
@@ -22,12 +22,12 @@ const steps = [
     description:
       "Monitor views, clicks, and leads in real-time. Optimize your campaigns and watch your business grow.",
   },
-]
+];
 
 export function StepsSection() {
   return (
     <section className="bg-card py-24">
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="mx-auto container">
         <div className="mb-16 text-center">
           <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-primary">
             How It Works
@@ -64,5 +64,5 @@ export function StepsSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

@@ -5,7 +5,7 @@ import {
   Bell,
   CreditCard,
   Users,
-} from "lucide-react"
+} from "lucide-react";
 
 const features = [
   {
@@ -44,12 +44,12 @@ const features = [
     description:
       "Get notified about campaign results, new templates, milestones, and reward opportunities.",
   },
-]
+];
 
 export function FeaturesSection() {
   return (
     <section className="bg-background py-24">
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="mx-auto container">
         <div className="mb-16 text-center">
           <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-secondary">
             Features
@@ -83,5 +83,5 @@ export function FeaturesSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

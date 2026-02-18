@@ -1,4 +1,4 @@
-import { Star } from "lucide-react"
+import { Star } from "lucide-react";
 
 const testimonials = [
   {
@@ -22,12 +22,12 @@ const testimonials = [
       "The gamification aspect keeps me motivated, and the leaderboard adds a fun competitive element. My engagement is up 200%.",
     rating: 5,
   },
-]
+];
 
 export function TestimonialsSection() {
   return (
     <section className="bg-card py-24">
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="mx-auto container">
         <div className="mb-16 text-center">
           <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-accent">
             Testimonials
@@ -45,10 +45,7 @@ export function TestimonialsSection() {
             >
               <div className="flex gap-1">
                 {Array.from({ length: t.rating }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className="h-4 w-4 fill-accent text-accent"
-                  />
+                  <Star key={i} className="h-4 w-4 fill-accent text-accent" />
                 ))}
               </div>
               <p className="flex-1 text-sm leading-relaxed text-muted-foreground">
@@ -73,5 +70,5 @@ export function TestimonialsSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

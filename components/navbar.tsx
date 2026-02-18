@@ -1,21 +1,22 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useState } from "react"
-import { Menu, X, Zap } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import Link from "next/link";
+import { useState } from "react";
+import { Menu, X, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const navLinks = [
   { href: "/", label: "Home" },
+  { href: "/about", label: "About" },
   { href: "/how-it-works", label: "How It Works" },
   { href: "/templates", label: "Templates" },
   { href: "/pricing", label: "Pricing" },
   { href: "/blog", label: "Blog" },
   { href: "/contact", label: "Contact" },
-]
+];
 
 export function Navbar() {
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md">
@@ -60,7 +61,11 @@ export function Navbar() {
           className="rounded-md p-2 text-foreground md:hidden"
           aria-label="Toggle navigation menu"
         >
-          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {mobileOpen ? (
+            <X className="h-6 w-6" />
+          ) : (
+            <Menu className="h-6 w-6" />
+          )}
         </button>
       </nav>
 
@@ -93,5 +98,5 @@ export function Navbar() {
         </div>
       )}
     </header>
-  )
+  );
 }

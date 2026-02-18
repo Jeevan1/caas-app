@@ -1,5 +1,5 @@
-import Link from "next/link"
-import { Zap } from "lucide-react"
+import Link from "next/link";
+import { Zap } from "lucide-react";
 
 const footerLinks = {
   Product: [
@@ -20,12 +20,12 @@ const footerLinks = {
     { href: "#", label: "Privacy Policy" },
     { href: "#", label: "Terms of Service" },
   ],
-}
+};
 
 export function Footer() {
   return (
     <footer className="border-t border-border bg-card">
-      <div className="mx-auto max-w-7xl px-6 py-16">
+      <div className="mx-auto container py-16">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-5">
           {/* Brand */}
           <div className="lg:col-span-2">
@@ -96,5 +96,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }
