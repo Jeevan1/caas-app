@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Menu, X, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "./theme-toggler";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -45,6 +46,7 @@ export function Navbar() {
         </ul>
 
         <div className="hidden items-center gap-3 md:flex">
+          <ThemeToggle />
           <Link href="/dashboard">
             <Button variant="ghost" size="sm">
               Log In

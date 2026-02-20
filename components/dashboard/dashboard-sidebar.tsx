@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Megaphone,
@@ -11,8 +11,9 @@ import {
   User,
   Settings,
   Zap,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useCurrentUser } from "@/lib/providers";
 
 const sidebarLinks = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
@@ -22,10 +23,11 @@ const sidebarLinks = [
   { href: "/dashboard#leaderboard", icon: Trophy, label: "Leaderboard" },
   { href: "/dashboard#profile", icon: User, label: "Profile" },
   { href: "/dashboard#settings", icon: Settings, label: "Settings" },
-]
+];
 
 export function DashboardSidebar() {
-  const pathname = usePathname()
+  const pathname = usePathname();
+  const user = useCurrentUser();
 
   return (
     <aside className="hidden w-64 flex-shrink-0 border-r border-border bg-card lg:block">
@@ -36,13 +38,14 @@ export function DashboardSidebar() {
             <Zap className="h-4 w-4 text-primary-foreground" />
           </div>
           <span className="text-lg font-bold text-foreground">CaaS</span>
+          <span>{user?.name}</span>
         </div>
 
         {/* Nav Links */}
         <nav className="flex-1 px-4 py-4">
           <ul className="flex flex-col gap-1">
             {sidebarLinks.map((link) => {
-              const isActive = pathname === link.href
+              const isActive = pathname === link.href;
               return (
                 <li key={link.label}>
                   <Link
@@ -51,14 +54,14 @@ export function DashboardSidebar() {
                       "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                       isActive
                         ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
                     )}
                   >
                     <link.icon className="h-4 w-4" />
                     {link.label}
                   </Link>
                 </li>
-              )
+              );
             })}
           </ul>
         </nav>
@@ -66,7 +69,9 @@ export function DashboardSidebar() {
         {/* Upgrade Card */}
         <div className="p-4">
           <div className="rounded-xl bg-primary/5 p-4">
-            <p className="text-sm font-semibold text-foreground">Upgrade to Pro</p>
+            <p className="text-sm font-semibold text-foreground">
+              Upgrade to Pro
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">
               Unlock unlimited campaigns and premium templates.
             </p>
@@ -80,5 +85,5 @@ export function DashboardSidebar() {
         </div>
       </div>
     </aside>
-  )
+  );
 }
