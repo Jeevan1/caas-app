@@ -1,10 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
+import { NextIntlClientProvider, hasLocale } from "next-intl";
 
-import "./globals.css";
+import "../globals.css";
 import { CurrentUserProvider, Providers } from "@/lib/providers";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
+import { routing } from "@/i18n/routing";
+import { notFound } from "next/navigation";
+import { Locale, localeConfig, locales } from "@/i18n/config";
+import { getMessages } from "next-intl/server";
 
 const _inter = Inter({
   subsets: ["latin"],
@@ -26,24 +31,39 @@ export const viewport: Viewport = {
   themeColor: "#2563eb",
 };
 
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
 export default async function RootLayout({
   children,
-}: Readonly<{
+  params,
+}: {
   children: React.ReactNode;
-}>) {
+  params: Promise<{ locale: Locale }>;
+}) {
+  const { locale } = await params;
+
+  if (!locales.includes(locale as Locale)) notFound();
+
+  const messages = await getMessages();
+  const dir = localeConfig[locale as Locale].dir;
   const user = await getCurrentUser();
 
   return (
     <html
-      lang="en"
+      lang={locale}
+      dir={dir}
       className={`${_inter.variable} ${_spaceGrotesk.variable}`}
       suppressHydrationWarning
     >
       <body className="font-sans antialiased">
         <NextTopLoader color="#2563eb" showSpinner={false} />
-        <Providers>
-          <CurrentUserProvider user={user}>{children}</CurrentUserProvider>
-        </Providers>
+        <NextIntlClientProvider messages={messages} locale={locale}>
+          <Providers>
+            <CurrentUserProvider user={user}>{children}</CurrentUserProvider>
+          </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

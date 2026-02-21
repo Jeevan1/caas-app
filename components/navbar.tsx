@@ -1,35 +1,42 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { Menu, X, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggler";
+import { LanguageSwitcher } from "./local-switcher";
+import { Link, usePathname } from "@/i18n/navigation"; // ✅ next-intl
+import { useTranslations } from "next-intl";
+type CommonKeys = Parameters<ReturnType<typeof useTranslations<"common">>>[0];
 
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
-  { href: "/how-it-works", label: "How It Works" },
-  { href: "/templates", label: "Templates" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/blog", label: "Blog" },
-  { href: "/contact", label: "Contact" },
+const navLinks: { href: string; labelKey: CommonKeys }[] = [
+  { href: "/", labelKey: "nav.home" },
+  { href: "/about", labelKey: "nav.about" },
+  { href: "/how-it-works", labelKey: "nav.howItWorks" },
+  { href: "/templates", labelKey: "nav.templates" },
+  { href: "/pricing", labelKey: "nav.pricing" },
+  { href: "/blog", labelKey: "nav.blog" },
+  { href: "/contact", labelKey: "nav.contact" },
 ];
-
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+  const t = useTranslations("common");
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             <Zap className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="text-xl font-bold tracking-tight text-foreground">
-            CaaS
+            {t("nav.contact")}
           </span>
         </Link>
+
+        <LanguageSwitcher />
 
         {/* Desktop Nav */}
         <ul className="hidden items-center gap-1 md:flex">
@@ -37,9 +44,13 @@ export function Navbar() {
             <li key={link.href}>
               <Link
                 href={link.href}
-                className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground ${
+                  pathname === link.href
+                    ? "bg-muted text-foreground" // ✅ active state
+                    : "text-muted-foreground"
+                }`}
               >
-                {link.label}
+                {t(link.labelKey)}
               </Link>
             </li>
           ))}
@@ -47,13 +58,13 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <ThemeToggle />
-          <Link href="/dashboard">
+          <Link href="/login">
             <Button variant="ghost" size="sm">
-              Log In
+              {t("auth.login")}
             </Button>
           </Link>
-          <Link href="/dashboard">
-            <Button size="sm">Get Started</Button>
+          <Link href="/register">
+            <Button size="sm">{t("auth.getStarted")}</Button>
           </Link>
         </div>
 
@@ -80,20 +91,24 @@ export function Navbar() {
                 <Link
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className="block rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className={`block rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground ${
+                    pathname === link.href
+                      ? "bg-muted text-foreground" // ✅ active state
+                      : "text-muted-foreground"
+                  }`}
                 >
-                  {link.label}
+                  {t(link.labelKey)}
                 </Link>
               </li>
             ))}
           </ul>
           <div className="mt-4 flex flex-col gap-2">
-            <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
+            <Link href="/login" onClick={() => setMobileOpen(false)}>
               <Button variant="outline" className="w-full">
-                Log In
+                {t("auth.login")}
               </Button>
             </Link>
-            <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
+            <Link href="/register" onClick={() => setMobileOpen(false)}>
               <Button className="w-full">Get Started</Button>
             </Link>
           </div>
