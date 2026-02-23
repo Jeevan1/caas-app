@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -14,15 +13,16 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCurrentUser } from "@/lib/providers";
+import Image from "next/image";
+import { Link } from "@/i18n/navigation";
 
 const sidebarLinks = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
-  { href: "/dashboard#campaigns", icon: Megaphone, label: "Campaigns" },
-  { href: "/dashboard#analytics", icon: BarChart3, label: "Analytics" },
-  { href: "/dashboard#templates", icon: FileImage, label: "Templates" },
-  { href: "/dashboard#leaderboard", icon: Trophy, label: "Leaderboard" },
-  { href: "/dashboard#profile", icon: User, label: "Profile" },
-  { href: "/dashboard#settings", icon: Settings, label: "Settings" },
+  { href: "/dashboard/categories", icon: Trophy, label: "Categories" },
+  { href: "/dashboard/events", icon: Megaphone, label: "Events" },
+  { href: "/dashboard/analytics", icon: BarChart3, label: "Analytics" },
+  { href: "/dashboard/profile", icon: User, label: "Profile" },
+  { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 
 export function DashboardSidebar() {
@@ -33,13 +33,15 @@ export function DashboardSidebar() {
     <aside className="hidden w-64 flex-shrink-0 border-r border-border bg-card lg:block">
       <div className="flex h-full flex-col">
         {/* Logo */}
-        <div className="flex items-center gap-2 border-b border-border px-6 py-5">
+        <Link
+          href="/"
+          className="flex items-center gap-2 border-b border-border px-6 py-5"
+        >
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <Zap className="h-4 w-4 text-primary-foreground" />
           </div>
           <span className="text-lg font-bold text-foreground">CaaS</span>
-          <span>{user?.name}</span>
-        </div>
+        </Link>
 
         {/* Nav Links */}
         <nav className="flex-1 px-4 py-4">
@@ -67,7 +69,26 @@ export function DashboardSidebar() {
         </nav>
 
         {/* Upgrade Card */}
-        <div className="p-4">
+        <div className="p-4 space-y-4">
+          <div className="flex items-center gap-2 px-2">
+            {user?.image ? (
+              <Image
+                src={user?.image ?? ""}
+                alt={user?.name ?? ""}
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded-full border border-border bg-muted"
+              />
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted">
+                <User className="h-6 w-6 text-muted-foreground" />
+              </div>
+            )}
+            <span className="text-sm font-semibold text-foreground">
+              {user?.name}
+            </span>
+          </div>
+
           <div className="rounded-xl bg-primary/5 p-4">
             <p className="text-sm font-semibold text-foreground">
               Upgrade to Pro

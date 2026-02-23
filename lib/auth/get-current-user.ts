@@ -15,9 +15,9 @@ export class UnauthorizedError extends Error {
 export async function fetchUserProfile<TProfile = unknown>(
   accessToken: string,
 ): Promise<TProfile> {
-  const response = await fetch(`${BASE_URL}/auth/users/me/`, {
+  const response = await fetch(`${BASE_URL}/autho/user_info/me`, {
     headers: {
-      Authorization: `HOS ${accessToken}`,
+      Authorization: `CAAS ${accessToken}`,
     },
     cache: "no-store",
   });
@@ -26,7 +26,8 @@ export async function fetchUserProfile<TProfile = unknown>(
   }
 
   if (!response.ok) {
-    throw new Error(`Failed to load current user: ${response.statusText}`);
+    console.error("API Error:", response.status, response.statusText);
+    return null as TProfile;
   }
 
   return response.json();
@@ -35,12 +36,7 @@ export async function fetchUserProfile<TProfile = unknown>(
 export async function getCurrentUser(): Promise<User | null> {
   const accessToken = (await cookies()).get("accessToken")?.value;
   if (!accessToken) {
-    return {
-      id: "Jane Doe",
-      name: "Jane Doe",
-      email: "kDd7O@example.com",
-      image: "",
-    };
+    return null;
   }
 
   try {

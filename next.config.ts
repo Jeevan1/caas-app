@@ -11,6 +11,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  images: {
+    domains: ["wo-mac.batomechanic.com"],
+  },
 };
 
 export default withNextIntl(nextConfig);

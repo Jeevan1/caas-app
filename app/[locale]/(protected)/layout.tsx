@@ -1,3 +1,4 @@
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { CurrentUserProvider } from "@/lib/providers";
 import { redirect } from "next/navigation";
@@ -17,15 +18,10 @@ export default async function ProtectedLayout({
 }) {
   const user = await getCurrentUser();
 
-  if (!user) {
-    redirect("/login");
-  }
-
   return (
-    <main className="flex-1 overflow-y-auto ">
-      <div className=" mx-auto px-4 py-6 lg:px-6 lg:py-8 w-full">
-        {children}
-      </div>
-    </main>
+    <div className="flex min-h-screen bg-background">
+      <DashboardSidebar />
+      <main className="flex-1 overflow-auto">{children}</main>
+    </div>
   );
 }

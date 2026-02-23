@@ -7,6 +7,11 @@ import { ThemeToggle } from "./theme-toggler";
 import { LanguageSwitcher } from "./local-switcher";
 import { Link, usePathname } from "@/i18n/navigation"; // ✅ next-intl
 import { useTranslations } from "next-intl";
+import AuthPopup from "./auth/AuthModel";
+import { useCurrentUser } from "@/lib/providers";
+import UserMenu from "./UserMenu";
+import { toast, useToast } from "@/hooks/use-toast";
+import { showToast } from "./toast";
 type CommonKeys = Parameters<ReturnType<typeof useTranslations<"common">>>[0];
 
 const navLinks: { href: string; labelKey: CommonKeys }[] = [
@@ -22,6 +27,7 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const t = useTranslations("common");
+  const user = useCurrentUser();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md">
@@ -58,14 +64,7 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <ThemeToggle />
-          <Link href="/login">
-            <Button variant="ghost" size="sm">
-              {t("auth.login")}
-            </Button>
-          </Link>
-          <Link href="/register">
-            <Button size="sm">{t("auth.getStarted")}</Button>
-          </Link>
+          {user ? <UserMenu user={user} /> : <AuthPopup />}
         </div>
 
         {/* Mobile Hamburger */}
@@ -103,14 +102,20 @@ export function Navbar() {
             ))}
           </ul>
           <div className="mt-4 flex flex-col gap-2">
-            <Link href="/login" onClick={() => setMobileOpen(false)}>
-              <Button variant="outline" className="w-full">
-                {t("auth.login")}
-              </Button>
-            </Link>
-            <Link href="/register" onClick={() => setMobileOpen(false)}>
-              <Button className="w-full">Get Started</Button>
-            </Link>
+            {user ? (
+              <UserMenu user={user} />
+            ) : (
+              <>
+                <Link href="/login" onClick={() => setMobileOpen(false)}>
+                  <Button variant="outline" className="w-full">
+                    {t("auth.login")}
+                  </Button>
+                </Link>
+                <Link href="/register" onClick={() => setMobileOpen(false)}>
+                  <Button className="w-full">Get Started</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

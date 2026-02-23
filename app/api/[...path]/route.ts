@@ -12,7 +12,7 @@ async function proxy(req: NextRequest) {
   const rawPath = req.nextUrl.pathname.replace(/^\/api\/?/, "");
   const path = rawPath.replace(/^\/|\/$/g, "");
   const headers: HeadersInit = {};
-  if (token) headers["Authorization"] = `HOS ${token}`;
+  if (token) headers["Authorization"] = `CAAS ${token}`;
 
   const contentType = req.headers.get("content-type");
   if (contentType && !contentType.includes("multipart/form-data")) {
@@ -30,79 +30,50 @@ async function proxy(req: NextRequest) {
     }
   }
 
-  try {
-    const getBackendBase = await fetch(`${API_BASE}/config/domains-map/`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `HOS ${token}`,
-      },
-      cache: "force-cache",
-    });
+  let pathname = `/${path}`;
+  if (req.method !== "GET") pathname += "/";
 
-    const backendBaseData = await getBackendBase.json();
+  const url = new URL(pathname, MHR_BASE);
+  const base = url.toString().replace(/\/$/, "");
 
-    if (!backendBaseData) {
-      return NextResponse.error();
-    }
+  const backendUrl = `${API_BASE}${pathname}${req.nextUrl.search}`;
 
-    let backendBase = backendBaseData[host] || MHR_BASE;
+  const res = await fetch(backendUrl, {
+    method: req.method,
+    headers,
+    body,
+  });
 
-    backendBase.startsWith("http")
-      ? (backendBase = backendBase)
-      : (backendBase = `https://${backendBase}`);
-
-    let pathname = `/${path}`;
-    if (req.method !== "GET") pathname += "/";
-
-    const url = new URL(backendBase);
-
-    const base = url.toString().replace(/\/$/, "");
-
-    const backendUrl = `${API_BASE}${pathname}${req.nextUrl.search}`;
-
-    const res = await fetch(backendUrl, {
-      method: req.method,
-      headers,
-      body,
-    });
-
-    if (res.status === 204) {
-      return new NextResponse(null, { status: 204 });
-    }
-
-    let data: any = null;
-    try {
-      data = await res.json();
-    } catch {
-      data = null;
-    }
-
-    const response = NextResponse.json(data, { status: res.status });
-
-    if (path === "auth/create-token" && data) {
-      const access = data.access || data.token?.access;
-      const refresh = data.refresh || data.token?.refresh;
-      const isProd = process.env.NODE_ENV === "production";
-
-      const cookieOptions = {
-        httpOnly: true,
-        secure: isProd,
-        sameSite: "strict" as const,
-        path: "/",
-      };
-
-      if (access) response.cookies.set("accessToken", access, cookieOptions);
-      if (refresh) response.cookies.set("refreshToken", refresh, cookieOptions);
-    }
-
-    return response;
-  } catch (err: any) {
-    console.error("Proxy error:", err);
-    return new NextResponse(JSON.stringify({ error: err.message }), {
-      status: 500,
-    });
+  if (res.status === 204) {
+    return new NextResponse(null, { status: 204 });
   }
+
+  let data: any = null;
+  try {
+    data = await res.json();
+  } catch {
+    data = null;
+  }
+
+  const response = NextResponse.json(data, { status: res.status });
+
+  if (path === "autho/create-token" && data) {
+    const access = data.access || data.token?.access;
+    const refresh = data.refresh || data.token?.refresh;
+    const isProd = process.env.NODE_ENV === "production";
+
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: "strict" as const,
+      path: "/",
+    };
+
+    if (access) response.cookies.set("accessToken", access, cookieOptions);
+    if (refresh) response.cookies.set("refreshToken", refresh, cookieOptions);
+  }
+
+  return response;
 }
 
 export const GET = proxy;

@@ -29,13 +29,13 @@ export const ROUTE_CONFIGS: RouteConfig[] = [
   { pattern: "/deals", access: "public" },
 
   // ── Auth Pages (logged-in users bounce out) ───────────────
-  { pattern: "/login", access: "guest-only", redirectTo: "/account" },
-  { pattern: "/register", access: "guest-only", redirectTo: "/account" },
-  { pattern: "/forgot-password", access: "guest-only", redirectTo: "/account" },
-  { pattern: "/reset-password", access: "guest-only", redirectTo: "/account" },
+  { pattern: "/login", access: "guest-only", redirectTo: "/login" },
+  { pattern: "/register", access: "guest-only", redirectTo: "/login" },
+  { pattern: "/forgot-password", access: "guest-only", redirectTo: "/login" },
+  { pattern: "/reset-password", access: "guest-only", redirectTo: "/login" },
 
   // ── Requires Login ────────────────────────────────────────
-  { pattern: "/account", access: "auth" },
+  { pattern: "/login", access: "auth" },
   { pattern: "/dashboard", access: "auth" },
   { pattern: "/orders", access: "auth" },
   { pattern: "/checkout", access: "auth" },

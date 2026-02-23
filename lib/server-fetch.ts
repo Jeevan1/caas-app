@@ -5,42 +5,13 @@ interface ApiFetchOptions extends RequestInit {
 }
 
 const API_BASE = process.env.MASTER_URL!;
-const MHR_BASE = process.env.MASTER_URL!;
 
-export async function serverFetch(path: string, options: ApiFetchOptions = {}) {
+export async function serverFetch<T>(
+  path: string,
+  options: ApiFetchOptions = {},
+): Promise<T | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("accessToken")?.value;
-
-  const headerList = await headers();
-  const host = headerList.get("host");
-
-  if (!host) {
-    throw new Error("Host header not found");
-  }
-
-  const domainRes = await fetch(`${API_BASE}/config/domains-map/`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: token ? `HOS ${token}` : "",
-    },
-    cache: "force-cache",
-  });
-
-  if (!domainRes.ok) {
-    throw new Error("Failed to load domains map");
-  }
-
-  const domainMap = await domainRes.json();
-
-  let backendBase: string = domainMap[host] || MHR_BASE;
-
-  if (!backendBase.startsWith("http")) {
-    backendBase = `https://${backendBase}`;
-  }
-
-  const url = new URL(backendBase);
-  const base = url.toString().replace(/\/$/, "");
 
   let pathname = path.startsWith("/") ? path : `/${path}`;
 
@@ -48,21 +19,27 @@ export async function serverFetch(path: string, options: ApiFetchOptions = {}) {
     pathname += "/";
   }
 
-  const finalUrl = `${base}${pathname}`;
+  const finalUrl = `${API_BASE}${pathname}`;
 
-  const res = await fetch(finalUrl, {
-    ...options,
-    headers: {
-      ...(options.headers || {}),
-      Authorization: token ? `HOS ${token}` : "",
-      "Content-Type": "application/json",
-    },
-    next: { tags: options.tags ?? [] },
-  });
+  try {
+    const res = await fetch(finalUrl, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        Authorization: token ? `CAAS ${token}` : "",
+        "Content-Type": "application/json",
+      },
+      next: { tags: options.tags ?? [] },
+    });
 
-  if (!res.ok) {
-    return res.json();
+    if (!res.ok) {
+      console.error("API Error:", res.status, res.statusText, finalUrl);
+      return null;
+    }
+
+    return (await res.json()) as T;
+  } catch (error) {
+    console.error("Server fetch error:", error);
+    return null;
   }
-
-  return res.json();
 }

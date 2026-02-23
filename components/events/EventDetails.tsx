@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
@@ -11,76 +12,265 @@ import {
   Eye,
   Globe,
   Heart,
+  Images,
   MapPin,
   MousePointerClick,
   Share2,
   Star,
   TrendingUp,
   Users,
-  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import JoinEvent from "./JoinEvents";
+import { useApiQuery } from "@/lib/hooks/use-api-query";
+import { SINGLE_EVENT_QUERY_KEY } from "@/constants";
+import { cn } from "@/lib/utils";
 
-const campaign = {
-  title: "Startup Pitch Night & Networking",
-  group: "Entrepreneurs of Kathmandu",
-  groupInitials: "EK",
-  category: "Career & Business",
-  date: "Thu, Feb 20, 2026",
-  time: "6:00 – 9:00 PM",
-  location: "Thamel Business Hub, Kathmandu",
-  emoji: "🚀",
-  description: `An electrifying evening of startup pitches and real conversations with founders who've been in the trenches. Expect 5-minute pitches from 6 early-stage startups, followed by open networking with investors, mentors, and builders.`,
-  attendees: 42,
-  maxAttendees: 60,
-  organizer: "Aarav Karki",
-  organizerRole: "Founder & Organizer",
-  tags: ["Startup", "Networking", "Tech"],
-  stats: { views: 1240, clicks: 387, leads: 42, conversion: "3.4%" },
-  rating: 4.8,
-  reviews: 24,
+// ─── API TYPES ────────────────────────────────────────────────────────────────
+
+type EventLocation = {
+  idx: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+};
+type EventCategory = { idx: string; name: string };
+type EventOrganizer = { idx: string; name: string; image: string | null };
+
+type Event = {
+  idx: string;
+  title: string;
+  description: string;
+  start_datetime: string;
+  end_datetime: string;
+  location: EventLocation;
+  is_paid: boolean;
+  price: number;
+  category: EventCategory;
+  organizer: EventOrganizer;
+  max_attendees: number;
+  cover_image: string | null;
+  duration: string;
 };
 
-const relatedEvents = [
-  {
-    title: "Digital Marketing Masterclass",
-    date: "Sun, Feb 23",
-    attendees: 89,
-    emoji: "📊",
-  },
-  {
-    title: "Book Club: The Lean Startup",
-    date: "Wed, Feb 19",
-    attendees: 18,
-    emoji: "📚",
-  },
-  {
-    title: "Photography Walk: Thamel",
-    date: "Sat, Feb 22",
-    attendees: 23,
-    emoji: "📸",
-  },
-];
+type GalleryImage = { idx: string; image: string; caption?: string };
 
-const chartBars = [28, 45, 38, 72, 55, 88, 65, 91, 74, 85, 78, 95];
+// ─── STATIC FALLBACKS (shown only when API field absent) ──────────────────────
 
-export default function EventDetails() {
+const FALLBACK = {
+  emoji: "🚀",
+  rating: 4.8,
+  reviews: 24,
+  attendees: 42,
+  groupStats: [
+    ["48", "Events"],
+    ["1.2K", "Members"],
+    ["4.9", "Rating"],
+  ],
+  chartBars: [28, 45, 38, 72, 55, 88, 65, 91, 74, 85, 78, 95],
+  relatedEvents: [
+    {
+      title: "Digital Marketing Masterclass",
+      date: "Sun, Feb 23",
+      attendees: 89,
+      emoji: "📊",
+    },
+    {
+      title: "Book Club: The Lean Startup",
+      date: "Wed, Feb 19",
+      attendees: 18,
+      emoji: "📚",
+    },
+    {
+      title: "Photography Walk: Thamel",
+      date: "Sat, Feb 22",
+      attendees: 23,
+      emoji: "📸",
+    },
+  ],
+  attendeeList: [
+    { initials: "AK", name: "Aarav K.", role: "Founder", color: "primary" },
+    { initials: "MJ", name: "Mina J.", role: "Designer", color: "secondary" },
+    { initials: "SR", name: "Sita R.", role: "Developer", color: "accent" },
+    { initials: "PB", name: "Prem B.", role: "Marketer", color: "primary" },
+    { initials: "RC", name: "Ravi C.", role: "Investor", color: "secondary" },
+    { initials: "DT", name: "Devi T.", role: "Mentor", color: "accent" },
+  ],
+};
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+const formatTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+// ─── SKELETON ────────────────────────────────────────────────────────────────
+
+function Sk({ className }: { className?: string }) {
+  return (
+    <div className={cn("animate-pulse rounded-xl bg-muted/70", className)} />
+  );
+}
+
+// ─── GALLERY ─────────────────────────────────────────────────────────────────
+
+function Gallery({ images }: { images: GalleryImage[] }) {
+  const [lightbox, setLightbox] = useState<string | null>(null);
+  if (!images.length)
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border py-14 text-center">
+        <Images className="h-8 w-8 text-muted-foreground/40" />
+        <p className="text-sm text-muted-foreground">No gallery images yet.</p>
+      </div>
+    );
+
+  const [first, ...rest] = images;
+  return (
+    <>
+      <div
+        className={cn(
+          "grid gap-2",
+          images.length === 1
+            ? "grid-cols-1"
+            : images.length === 2
+              ? "grid-cols-2"
+              : "grid-cols-3",
+        )}
+      >
+        <div
+          className={cn(
+            "relative cursor-zoom-in overflow-hidden rounded-2xl bg-muted",
+            images.length >= 3 && "col-span-2",
+          )}
+          style={{ aspectRatio: images.length >= 3 ? "16/9" : "4/3" }}
+          onClick={() => setLightbox(first.image)}
+        >
+          <Image
+            src={first.image}
+            alt={first.caption ?? "Photo"}
+            fill
+            className="object-cover transition-transform duration-500 hover:scale-105"
+          />
+        </div>
+        {rest.map((img) => (
+          <div
+            key={img.idx}
+            className="relative cursor-zoom-in overflow-hidden rounded-xl bg-muted"
+            style={{ aspectRatio: "1/1" }}
+            onClick={() => setLightbox(img.image)}
+          >
+            <Image
+              src={img.image}
+              alt={img.caption ?? "Photo"}
+              fill
+              className="object-cover transition-transform duration-500 hover:scale-105"
+            />
+          </div>
+        ))}
+      </div>
+
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+            onClick={() => setLightbox(null)}
+          >
+            ✕
+          </button>
+          <Image
+            src={lightbox}
+            alt="Preview"
+            width={1200}
+            height={800}
+            className="max-h-[90vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl"
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── MAIN ─────────────────────────────────────────────────────────────────────
+
+export default function EventDetails({ eventId }: { eventId: string }) {
   const [liked, setLiked] = useState(false);
   const [joined, setJoined] = useState(false);
-  const [tab, setTab] = useState<"about" | "stats" | "attendees">("about");
+  const [tab, setTab] = useState<"about" | "stats" | "attendees" | "gallery">(
+    "about",
+  );
   const [showBar, setShowBar] = useState(false);
   const joinCardRef = useRef<HTMLDivElement>(null);
-  const progress = (campaign.attendees / campaign.maxAttendees) * 100;
 
-  // Show sticky bar when join card is out of viewport
+  // ── API queries ───────────────────────────────────────────────────────────
+  const { data: event, isLoading } = useApiQuery<Event>({
+    url: `/api/event/events/${eventId}/`,
+    queryKey: SINGLE_EVENT_QUERY_KEY(eventId),
+  });
+
+  const { data: galleryData } = useApiQuery<{ results: GalleryImage[] }>({
+    url: `/api/event/events/${eventId}/images/`,
+    queryKey: ["event", "gallery", eventId],
+  });
+
+  const gallery: GalleryImage[] = galleryData?.results ?? [];
+
+  // ── Derived display values — real data first, fallback second ─────────────
+  const title = event?.title ?? "Loading…";
+  const description = event?.description ?? "";
+  const category = event?.category?.name ?? "";
+  const locationName = event?.location?.name ?? "";
+  const lat = event?.location?.latitude;
+  const lng = event?.location?.longitude;
+  const startDate = event?.start_datetime
+    ? formatDate(event.start_datetime)
+    : "—";
+  const startTime = event?.start_datetime
+    ? formatTime(event.start_datetime)
+    : "—";
+  const endTime = event?.end_datetime ? formatTime(event.end_datetime) : "—";
+  const timeRange = `${startTime} – ${endTime}`;
+  const organizer = event?.organizer?.name ?? "";
+  const organizerImg = event?.organizer?.image ?? null;
+  const maxAttendees = event?.max_attendees ?? 0;
+  const isPaid = event?.is_paid ?? false;
+  const price = event?.price ?? 0;
+  const coverImage = event?.cover_image ?? null;
+
+  // ── Sticky bar via IntersectionObserver ───────────────────────────────────
   useEffect(() => {
     const observer = new IntersectionObserver(
-      ([entry]) => setShowBar(!entry.isIntersecting),
+      ([e]) => setShowBar(!e.isIntersecting),
       { threshold: 0 },
     );
     if (joinCardRef.current) observer.observe(joinCardRef.current);
     return () => observer.disconnect();
   }, []);
+
+  const TABS = ["about", "stats", "attendees", "gallery"] as const;
+
+  if (!event) return null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -89,19 +279,22 @@ export default function EventDetails() {
         className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md"
         style={{ animation: "dp 0.4s ease both" }}
       >
-        <div className="mx-auto flex container items-center justify-between px-6 py-3.5">
+        <div className="container mx-auto flex items-center justify-between px-6 py-3.5">
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Events
           </Link>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setLiked(!liked)}
-              className={`ib flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card transition-all ${liked ? "border-red-300 text-red-500" : "text-muted-foreground"}`}
+              className={cn(
+                "ib flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card transition-all",
+                liked ? "border-red-300 text-red-500" : "text-muted-foreground",
+              )}
             >
-              <Heart className={`h-3.5 w-3.5 ${liked ? "fill-red-500" : ""}`} />
+              <Heart className={cn("h-3.5 w-3.5", liked && "fill-red-500")} />
             </button>
             <button className="ib flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all">
               <Share2 className="h-3.5 w-3.5" />
@@ -110,132 +303,226 @@ export default function EventDetails() {
         </div>
       </nav>
 
-      <div className="mx-auto container px-6 py-10">
+      <div className="container mx-auto px-6 py-10">
         <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
-          {/* LEFT */}
+          {/* ── LEFT ───────────────────────────────────────────────────────── */}
           <div className="flex flex-col gap-8">
             {/* Hero */}
             <div
               className="relative flex h-56 items-center justify-center overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/8 via-muted to-secondary/8 md:h-72"
               style={{ animation: "du 0.55s ease 0.05s both" }}
             >
-              <div
-                className="absolute inset-0 opacity-[0.05]"
-                style={{
-                  backgroundImage:
-                    "radial-gradient(hsl(var(--foreground)) 1px, transparent 1px)",
-                  backgroundSize: "24px 24px",
-                }}
-              />
-              <span className="hero-em select-none text-[130px] md:text-[160px]">
-                {campaign.emoji}
-              </span>
+              {coverImage ? (
+                <Image
+                  src={coverImage}
+                  alt={title}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              ) : (
+                <>
+                  <div
+                    className="absolute inset-0 opacity-[0.05]"
+                    style={{
+                      backgroundImage:
+                        "radial-gradient(hsl(var(--foreground)) 1px, transparent 1px)",
+                      backgroundSize: "24px 24px",
+                    }}
+                  />
+                  <span className="hero-em select-none text-[130px] md:text-[160px]">
+                    {FALLBACK.emoji}
+                  </span>
+                </>
+              )}
               <div className="absolute left-4 top-4 flex gap-2">
-                <span className="rounded-full border border-border bg-card/80 px-3 py-1 text-[11px] font-semibold text-foreground backdrop-blur-sm">
-                  {campaign.category}
-                </span>
-                <span className="rounded-full bg-secondary/80 px-3 py-1 text-[11px] font-semibold text-secondary-foreground backdrop-blur-sm">
-                  In Person
+                {category && (
+                  <span className="rounded-full border border-border bg-card/80 px-3 py-1 text-[11px] font-semibold text-foreground backdrop-blur-sm">
+                    {category}
+                  </span>
+                )}
+                <span
+                  className={cn(
+                    "rounded-full px-3 py-1 text-[11px] font-semibold backdrop-blur-sm",
+                    isPaid
+                      ? "bg-accent/80 text-accent-foreground"
+                      : "bg-secondary/80 text-secondary-foreground",
+                  )}
+                >
+                  {isPaid ? `NPR ${price.toLocaleString()}` : "Free"}
                 </span>
               </div>
             </div>
 
-            {/* Title */}
+            {/* Title block */}
             <div style={{ animation: "du 0.55s ease 0.12s both" }}>
-              <div className="mb-3 flex gap-1.5">
-                {campaign.tags.map((t) => (
-                  <span
-                    key={t}
-                    className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground"
-                  >
-                    {t}
-                  </span>
-                ))}
-              </div>
-              <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-                {campaign.title}
-              </h1>
-              <div className="mt-3 flex flex-wrap gap-4">
-                {[
-                  {
-                    icon: Calendar,
-                    text: campaign.date,
-                    color: "text-primary",
-                  },
-                  { icon: Clock, text: campaign.time, color: "text-secondary" },
-                  {
-                    icon: MapPin,
-                    text: campaign.location,
-                    color: "text-accent",
-                  },
-                ].map(({ icon: Icon, text, color }) => (
-                  <span
-                    key={text}
-                    className="flex items-center gap-1.5 text-xs text-muted-foreground"
-                  >
-                    <Icon className={`h-3.5 w-3.5 ${color}`} />
-                    {text}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-2.5 flex items-center gap-1.5">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-3.5 w-3.5 ${i < Math.floor(campaign.rating) ? "fill-accent text-accent" : "text-border"}`}
-                  />
-                ))}
-                <span className="text-xs font-semibold text-foreground">
-                  {campaign.rating}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  ({campaign.reviews})
-                </span>
-              </div>
+              {isLoading ? (
+                <div className="flex flex-col gap-3">
+                  <Sk className="h-8 w-3/4" />
+                  <Sk className="h-4 w-48" />
+                  <Sk className="h-4 w-64" />
+                </div>
+              ) : (
+                <>
+                  <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+                    {title}
+                  </h1>
+                  <div className="mt-3 flex flex-wrap gap-4">
+                    {[
+                      {
+                        icon: Calendar,
+                        text: startDate,
+                        color: "text-primary",
+                      },
+                      { icon: Clock, text: timeRange, color: "text-secondary" },
+                      {
+                        icon: MapPin,
+                        text: locationName,
+                        color: "text-accent",
+                      },
+                    ]
+                      .filter((r) => r.text && r.text !== "—")
+                      .map(({ icon: Icon, text, color }) => (
+                        <span
+                          key={text}
+                          className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                        >
+                          <Icon className={cn("h-3.5 w-3.5", color)} />
+                          {text}
+                        </span>
+                      ))}
+                  </div>
+                  <div className="mt-2.5 flex items-center gap-1.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={cn(
+                          "h-3.5 w-3.5",
+                          i < Math.floor(FALLBACK.rating)
+                            ? "fill-accent text-accent"
+                            : "text-border",
+                        )}
+                      />
+                    ))}
+                    <span className="text-xs font-semibold text-foreground">
+                      {FALLBACK.rating}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      ({FALLBACK.reviews})
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Tabs */}
             <div style={{ animation: "du 0.55s ease 0.19s both" }}>
               <div className="flex gap-0.5 rounded-xl border border-border bg-muted p-1">
-                {(["about", "stats", "attendees"] as const).map((t) => (
+                {TABS.map((t) => (
                   <button
                     key={t}
                     onClick={() => setTab(t)}
-                    className={`flex-1 rounded-lg py-1.5 text-xs font-semibold capitalize transition-all ${tab === t ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    className={cn(
+                      "flex-1 rounded-lg py-1.5 text-xs font-semibold capitalize transition-all",
+                      tab === t
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
                   >
                     {t}
                   </button>
                 ))}
               </div>
 
+              {/* ── ABOUT ── */}
               {tab === "about" && (
                 <div className="tc mt-5 flex flex-col gap-4">
-                  <p className="text-sm leading-relaxed text-muted-foreground">
-                    {campaign.description}
-                  </p>
-                  <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                      {campaign.groupInitials}
+                  {description ? (
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      {description}
+                    </p>
+                  ) : (
+                    <p className="text-sm italic text-muted-foreground/50">
+                      No description provided.
+                    </p>
+                  )}
+
+                  {/* Organizer */}
+                  {organizer && (
+                    <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
+                      {organizerImg ? (
+                        <Image
+                          src={organizerImg}
+                          alt={organizer}
+                          width={40}
+                          height={40}
+                          className="h-10 w-10 shrink-0 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                          {initials(organizer)}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground">
+                          {organizer}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          Organizer
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="ml-auto h-7 shrink-0 rounded-full px-3 text-xs"
+                      >
+                        Follow
+                      </Button>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-foreground">
-                        {campaign.organizer}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {campaign.organizerRole} · {campaign.group}
-                      </p>
+                  )}
+
+                  {/* Location */}
+                  {locationName && (
+                    <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">
+                          {locationName}
+                        </p>
+                        {lat != null && lng != null && (
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {lat.toFixed(4)}, {lng.toFixed(4)}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="ml-auto shrink-0 rounded-full text-xs h-7 px-3"
-                    >
-                      Follow
-                    </Button>
-                  </div>
+                  )}
+
+                  {/* Capacity */}
+                  {maxAttendees > 0 && (
+                    <div className="rounded-2xl border border-border bg-card p-4">
+                      <div className="mb-2 flex items-center justify-between text-xs">
+                        <span className="font-semibold text-foreground">
+                          Capacity
+                        </span>
+                        <span className="text-muted-foreground">
+                          {FALLBACK.attendees}/{maxAttendees} joined
+                        </span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="pb h-full rounded-full bg-primary"
+                          style={{
+                            width: `${Math.min((FALLBACK.attendees / maxAttendees) * 100, 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
+              {/* ── STATS ── */}
               {tab === "stats" && (
                 <div className="tc mt-5 flex flex-col gap-4">
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -275,7 +562,11 @@ export default function EventDetails() {
                         style={{ animationDelay: `${i * 0.06}s` }}
                       >
                         <div
-                          className={`flex h-8 w-8 items-center justify-center rounded-lg ${s.bg} ${s.color}`}
+                          className={cn(
+                            "flex h-8 w-8 items-center justify-center rounded-lg",
+                            s.bg,
+                            s.color,
+                          )}
                         >
                           <s.icon className="h-4 w-4" />
                         </div>
@@ -294,11 +585,11 @@ export default function EventDetails() {
                     <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Views · Last 12 months
                     </p>
-                    <div className="flex items-end gap-1 h-20">
-                      {chartBars.map((h, i) => (
+                    <div className="flex h-20 items-end gap-1">
+                      {FALLBACK.chartBars.map((h, i) => (
                         <div
                           key={i}
-                          className="flex-1 flex flex-col justify-end"
+                          className="flex flex-1 flex-col justify-end"
                         >
                           <div
                             className="w-full rounded-t-sm bg-primary/12"
@@ -324,46 +615,10 @@ export default function EventDetails() {
                 </div>
               )}
 
+              {/* ── ATTENDEES ── */}
               {tab === "attendees" && (
                 <div className="tc mt-5 flex flex-col gap-2">
-                  {[
-                    {
-                      initials: "AK",
-                      name: "Aarav K.",
-                      role: "Founder",
-                      color: "primary",
-                    },
-                    {
-                      initials: "MJ",
-                      name: "Mina J.",
-                      role: "Designer",
-                      color: "secondary",
-                    },
-                    {
-                      initials: "SR",
-                      name: "Sita R.",
-                      role: "Developer",
-                      color: "accent",
-                    },
-                    {
-                      initials: "PB",
-                      name: "Prem B.",
-                      role: "Marketer",
-                      color: "primary",
-                    },
-                    {
-                      initials: "RC",
-                      name: "Ravi C.",
-                      role: "Investor",
-                      color: "secondary",
-                    },
-                    {
-                      initials: "DT",
-                      name: "Devi T.",
-                      role: "Mentor",
-                      color: "accent",
-                    },
-                  ].map((a, i) => (
+                  {FALLBACK.attendeeList.map((a, i) => (
                     <div
                       key={a.name}
                       className="ac flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3"
@@ -388,7 +643,38 @@ export default function EventDetails() {
                   ))}
                 </div>
               )}
+
+              {/* ── GALLERY ── */}
+              {tab === "gallery" && (
+                <div className="tc mt-5">
+                  <Gallery images={gallery} />
+                </div>
+              )}
             </div>
+
+            {/* Inline gallery preview on About tab */}
+            {tab === "about" && gallery.length > 0 && (
+              <div style={{ animation: "du 0.55s ease 0.23s both" }}>
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Images className="h-4 w-4 text-muted-foreground" />
+                    <p className="text-sm font-bold text-foreground">Gallery</p>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                      {gallery.length}
+                    </span>
+                  </div>
+                  {gallery.length > 4 && (
+                    <button
+                      onClick={() => setTab("gallery")}
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      See all
+                    </button>
+                  )}
+                </div>
+                <Gallery images={gallery.slice(0, 4)} />
+              </div>
+            )}
 
             {/* Related */}
             <div style={{ animation: "du 0.55s ease 0.26s both" }}>
@@ -396,18 +682,18 @@ export default function EventDetails() {
                 You might also like
               </p>
               <div className="grid gap-3 sm:grid-cols-3">
-                {relatedEvents.map((ev, i) => (
+                {FALLBACK.relatedEvents.map((ev, i) => (
                   <Link
                     key={ev.title}
                     href="#"
-                    className="rc group flex flex-col gap-0 overflow-hidden rounded-2xl border border-border bg-card transition-all hover:border-primary/30 hover:shadow-md"
+                    className="rc group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all hover:border-primary/30 hover:shadow-md"
                     style={{ animationDelay: `${i * 0.07}s` }}
                   >
                     <div className="flex h-16 items-center justify-center bg-muted text-3xl">
                       {ev.emoji}
                     </div>
                     <div className="px-3 py-2.5">
-                      <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
+                      <p className="line-clamp-2 text-xs font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
                         {ev.title}
                       </p>
                       <div className="mt-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
@@ -427,139 +713,54 @@ export default function EventDetails() {
             </div>
           </div>
 
-          {/* SIDEBAR */}
+          {/* ── SIDEBAR ────────────────────────────────────────────────────── */}
           <div
             className="flex flex-col gap-4 lg:sticky lg:top-20 lg:self-start"
             style={{ animation: "du 0.55s ease 0.16s both" }}
           >
-            {/* Join card — observed */}
-            <div
-              ref={joinCardRef}
-              className="jcard overflow-hidden rounded-3xl border border-border bg-card shadow-md"
-            >
-              <div className="h-1 w-full bg-gradient-to-r from-primary via-secondary to-accent" />
-              <div className="flex flex-col gap-4 p-5">
-                <div className="flex items-center justify-between">
-                  <span className="rounded-full bg-secondary/12 px-3 py-1 text-xs font-bold text-secondary">
-                    Free
-                  </span>
-                  <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
-                    <Zap className="h-3 w-3 text-accent" /> Filling fast
-                  </span>
-                </div>
-                <div>
-                  <div className="mb-1.5 flex justify-between text-xs">
-                    <span className="font-semibold text-foreground">
-                      {campaign.attendees} attending
-                    </span>
-                    <span className="text-muted-foreground">
-                      {campaign.maxAttendees - campaign.attendees} left
-                    </span>
-                  </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="pb h-full rounded-full bg-gradient-to-r from-primary to-secondary"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <div className="mt-2.5 flex items-center gap-2">
-                    <div className="flex -space-x-1.5">
-                      {[
-                        "primary",
-                        "secondary",
-                        "accent",
-                        "primary",
-                        "secondary",
-                      ].map((c, i) => (
-                        <div
-                          key={i}
-                          className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-card text-[9px] font-bold text-primary-foreground"
-                          style={{ background: `hsl(var(--${c}))` }}
-                        >
-                          {["A", "M", "S", "P", "R"][i]}
-                        </div>
-                      ))}
-                    </div>
-                    <span className="text-[11px] text-muted-foreground">
-                      +37 others joined
-                    </span>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2.5 rounded-xl bg-muted/50 p-3.5">
-                  <div className="flex items-start gap-2.5">
-                    <Calendar className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-                    <div>
-                      <p className="text-xs font-semibold text-foreground">
-                        {campaign.date}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {campaign.time}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-secondary" />
-                    <div>
-                      <p className="text-xs font-semibold text-foreground">
-                        {campaign.location}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        View on map →
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setJoined(!joined)}
-                  className={`jbtn flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all ${joined ? "bg-secondary text-secondary-foreground" : "bg-primary text-primary-foreground"}`}
-                >
-                  {joined ? (
-                    <>
-                      <CheckCircle2 className="h-4 w-4" /> You&apos;re in!
-                    </>
-                  ) : (
-                    <>
-                      Join this event <ArrowRight className="h-4 w-4 ja" />
-                    </>
-                  )}
-                </button>
-                <p className="text-center text-[11px] text-muted-foreground">
-                  Free · No credit card required
-                </p>
-              </div>
+            <div ref={joinCardRef}>
+              <JoinEvent event={event} />
             </div>
 
-            {/* Organizer */}
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Organized by
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                  {campaign.groupInitials}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    {campaign.group}
-                  </p>
-                  <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                    <Globe className="h-3 w-3" /> Public group
-                  </p>
-                </div>
-              </div>
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                {[
-                  ["48", "Events"],
-                  ["1.2K", "Members"],
-                  ["4.9", "Rating"],
-                ].map(([val, lbl]) => (
-                  <div key={lbl} className="rounded-lg bg-muted/60 py-2">
-                    <p className="text-sm font-bold text-foreground">{val}</p>
-                    <p className="text-[10px] text-muted-foreground">{lbl}</p>
+            {/* Organizer card */}
+            {organizer && (
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  Organized by
+                </p>
+                <div className="flex items-center gap-3">
+                  {organizerImg ? (
+                    <Image
+                      src={organizerImg}
+                      alt={organizer}
+                      width={40}
+                      height={40}
+                      className="h-10 w-10 shrink-0 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                      {initials(organizer)}
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {organizer}
+                    </p>
+                    <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <Globe className="h-3 w-3" /> Public group
+                    </p>
                   </div>
-                ))}
+                </div>
+                <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                  {FALLBACK.groupStats.map(([val, lbl]) => (
+                    <div key={lbl} className="rounded-lg bg-muted/60 py-2">
+                      <p className="text-sm font-bold text-foreground">{val}</p>
+                      <p className="text-[10px] text-muted-foreground">{lbl}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Share */}
             <div className="rounded-2xl border border-border bg-card p-4">
@@ -587,68 +788,96 @@ export default function EventDetails() {
         </div>
       </div>
 
-      {/* ── STICKY BOTTOM BAR ──────────────────────────────────────────────
-           Slides up from bottom when join card scrolls out of view.      */}
+      {/* ── STICKY BOTTOM BAR ─────────────────────────────────────────────── */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.34,1.3,0.64,1)]
-        ${showBar ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"}`}
+        className={cn(
+          "fixed bottom-0 left-0 right-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.34,1.3,0.64,1)]",
+          showBar
+            ? "translate-y-0 opacity-100"
+            : "translate-y-full opacity-0 pointer-events-none",
+        )}
       >
-        {/* Frosted glass panel */}
-        <div className="border-t border-border bg-card/90 backdrop-blur-xl shadow-[0_-8px_40px_-4px_hsl(var(--foreground)/0.1)]">
-          {/* Gradient top line */}
+        <div className="border-t border-border bg-card/90 shadow-[0_-8px_40px_-4px_hsl(var(--foreground)/0.1)] backdrop-blur-xl">
           <div className="h-[2px] bg-gradient-to-r from-primary via-secondary to-accent" />
-
-          <div className="mx-auto container px-6 py-3">
+          <div className="container mx-auto px-6 py-3">
             <div className="flex items-center gap-3 md:gap-5">
-              {/* Event emoji + title */}
-              <div className="flex items-center gap-3 min-w-0 shrink-0">
-                <span className="text-2xl leading-none">{campaign.emoji}</span>
-                <div className="hidden sm:block min-w-0">
-                  <p className="truncate text-sm font-bold text-foreground leading-tight">
-                    {campaign.title}
+              {/* Cover or emoji */}
+              <div className="flex shrink-0 items-center gap-3">
+                {coverImage ? (
+                  <Image
+                    src={coverImage}
+                    alt={title}
+                    width={32}
+                    height={32}
+                    className="h-8 w-8 shrink-0 rounded-lg object-cover"
+                  />
+                ) : (
+                  <span className="text-2xl leading-none">
+                    {FALLBACK.emoji}
+                  </span>
+                )}
+                <div className="hidden min-w-0 sm:block">
+                  <p className="truncate text-sm font-bold leading-tight text-foreground">
+                    {title}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    Free · {campaign.attendees} attending
+                    {isPaid ? `NPR ${price.toLocaleString()}` : "Free"}
+                    {maxAttendees > 0 && ` · ${maxAttendees} seats`}
                   </p>
                 </div>
               </div>
 
-              {/* Vertical divider */}
               <div className="hidden h-8 w-px shrink-0 bg-border sm:block" />
 
-              {/* Info pills — stagger in */}
+              {/* Pills */}
               <div className="flex flex-1 flex-wrap items-center gap-2">
-                <span
-                  className={`pill-1 flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1.5 text-[11px] font-medium text-foreground whitespace-nowrap
-                  ${showBar ? "pill-in" : ""}`}
-                  style={{ animationDelay: "0.06s" }}
-                >
-                  <Calendar className="h-3 w-3 text-primary shrink-0" />
-                  {campaign.date}
-                </span>
-                <span
-                  className={`pill-2 flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1.5 text-[11px] font-medium text-foreground whitespace-nowrap
-                  ${showBar ? "pill-in" : ""}`}
-                  style={{ animationDelay: "0.13s" }}
-                >
-                  <Clock className="h-3 w-3 text-secondary shrink-0" />
-                  {campaign.time}
-                </span>
-                <span
-                  className={`pill-3 hidden md:flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1.5 text-[11px] font-medium text-foreground whitespace-nowrap
-                  ${showBar ? "pill-in" : ""}`}
-                  style={{ animationDelay: "0.20s" }}
-                >
-                  <MapPin className="h-3 w-3 text-accent shrink-0" />
-                  {campaign.location}
-                </span>
+                {[
+                  {
+                    icon: Calendar,
+                    text: startDate,
+                    color: "text-primary",
+                    delay: "0.06s",
+                  },
+                  {
+                    icon: Clock,
+                    text: timeRange,
+                    color: "text-secondary",
+                    delay: "0.13s",
+                  },
+                  {
+                    icon: MapPin,
+                    text: locationName,
+                    color: "text-accent",
+                    delay: "0.20s",
+                    hide: true,
+                  },
+                ]
+                  .filter((p) => p.text && p.text !== "—")
+                  .map(({ icon: Icon, text, color, delay, hide }) => (
+                    <span
+                      key={text}
+                      className={cn(
+                        "flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-muted px-3 py-1.5 text-[11px] font-medium text-foreground",
+                        hide && "hidden md:flex",
+                        showBar && "pill-in",
+                      )}
+                      style={{ animationDelay: delay }}
+                    >
+                      <Icon className={cn("h-3 w-3 shrink-0", color)} />
+                      {text}
+                    </span>
+                  ))}
               </div>
 
               {/* CTA */}
               <button
                 onClick={() => setJoined(!joined)}
-                className={`bar-btn shrink-0 flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold
-                  ${joined ? "bg-secondary text-secondary-foreground" : "bg-primary text-primary-foreground"}`}
+                className={cn(
+                  "bar-btn flex shrink-0 items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold",
+                  joined
+                    ? "bg-secondary text-secondary-foreground"
+                    : "bg-primary text-primary-foreground",
+                )}
               >
                 {joined ? (
                   <>
@@ -656,7 +885,7 @@ export default function EventDetails() {
                   </>
                 ) : (
                   <>
-                    Join <ArrowRight className="h-4 w-4 bar-arrow" />
+                    Join <ArrowRight className="bar-arrow h-4 w-4" />
                   </>
                 )}
               </button>
@@ -665,7 +894,6 @@ export default function EventDetails() {
         </div>
       </div>
 
-      {/* Spacer so content isn't hidden behind bar */}
       {showBar && <div className="h-20" />}
 
       <style>{`
@@ -676,36 +904,26 @@ export default function EventDetails() {
         .hero-em { animation: hf 5s ease-in-out infinite; }
         @keyframes hf { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-12px) rotate(2deg)} }
 
-        .tc  { animation: du 0.3s ease both; }
-        .sc  { animation: du 0.4s ease both; transition:transform .2s ease,box-shadow .2s ease; }
-        .sc:hover { transform:translateY(-3px); box-shadow:0 8px 20px -4px hsl(var(--foreground)/.07); }
-        .bc  { animation: bcg 0.7s ease both; }
+        .tc { animation: du 0.3s ease both; }
+        .sc { animation: du 0.4s ease both; transition: transform .2s ease, box-shadow .2s ease; }
+        .sc:hover { transform: translateY(-3px); box-shadow: 0 8px 20px -4px hsl(var(--foreground)/.07); }
+        .bc { animation: bcg 0.7s ease both; }
         @keyframes bcg { from{height:0} to{height:70%} }
-        .ac  { animation: du 0.35s ease both; transition:transform .18s ease; }
-        .ac:hover { transform:translateX(3px); }
-        .rc  { animation: du 0.4s ease both; }
-        .pb  { animation: pbg 1s cubic-bezier(.34,1.2,.64,1) .5s both; }
+        .ac { animation: du 0.35s ease both; transition: transform .18s ease; }
+        .ac:hover { transform: translateX(3px); }
+        .rc { animation: du 0.4s ease both; }
+        .pb { animation: pbg 1s cubic-bezier(.34,1.2,.64,1) .5s both; }
         @keyframes pbg { from{width:0} }
 
-        .jcard { transition:box-shadow .3s ease; }
-        .jcard:hover { box-shadow:0 16px 48px -10px hsl(var(--primary)/.12); }
-        .jbtn { transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s ease; }
-        .jbtn:hover { transform:translateY(-2px) scale(1.01); box-shadow:0 10px 28px -6px hsl(var(--primary)/.3); }
-        .ja  { transition:transform .18s ease; }
-        .jbtn:hover .ja { transform:translateX(3px); }
-        .ib  { transition:transform .2s cubic-bezier(.34,1.56,.64,1); }
-        .ib:hover { transform:scale(1.12); }
-        .sb  { transition:transform .2s cubic-bezier(.34,1.56,.64,1); }
-        .sb:hover { transform:translateY(-2px); }
-
-        /* Pills stagger in when bar appears */
+        .ib { transition: transform .2s cubic-bezier(.34,1.56,.64,1); }
+        .ib:hover { transform: scale(1.12); }
+        .sb { transition: transform .2s cubic-bezier(.34,1.56,.64,1); }
+        .sb:hover { transform: translateY(-2px); }
         .pill-in { animation: pip 0.4s ease both; }
-
-        /* Bar CTA */
-        .bar-btn { transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s ease; }
-        .bar-btn:hover { transform:translateY(-1px) scale(1.02); box-shadow:0 8px 20px -4px hsl(var(--primary)/.35); }
-        .bar-arrow { transition:transform .18s ease; }
-        .bar-btn:hover .bar-arrow { transform:translateX(3px); }
+        .bar-btn { transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease; }
+        .bar-btn:hover { transform: translateY(-1px) scale(1.02); box-shadow: 0 8px 20px -4px hsl(var(--primary)/.35); }
+        .bar-arrow { transition: transform .18s ease; }
+        .bar-btn:hover .bar-arrow { transform: translateX(3px); }
       `}</style>
     </div>
   );
