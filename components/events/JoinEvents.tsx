@@ -20,24 +20,8 @@ import FormInput from "@/components/form/FormInput";
 import FieldTextarea from "@/components/form/FieldTextarea";
 import { FieldImageUpload } from "../form/ImageUploadField";
 import { Event } from "@/lib/types";
-
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-
-const formatTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-// ─── SCHEMAS ─────────────────────────────────────────────────────────────────
+import { useCurrentUser } from "@/lib/providers";
+import { formatDate, formatTime } from "@/lib/helpers";
 
 const detailsSchema = z.object({
   name: z.string().min(1, "Name is required").min(2, "At least 2 characters"),
@@ -55,46 +39,61 @@ const paymentSchema = z.object({
 type DetailsData = z.infer<typeof detailsSchema>;
 type ScreenshotFile = File;
 
-// ─── STEP BAR ────────────────────────────────────────────────────────────────
+type StepId = "details" | "payment" | "confirm" | "success";
 
-const STEPS = ["Details", "Payment", "Confirm"] as const;
+function buildSteps(isLoggedIn: boolean, isPaid: boolean): StepId[] {
+  if (!isLoggedIn && !isPaid) return ["details", "success"];
+  if (!isLoggedIn && isPaid) return ["details", "payment", "success"];
+  if (isLoggedIn && !isPaid) return ["confirm", "success"];
+  /* loggedIn && paid */ return ["payment", "success"];
+}
 
-function StepBar({ current }: { current: number }) {
+const STEP_LABELS: Partial<Record<StepId, string>> = {
+  details: "Details",
+  payment: "Payment",
+};
+
+function StepBar({ steps, current }: { steps: StepId[]; current: number }) {
+  const visible = steps.filter((s) => s in STEP_LABELS);
+  if (visible.length <= 1) return null;
+
   return (
     <div className="flex items-center px-10">
-      {STEPS.map((label, i) => {
-        const isLast = i === STEPS.length - 1;
+      {visible.map((stepId, i) => {
+        const isLast = i === visible.length - 1;
+        const done = i < current;
+        const active = i === current;
         return (
           <div
-            key={label}
+            key={stepId}
             className={cn("flex items-center", !isLast && "flex-1")}
           >
             <div className="flex flex-col items-center gap-1">
               <div
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all duration-300",
-                  i < current && "bg-secondary text-secondary-foreground",
-                  i === current &&
+                  done && "bg-secondary text-secondary-foreground",
+                  active &&
                     "bg-primary text-primary-foreground shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]",
-                  i > current && "bg-muted text-muted-foreground",
+                  !done && !active && "bg-muted text-muted-foreground",
                 )}
               >
-                {i < current ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
+                {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
               </div>
               <span
                 className={cn(
                   "text-[10px] font-semibold",
-                  i === current ? "text-foreground" : "text-muted-foreground",
+                  active ? "text-foreground" : "text-muted-foreground",
                 )}
               >
-                {label}
+                {STEP_LABELS[stepId]}
               </span>
             </div>
             {!isLast && (
               <div
                 className={cn(
                   "mx-2 mb-4 h-px flex-1 transition-all duration-500",
-                  i < current ? "bg-secondary" : "bg-border",
+                  done ? "bg-secondary" : "bg-border",
                 )}
               />
             )}
@@ -105,7 +104,22 @@ function StepBar({ current }: { current: number }) {
   );
 }
 
-// ─── STEP 0 — DETAILS ────────────────────────────────────────────────────────
+// ─── USER BANNER (shown when logged in) ──────────────────────────────────────
+
+function UserBanner({ name, email }: { name: string; email: string }) {
+  return (
+    <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-border bg-muted/30 px-3.5 py-2.5">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+        {name.charAt(0).toUpperCase()}
+      </div>
+      <div className="min-w-0">
+        <p className="truncate text-xs font-semibold text-foreground">{name}</p>
+        <p className="truncate text-[11px] text-muted-foreground">{email}</p>
+      </div>
+      <CheckCircle2 className="ml-auto h-4 w-4 shrink-0 text-secondary" />
+    </div>
+  );
+}
 
 function DetailsStep({ onNext }: { onNext: (data: DetailsData) => void }) {
   const form = useForm({
@@ -181,18 +195,18 @@ function DetailsStep({ onNext }: { onNext: (data: DetailsData) => void }) {
   );
 }
 
-// ─── STEP 1 — PAYMENT ────────────────────────────────────────────────────────
-
 function PaymentStep({
   event,
   onNext,
   onBack,
   submitting,
+  canGoBack,
 }: {
   event: Event;
   onNext: (file: ScreenshotFile) => void;
   onBack: () => void;
   submitting: boolean;
+  canGoBack: boolean; // false when logged in (no details step to go back to)
 }) {
   const form = useForm({
     defaultValues: { screenshot: null as File | null },
@@ -211,31 +225,31 @@ function PaymentStep({
       }}
       className="flex flex-col gap-4"
     >
-      {/* Amount summary */}
       <div className="flex items-center justify-between rounded-2xl border border-border bg-muted/30 px-4 py-3">
         <div>
           <p className="text-sm font-semibold text-foreground">Entry fee</p>
           <p className="text-xs text-muted-foreground">{event.title}</p>
         </div>
         <span className="rounded-full bg-secondary/10 px-3 py-1 text-sm font-bold text-secondary">
-          {event.is_paid ? `NPR ${event.price?.toLocaleString()}` : "Free"}
+          NPR {event.price?.toLocaleString()}
         </span>
       </div>
 
-      {/* Screenshot upload */}
       <form.Field name="screenshot">
         {(f) => <FieldImageUpload field={f} label="Payment screenshot" />}
       </form.Field>
 
       <div className="flex gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          className="flex-1 rounded-xl"
-          onClick={onBack}
-        >
-          Back
-        </Button>
+        {canGoBack && (
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1 rounded-xl"
+            onClick={onBack}
+          >
+            Back
+          </Button>
+        )}
         <Button
           type="submit"
           disabled={!canSubmit || submitting}
@@ -256,7 +270,44 @@ function PaymentStep({
   );
 }
 
-// ─── STEP 2 — SUCCESS ────────────────────────────────────────────────────────
+function ConfirmStep({
+  event,
+  onConfirm,
+  submitting,
+}: {
+  event: Event;
+  onConfirm: () => void;
+  submitting: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="rounded-2xl border border-border bg-muted/30 px-4 py-3">
+        <p className="text-xs text-muted-foreground">You're joining</p>
+        <p className="mt-0.5 text-sm font-semibold text-foreground">
+          {event.title}
+        </p>
+        <span className="mt-2 inline-flex rounded-full bg-secondary/10 px-2.5 py-0.5 text-xs font-bold text-secondary">
+          Free entry
+        </span>
+      </div>
+      <Button
+        className="w-full gap-2 rounded-xl font-bold"
+        disabled={submitting}
+        onClick={onConfirm}
+      >
+        {submitting ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" /> Joining…
+          </>
+        ) : (
+          <>
+            Confirm registration <ArrowRight className="h-4 w-4" />
+          </>
+        )}
+      </Button>
+    </div>
+  );
+}
 
 function SuccessStep({
   name,
@@ -273,7 +324,11 @@ function SuccessStep({
     { label: "Name", value: name, cls: "" },
     { label: "Email", value: email, cls: "" },
     { label: "Event", value: event.title, cls: "" },
-    { label: "Payment", value: "Pending review", cls: "text-secondary" },
+    {
+      label: "Payment",
+      value: event.is_paid ? "Pending review" : "Free",
+      cls: "text-secondary",
+    },
   ];
 
   return (
@@ -314,10 +369,7 @@ function SuccessStep({
   );
 }
 
-// ─── TRIGGER CARD ─────────────────────────────────────────────────────────────
-
 function TriggerCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
-  // All values derived from the real event prop
   const isPaid = event.is_paid ?? false;
   const price = event.price ?? 0;
   const startDate = event.start_datetime
@@ -362,7 +414,6 @@ function TriggerCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
     <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-md">
       <div className="h-1 w-full bg-gradient-to-r from-primary via-secondary to-accent" />
       <div className="flex flex-col gap-4 p-5">
-        {/* Badge row */}
         <div className="flex items-center justify-between">
           <span
             className={cn(
@@ -376,13 +427,12 @@ function TriggerCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
           </span>
           {maxSeats > 0 && (
             <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
-              <Users className="h-3 w-3 text-accent" />
-              {maxSeats} seats available
+              <Users className="h-3 w-3 text-accent" /> {maxSeats} seats
+              available
             </span>
           )}
         </div>
 
-        {/* Meta rows — only shown when data present */}
         {metaRows.length > 0 && (
           <div className="flex flex-col gap-2.5 rounded-xl bg-muted/50 p-3.5">
             {metaRows.map(({ icon: Icon, color, text, bold }) => (
@@ -422,11 +472,18 @@ function TriggerCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
 // ─── MAIN EXPORT ─────────────────────────────────────────────────────────────
 
 export default function JoinEvent({ event }: { event: Event }) {
+  const user = useCurrentUser();
+  const isLoggedIn = !!user;
+  const isPaid = event.is_paid ?? false;
+
+  const steps = buildSteps(isLoggedIn, isPaid);
+
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState(0);
+  const [stepIndex, setStepIndex] = useState(0);
   const [anim, setAnim] = useState(false);
-  const [savedName, setSavedName] = useState("");
-  const [savedEmail, setSavedEmail] = useState("");
+  // Seed name/email from logged-in user so success screen always has values
+  const [savedName, setSavedName] = useState(user?.name ?? "");
+  const [savedEmail, setSavedEmail] = useState(user?.email ?? "");
   const [savedDetails, setSavedDetails] = useState<DetailsData | null>(null);
 
   const { mutateAsync: joinEvent, isPending: submitting } = useApiMutation({
@@ -435,10 +492,12 @@ export default function JoinEvent({ event }: { event: Event }) {
     successMessage: "You're in! 🎉",
   });
 
+  const currentStep = steps[stepIndex];
+
   const goTo = (next: number) => {
     setAnim(true);
     setTimeout(() => {
-      setStep(next);
+      setStepIndex(next);
       setAnim(false);
     }, 220);
   };
@@ -447,39 +506,52 @@ export default function JoinEvent({ event }: { event: Event }) {
     setOpen(o);
     if (!o)
       setTimeout(() => {
-        setStep(0);
-        setSavedName("");
-        setSavedEmail("");
+        setStepIndex(0);
+        setSavedName(user?.name ?? "");
+        setSavedEmail(user?.email ?? "");
         setSavedDetails(null);
       }, 300);
+  };
+
+  // Build the FormData payload for the API call
+  const buildPayload = (file?: ScreenshotFile): FormData => {
+    const fd = new FormData();
+    fd.append("name", savedName);
+    fd.append("email", savedEmail);
+    if (savedDetails?.phone) fd.append("phone", savedDetails.phone);
+    if (savedDetails?.note) fd.append("note", savedDetails.note);
+    if (file) fd.append("payment_screenshot", file);
+    return fd;
   };
 
   const handleDetailsNext = (data: DetailsData) => {
     setSavedName(data.name);
     setSavedEmail(data.email);
     setSavedDetails(data);
-    goTo(1);
+    goTo(stepIndex + 1);
   };
 
   const handlePaymentNext = async (file: ScreenshotFile) => {
-    const fd = new FormData();
-    if (savedDetails) {
-      fd.append("name", savedDetails.name);
-      fd.append("email", savedDetails.email);
-      if (savedDetails.phone) fd.append("phone", savedDetails.phone);
-      if (savedDetails.note) fd.append("note", savedDetails.note);
-    }
-    fd.append("payment_screenshot", file);
     try {
-      await joinEvent(fd as any);
-      goTo(2);
-    } catch {
-      // errors surfaced via toast in useApiMutation
-    }
+      await joinEvent(buildPayload(file) as any);
+      goTo(stepIndex + 1);
+    } catch {}
   };
 
+  const handleConfirm = async () => {
+    try {
+      await joinEvent(buildPayload() as any);
+      goTo(stepIndex + 1);
+    } catch {}
+  };
+
+  const barSteps = steps.filter((s) => s in STEP_LABELS);
+  const barCurrent = steps
+    .slice(0, stepIndex)
+    .filter((s) => s in STEP_LABELS).length;
+
   const accentLine =
-    step === 2
+    currentStep === "success"
       ? "from-secondary via-green-400 to-secondary"
       : "from-primary via-secondary to-accent";
 
@@ -499,7 +571,6 @@ export default function JoinEvent({ event }: { event: Event }) {
           />
 
           <div className="max-h-[85vh] overflow-y-auto px-6 pb-6 pt-5">
-            {/* Header */}
             <div className="mb-5 flex items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10 text-2xl">
                 {event.cover_image ? (
@@ -522,10 +593,14 @@ export default function JoinEvent({ event }: { event: Event }) {
               </div>
             </div>
 
-            {step < 2 && (
+            {currentStep !== "success" && barSteps.length > 1 && (
               <div className="mb-6">
-                <StepBar current={step} />
+                <StepBar steps={steps} current={barCurrent} />
               </div>
+            )}
+
+            {isLoggedIn && currentStep !== "success" && (
+              <UserBanner name={user?.name ?? ""} email={user?.email ?? ""} />
             )}
 
             <div
@@ -534,16 +609,26 @@ export default function JoinEvent({ event }: { event: Event }) {
                 anim ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100",
               )}
             >
-              {step === 0 && <DetailsStep onNext={handleDetailsNext} />}
-              {step === 1 && (
+              {currentStep === "details" && (
+                <DetailsStep onNext={handleDetailsNext} />
+              )}
+              {currentStep === "payment" && (
                 <PaymentStep
                   event={event}
                   onNext={handlePaymentNext}
-                  onBack={() => goTo(0)}
+                  onBack={() => goTo(stepIndex - 1)}
+                  submitting={submitting}
+                  canGoBack={!isLoggedIn}
+                />
+              )}
+              {currentStep === "confirm" && (
+                <ConfirmStep
+                  event={event}
+                  onConfirm={handleConfirm}
                   submitting={submitting}
                 />
               )}
-              {step === 2 && (
+              {currentStep === "success" && (
                 <SuccessStep
                   name={savedName}
                   email={savedEmail}

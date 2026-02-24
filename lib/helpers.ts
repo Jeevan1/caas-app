@@ -207,3 +207,15 @@ export const getRandomColor = () => {
   const l = 45 + Math.floor(Math.random() * 15);
   return `${h} ${s}% ${l}%`;
 };
+
+export function statusFromDates(start: string, end: string) {
+  const now = Date.now();
+  if (now < new Date(start).getTime())
+    return { label: "Upcoming", cls: "bg-primary/10 text-primary" };
+  if (now > new Date(end).getTime())
+    return { label: "Ended", cls: "bg-muted text-muted-foreground" };
+  return {
+    label: "Live now",
+    cls: "bg-secondary/10 text-secondary animate-pulse",
+  };
+}

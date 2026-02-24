@@ -2,6 +2,7 @@
 
 import {
   ArrowRight,
+  Building2,
   CheckCircle2,
   KeyRound,
   Lock,
@@ -107,10 +108,10 @@ export function RegisterStep({
         <form.Field name="name">
           {(field) => (
             <StyledInput
-              label="Full name"
+              label={isOrganizer ? "Organizer name" : "Full name"}
               field={field}
-              icon={User}
-              placeholder="Aarav Karki"
+              icon={isOrganizer ? Building2 : User}
+              placeholder={isOrganizer ? "Organizer name" : "Aarav Karki"}
             />
           )}
         </form.Field>

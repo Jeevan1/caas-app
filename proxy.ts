@@ -53,7 +53,7 @@ interface Session {
 function getSession(req: NextRequest): Session {
   const accessToken = req.cookies.get("accessToken")?.value;
   const refreshToken = req.cookies.get("refreshToken")?.value;
-  const role = req.cookies.get("role")?.value ?? "admin";
+  const role = req.cookies.get("role")?.value ?? null;
   return {
     isLoggedIn: Boolean(accessToken || refreshToken),
     role,
@@ -100,8 +100,15 @@ const handlers: Record<
 
   "guest-only": (req, config, session, locale) => {
     if (session.isLoggedIn) {
-      const next = req.nextUrl.searchParams.get("next");
-      return toPath(req, next || config.redirectTo || `/${locale}/login`);
+      // const next = req.nextUrl.searchParams.get("next");
+
+      // // NEVER redirect to login again
+      // if (req.nextUrl.pathname.endsWith("/login")) {
+      //   return toPath(req, `/${locale}`);
+      // }
+
+      // return toPath(req, next || config.redirectTo || `/${locale}`);
+      return null;
     }
     return null;
   },
@@ -119,6 +126,7 @@ export async function proxy(req: NextRequest) {
   if (route) {
     const session = getSession(req);
     const redirect = handlers[route.access](req, route, session, locale);
+
     if (redirect) return redirect;
   }
 

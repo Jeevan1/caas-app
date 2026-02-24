@@ -1,3 +1,4 @@
+import Events from "@/components/events/Events";
 import { EVENTS_QUERY_KEY } from "@/constants";
 import { serverFetch } from "@/lib/server-fetch";
 import { Event } from "@/lib/types";
@@ -16,7 +17,7 @@ const EventDetailsPage = async () => {
     queryFn: () => getEvents(),
   });
 
-  return <section>dsjh</section>;
+  return <Events />;
 };
 
 export default EventDetailsPage;

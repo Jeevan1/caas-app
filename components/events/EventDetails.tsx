@@ -9,25 +9,28 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
-  Eye,
   Globe,
   Heart,
-  Images,
   MapPin,
-  MousePointerClick,
   Share2,
   Star,
-  TrendingUp,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import JoinEvent from "./JoinEvents";
 import { useApiQuery } from "@/lib/hooks/use-api-query";
-import { SINGLE_EVENT_QUERY_KEY } from "@/constants";
+import {
+  EVENTS_QUERY_KEY,
+  RELATED_EVENTS_QUERY_KEY,
+  SINGLE_EVENT_QUERY_KEY,
+} from "@/constants";
 import { cn } from "@/lib/utils";
 import Attendees from "./Attendees";
-import { Attendee, Event } from "@/lib/types";
+import { Event, PaginatedAPIResponse } from "@/lib/types";
 import EventGallery from "./EventGallery";
+import { EventCardGridLoader } from "../fallback/EventCardSkeleton";
+import { EventCard } from "./EventCard";
+import { ShareButtons } from "./ShareButtons";
 
 // ─── API TYPES ────────────────────────────────────────────────────────────────
 
@@ -118,7 +121,13 @@ function Sk({ className }: { className?: string }) {
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 
-export default function EventDetails({ eventId }: { eventId: string }) {
+export default function EventDetails({
+  eventId,
+  isDashboard,
+}: {
+  eventId: string;
+  isDashboard?: boolean;
+}) {
   const [liked, setLiked] = useState(false);
   const [joined, setJoined] = useState(false);
   const [tab, setTab] = useState<"about" | "stats" | "attendees" | "gallery">(
@@ -127,13 +136,18 @@ export default function EventDetails({ eventId }: { eventId: string }) {
   const [showBar, setShowBar] = useState(false);
   const joinCardRef = useRef<HTMLDivElement>(null);
 
-  // ── API queries ───────────────────────────────────────────────────────────
   const { data: event, isLoading } = useApiQuery<Event>({
     url: `/api/event/events/${eventId}/`,
     queryKey: SINGLE_EVENT_QUERY_KEY(eventId),
   });
 
-  // ── Derived display values — real data first, fallback second ─────────────
+  const { data: relatedEvents, isLoading: isRelatedLoading } = useApiQuery<
+    PaginatedAPIResponse<Event>
+  >({
+    url: `/api/event/events/`,
+    queryKey: EVENTS_QUERY_KEY,
+  });
+
   const title = event?.title ?? "Loading…";
   const description = event?.description ?? "";
   const category = event?.category?.name ?? "";
@@ -206,7 +220,7 @@ export default function EventDetails({ eventId }: { eventId: string }) {
           <div className="flex flex-col gap-8">
             {/* Hero */}
             <div
-              className="relative flex h-56 items-center justify-center overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/8 via-muted to-secondary/8 md:h-72"
+              className="relative flex h-56 items-center justify-center overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/8 via-muted to-secondary/8 md:h-96"
               style={{ animation: "du 0.55s ease 0.05s both" }}
             >
               {coverImage ? (
@@ -545,222 +559,196 @@ export default function EventDetails({ eventId }: { eventId: string }) {
             )} */}
 
             {/* Related */}
-            <div style={{ animation: "du 0.55s ease 0.26s both" }}>
-              <p className="mb-4 text-sm font-bold text-foreground">
-                You might also like
-              </p>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {FALLBACK.relatedEvents.map((ev, i) => (
-                  <Link
-                    key={ev.title}
-                    href="#"
-                    className="rc group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all hover:border-primary/30 hover:shadow-md"
-                    style={{ animationDelay: `${i * 0.07}s` }}
-                  >
-                    <div className="flex h-16 items-center justify-center bg-muted text-3xl">
-                      {ev.emoji}
-                    </div>
-                    <div className="px-3 py-2.5">
-                      <p className="line-clamp-2 text-xs font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
-                        {ev.title}
-                      </p>
-                      <div className="mt-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {ev.date}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {ev.attendees}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* ── SIDEBAR ────────────────────────────────────────────────────── */}
-          <div
-            className="flex flex-col gap-4 lg:sticky lg:top-20 lg:self-start"
-            style={{ animation: "du 0.55s ease 0.16s both" }}
-          >
-            <div ref={joinCardRef}>
-              <JoinEvent event={event} />
-            </div>
-
-            {/* Organizer card */}
-            {organizer && (
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  Organized by
+            {!isDashboard && (
+              <div style={{ animation: "du 0.55s ease 0.26s both" }}>
+                <p className="mb-4 text-sm font-bold text-foreground">
+                  You might also like
                 </p>
-                <div className="flex items-center gap-3">
-                  {organizerImg ? (
-                    <Image
-                      src={organizerImg}
-                      alt={organizer}
-                      width={40}
-                      height={40}
-                      className="h-10 w-10 shrink-0 rounded-full object-cover"
-                    />
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+                  {isRelatedLoading ? (
+                    <EventCardGridLoader count={4} />
                   ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                      {initials(organizer)}
-                    </div>
+                    relatedEvents?.results
+                      ?.slice(0, 4)
+                      .map((ev, i) => <EventCard event={ev} />)
                   )}
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      {organizer}
-                    </p>
-                    <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                      <Globe className="h-3 w-3" /> Public group
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                  {FALLBACK.groupStats.map(([val, lbl]) => (
-                    <div key={lbl} className="rounded-lg bg-muted/60 py-2">
-                      <p className="text-sm font-bold text-foreground">{val}</p>
-                      <p className="text-[10px] text-muted-foreground">{lbl}</p>
-                    </div>
-                  ))}
                 </div>
               </div>
             )}
-
-            {/* Share */}
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <p className="mb-3 text-xs font-semibold text-foreground">
-                Share
-              </p>
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  ["𝕏", "X"],
-                  ["in", "LinkedIn"],
-                  ["f", "Facebook"],
-                  ["🔗", "Copy"],
-                ].map(([icon, lbl]) => (
-                  <button
-                    key={lbl}
-                    className="sb flex flex-col items-center gap-1 rounded-xl border border-border bg-muted py-2.5 text-xs font-bold text-muted-foreground transition-all hover:border-primary/30 hover:text-primary"
-                  >
-                    <span className="text-sm">{icon}</span>
-                    <span className="text-[9px]">{lbl}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
+
+          {/* ── SIDEBAR ────────────────────────────────────────────────────── */}
+          {!isDashboard && (
+            <div
+              className="flex flex-col gap-4 lg:sticky lg:top-20 lg:self-start"
+              style={{ animation: "du 0.55s ease 0.16s both" }}
+            >
+              <div ref={joinCardRef}>
+                <JoinEvent event={event} />
+              </div>
+              {/* Organizer card */}
+              {organizer && (
+                <div className="rounded-2xl border border-border bg-card p-4">
+                  <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    Organized by
+                  </p>
+                  <div className="flex items-center gap-3">
+                    {organizerImg ? (
+                      <Image
+                        src={organizerImg}
+                        alt={organizer}
+                        width={40}
+                        height={40}
+                        className="h-10 w-10 shrink-0 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                        {initials(organizer)}
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {organizer}
+                      </p>
+                      <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <Globe className="h-3 w-3" /> Public group
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                    {FALLBACK.groupStats.map(([val, lbl]) => (
+                      <div key={lbl} className="rounded-lg bg-muted/60 py-2">
+                        <p className="text-sm font-bold text-foreground">
+                          {val}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {lbl}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Share */}
+              <ShareButtons
+                url={`https://caas-app-pro.netlify.app/events/${event.idx}`}
+                title={event.title}
+                description={event.description}
+                hashtags={["events", "kathmandu"]}
+              />
+            </div>
+          )}
         </div>
       </div>
 
       {/* ── STICKY BOTTOM BAR ─────────────────────────────────────────────── */}
-      <div
-        className={cn(
-          "fixed bottom-0 left-0 right-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.34,1.3,0.64,1)]",
-          showBar
-            ? "translate-y-0 opacity-100"
-            : "translate-y-full opacity-0 pointer-events-none",
-        )}
-      >
-        <div className="border-t border-border bg-card/90 shadow-[0_-8px_40px_-4px_hsl(var(--foreground)/0.1)] backdrop-blur-xl">
-          <div className="h-[2px] bg-gradient-to-r from-primary via-secondary to-accent" />
-          <div className="container mx-auto px-6 py-3">
-            <div className="flex items-center gap-3 md:gap-5">
-              {/* Cover or emoji */}
-              <div className="flex shrink-0 items-center gap-3">
-                {coverImage ? (
-                  <Image
-                    src={coverImage}
-                    alt={title}
-                    width={32}
-                    height={32}
-                    className="h-8 w-8 shrink-0 rounded-lg object-cover"
-                  />
-                ) : (
-                  <span className="text-2xl leading-none">
-                    {FALLBACK.emoji}
-                  </span>
-                )}
-                <div className="hidden min-w-0 sm:block">
-                  <p className="truncate text-sm font-bold leading-tight text-foreground">
-                    {title}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {isPaid ? `NPR ${price.toLocaleString()}` : "Free"}
-                    {maxAttendees > 0 && ` · ${maxAttendees} seats`}
-                  </p>
-                </div>
-              </div>
-
-              <div className="hidden h-8 w-px shrink-0 bg-border sm:block" />
-
-              {/* Pills */}
-              <div className="flex flex-1 flex-wrap items-center gap-2">
-                {[
-                  {
-                    icon: Calendar,
-                    text: startDate,
-                    color: "text-primary",
-                    delay: "0.06s",
-                  },
-                  {
-                    icon: Clock,
-                    text: timeRange,
-                    color: "text-secondary",
-                    delay: "0.13s",
-                  },
-                  {
-                    icon: MapPin,
-                    text: locationName,
-                    color: "text-accent",
-                    delay: "0.20s",
-                    hide: true,
-                  },
-                ]
-                  .filter((p) => p.text && p.text !== "—")
-                  .map(({ icon: Icon, text, color, delay, hide }) => (
-                    <span
-                      key={text}
-                      className={cn(
-                        "flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-muted px-3 py-1.5 text-[11px] font-medium text-foreground",
-                        hide && "hidden md:flex",
-                        showBar && "pill-in",
-                      )}
-                      style={{ animationDelay: delay }}
-                    >
-                      <Icon className={cn("h-3 w-3 shrink-0", color)} />
-                      {text}
+      {!isDashboard && (
+        <div
+          className={cn(
+            "fixed bottom-0 left-0 right-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.34,1.3,0.64,1)]",
+            showBar
+              ? "translate-y-0 opacity-100"
+              : "translate-y-full opacity-0 pointer-events-none",
+          )}
+        >
+          <div className="border-t border-border bg-card/90 shadow-[0_-8px_40px_-4px_hsl(var(--foreground)/0.1)] backdrop-blur-xl">
+            <div className="h-[2px] bg-gradient-to-r from-primary via-secondary to-accent" />
+            <div className="container mx-auto px-6 py-3">
+              <div className="flex items-center gap-3 md:gap-5">
+                {/* Cover or emoji */}
+                <div className="flex shrink-0 items-center gap-3">
+                  {coverImage ? (
+                    <Image
+                      src={coverImage}
+                      alt={title}
+                      width={32}
+                      height={32}
+                      className="h-8 w-8 shrink-0 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <span className="text-2xl leading-none">
+                      {FALLBACK.emoji}
                     </span>
-                  ))}
-              </div>
+                  )}
+                  <div className="hidden min-w-0 sm:block">
+                    <p className="truncate text-sm font-bold leading-tight text-foreground">
+                      {title}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {isPaid ? `NPR ${price.toLocaleString()}` : "Free"}
+                      {maxAttendees > 0 && ` · ${maxAttendees} seats`}
+                    </p>
+                  </div>
+                </div>
 
-              {/* CTA */}
-              <button
-                onClick={() => setJoined(!joined)}
-                className={cn(
-                  "bar-btn flex shrink-0 items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold",
-                  joined
-                    ? "bg-secondary text-secondary-foreground"
-                    : "bg-primary text-primary-foreground",
-                )}
-              >
-                {joined ? (
-                  <>
-                    <CheckCircle2 className="h-4 w-4" /> Joined
-                  </>
-                ) : (
-                  <>
-                    Join <ArrowRight className="bar-arrow h-4 w-4" />
-                  </>
-                )}
-              </button>
+                <div className="hidden h-8 w-px shrink-0 bg-border sm:block" />
+
+                {/* Pills */}
+                <div className="flex flex-1 flex-wrap items-center gap-2">
+                  {[
+                    {
+                      icon: Calendar,
+                      text: startDate,
+                      color: "text-primary",
+                      delay: "0.06s",
+                    },
+                    {
+                      icon: Clock,
+                      text: timeRange,
+                      color: "text-secondary",
+                      delay: "0.13s",
+                    },
+                    {
+                      icon: MapPin,
+                      text: locationName,
+                      color: "text-accent",
+                      delay: "0.20s",
+                      hide: true,
+                    },
+                  ]
+                    .filter((p) => p.text && p.text !== "—")
+                    .map(({ icon: Icon, text, color, delay, hide }) => (
+                      <span
+                        key={text}
+                        className={cn(
+                          "flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-muted px-3 py-1.5 text-[11px] font-medium text-foreground",
+                          hide && "hidden md:flex",
+                          showBar && "pill-in",
+                        )}
+                        style={{ animationDelay: delay }}
+                      >
+                        <Icon className={cn("h-3 w-3 shrink-0", color)} />
+                        {text}
+                      </span>
+                    ))}
+                </div>
+
+                {/* CTA */}
+                <button
+                  onClick={() => setJoined(!joined)}
+                  className={cn(
+                    "bar-btn flex shrink-0 items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold",
+                    joined
+                      ? "bg-secondary text-secondary-foreground"
+                      : "bg-primary text-primary-foreground",
+                  )}
+                >
+                  {joined ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4" /> Joined
+                    </>
+                  ) : (
+                    <>
+                      Join <ArrowRight className="bar-arrow h-4 w-4" />
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {showBar && <div className="h-20" />}
 

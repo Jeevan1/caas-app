@@ -1,5 +1,4 @@
 import AuthSection from "@/components/auth/login-signup";
-import React from "react";
 
 const page = () => {
   return (

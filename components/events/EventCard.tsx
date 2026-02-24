@@ -56,14 +56,17 @@ const nearbyEvents = [
 function EventCard({
   event,
   online = false,
+  index,
 }: {
   event: Event;
   online?: boolean;
+  index?: number;
 }) {
   return (
     <Link
       href={`/events/${event.idx}`}
       className="group flex flex-col rounded-2xl border border-border bg-card overflow-hidden transition-all hover:border-primary/40 hover:shadow-md"
+      style={{ animationDelay: `${index && (index % 10) * 40}ms` }}
     >
       {/* Cover image area */}
       <div className="relative flex h-36 w-full items-center justify-center bg-muted text-5xl">

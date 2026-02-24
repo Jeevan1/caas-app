@@ -11,6 +11,7 @@ import { EVENTS_QUERY_KEY } from "@/constants";
 import { Event, PaginatedAPIResponse } from "@/lib/types";
 import { DeleteAlertDialog } from "../DeleteAlertDialog";
 import { EventForm } from "./GalleryForm";
+import { statusFromDates } from "@/lib/helpers";
 
 // ─── SCHEMA ──────────────────────────────────────────────────────────────────
 
@@ -56,15 +57,6 @@ const formatTime = (iso: string) =>
     hour: "2-digit",
     minute: "2-digit",
   });
-
-function statusFromDates(start: string, end: string) {
-  const now = Date.now();
-  if (now < new Date(start).getTime())
-    return { label: "Upcoming", cls: "bg-primary/10 text-primary" };
-  if (now > new Date(end).getTime())
-    return { label: "Completed", cls: "bg-muted text-muted-foreground" };
-  return { label: "Active", cls: "bg-secondary/10 text-secondary" };
-}
 
 export function EventsOverview() {
   const [open, setOpen] = useState(false);
