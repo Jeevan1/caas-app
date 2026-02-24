@@ -55,8 +55,7 @@ function getSession(req: NextRequest): Session {
   const refreshToken = req.cookies.get("refreshToken")?.value;
   const role = req.cookies.get("role")?.value ?? "admin";
   return {
-    // isLoggedIn: Boolean(accessToken || refreshToken),
-    isLoggedIn: true,
+    isLoggedIn: Boolean(accessToken || refreshToken),
     role,
   };
 }

@@ -1,8 +1,15 @@
+type DobType = "ad" | "bs";
+type Gender = "male" | "female" | "other";
 export interface User {
   id: string;
   name: string;
   email: string;
-  image: string;
+  role: string;
+  phone: string | null;
+  gender: Gender;
+  dob_type: DobType;
+  image: string | null;
+  primary_role: string;
 }
 
 export interface PaginatedAPIResponse<TData> {
@@ -52,4 +59,16 @@ export interface Event {
   total_attendees: number;
   cover_image: string | null;
   duration: string;
+}
+
+export interface Attendee {
+  idx: string;
+  name: string;
+  image: string | null;
+}
+
+export interface GalleryImage {
+  idx: string;
+  image: string;
+  caption?: string;
 }

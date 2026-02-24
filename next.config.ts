@@ -12,7 +12,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ["wo-mac.batomechanic.com"],
+    domains: ["wo-mac.batomechanic.com", "caas.batomechanic.com"],
   },
 };
 

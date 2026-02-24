@@ -12,6 +12,7 @@ export function cn(...inputs: ClassValue[]) {
 export interface GenericMutationOptions<TPayload, TResult = any> {
   apiPath: string | ((payload: TPayload) => string);
   method?: HTTP_METHOD;
+  onErrorCallback?: (err: ApiError, payload?: TPayload) => void;
   queryKey?: any;
   payloadTransform?: (payload: TPayload) => any;
   optimisticUpdate?: (prevData: any, payload: TPayload) => any;
@@ -82,6 +83,7 @@ export const useApiMutation = <TPayload, TResult = any>({
   errorMessage = "Something went wrong",
   optimisticUpdate,
   onSuccessCallback,
+  onErrorCallback,
   showSuccessuseToast = true,
 }: GenericMutationOptions<TPayload, TResult>) => {
   const queryClient = useQueryClient();
@@ -118,6 +120,7 @@ export const useApiMutation = <TPayload, TResult = any>({
     },
 
     onError: (err: ApiError, _vars, context: any) => {
+      onErrorCallback?.(err);
       if (context?.previous && queryKey) {
         queryClient.setQueryData(queryKey, context.previous);
       }

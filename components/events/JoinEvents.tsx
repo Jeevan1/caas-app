@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { cn, useApiMutation } from "@/lib/utils";
 import FormInput from "@/components/form/FormInput";
 import FieldTextarea from "@/components/form/FieldTextarea";
 import { FieldImageUpload } from "../form/ImageUploadField";
@@ -425,9 +425,15 @@ export default function JoinEvent({ event }: { event: Event }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
   const [anim, setAnim] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [savedName, setSavedName] = useState("");
   const [savedEmail, setSavedEmail] = useState("");
+  const [savedDetails, setSavedDetails] = useState<DetailsData | null>(null);
+
+  const { mutateAsync: joinEvent, isPending: submitting } = useApiMutation({
+    apiPath: `/api/event/events/${event.idx}/join/`,
+    method: "POST",
+    successMessage: "You're in! 🎉",
+  });
 
   const goTo = (next: number) => {
     setAnim(true);
@@ -444,21 +450,32 @@ export default function JoinEvent({ event }: { event: Event }) {
         setStep(0);
         setSavedName("");
         setSavedEmail("");
+        setSavedDetails(null);
       }, 300);
   };
 
   const handleDetailsNext = (data: DetailsData) => {
     setSavedName(data.name);
     setSavedEmail(data.email);
+    setSavedDetails(data);
     goTo(1);
   };
 
-  const handlePaymentNext = (_file: ScreenshotFile) => {
-    setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+  const handlePaymentNext = async (file: ScreenshotFile) => {
+    const fd = new FormData();
+    if (savedDetails) {
+      fd.append("name", savedDetails.name);
+      fd.append("email", savedDetails.email);
+      if (savedDetails.phone) fd.append("phone", savedDetails.phone);
+      if (savedDetails.note) fd.append("note", savedDetails.note);
+    }
+    fd.append("payment_screenshot", file);
+    try {
+      await joinEvent(fd as any);
       goTo(2);
-    }, 1400);
+    } catch {
+      // errors surfaced via toast in useApiMutation
+    }
   };
 
   const accentLine =

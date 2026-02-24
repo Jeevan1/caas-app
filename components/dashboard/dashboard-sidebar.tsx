@@ -21,6 +21,7 @@ const sidebarLinks = [
   { href: "/dashboard/categories", icon: Trophy, label: "Categories" },
   { href: "/dashboard/events", icon: Megaphone, label: "Events" },
   { href: "/dashboard/analytics", icon: BarChart3, label: "Analytics" },
+  { href: "/joined-events", icon: FileImage, label: "Joined Events" },
   { href: "/dashboard/profile", icon: User, label: "Profile" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
@@ -31,7 +32,7 @@ export function DashboardSidebar() {
 
   return (
     <aside className="hidden w-64 flex-shrink-0 border-r border-border bg-card lg:block">
-      <div className="flex h-full flex-col">
+      <div className="flex fixed w-64 min-h-screen flex-col">
         {/* Logo */}
         <Link
           href="/"

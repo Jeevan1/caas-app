@@ -25,6 +25,9 @@ import JoinEvent from "./JoinEvents";
 import { useApiQuery } from "@/lib/hooks/use-api-query";
 import { SINGLE_EVENT_QUERY_KEY } from "@/constants";
 import { cn } from "@/lib/utils";
+import Attendees from "./Attendees";
+import { Attendee, Event } from "@/lib/types";
+import EventGallery from "./EventGallery";
 
 // ─── API TYPES ────────────────────────────────────────────────────────────────
 
@@ -36,24 +39,6 @@ type EventLocation = {
 };
 type EventCategory = { idx: string; name: string };
 type EventOrganizer = { idx: string; name: string; image: string | null };
-
-type Event = {
-  idx: string;
-  title: string;
-  description: string;
-  start_datetime: string;
-  end_datetime: string;
-  location: EventLocation;
-  is_paid: boolean;
-  price: number;
-  category: EventCategory;
-  organizer: EventOrganizer;
-  max_attendees: number;
-  cover_image: string | null;
-  duration: string;
-};
-
-type GalleryImage = { idx: string; image: string; caption?: string };
 
 // ─── STATIC FALLBACKS (shown only when API field absent) ──────────────────────
 
@@ -131,87 +116,6 @@ function Sk({ className }: { className?: string }) {
   );
 }
 
-// ─── GALLERY ─────────────────────────────────────────────────────────────────
-
-function Gallery({ images }: { images: GalleryImage[] }) {
-  const [lightbox, setLightbox] = useState<string | null>(null);
-  if (!images.length)
-    return (
-      <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border py-14 text-center">
-        <Images className="h-8 w-8 text-muted-foreground/40" />
-        <p className="text-sm text-muted-foreground">No gallery images yet.</p>
-      </div>
-    );
-
-  const [first, ...rest] = images;
-  return (
-    <>
-      <div
-        className={cn(
-          "grid gap-2",
-          images.length === 1
-            ? "grid-cols-1"
-            : images.length === 2
-              ? "grid-cols-2"
-              : "grid-cols-3",
-        )}
-      >
-        <div
-          className={cn(
-            "relative cursor-zoom-in overflow-hidden rounded-2xl bg-muted",
-            images.length >= 3 && "col-span-2",
-          )}
-          style={{ aspectRatio: images.length >= 3 ? "16/9" : "4/3" }}
-          onClick={() => setLightbox(first.image)}
-        >
-          <Image
-            src={first.image}
-            alt={first.caption ?? "Photo"}
-            fill
-            className="object-cover transition-transform duration-500 hover:scale-105"
-          />
-        </div>
-        {rest.map((img) => (
-          <div
-            key={img.idx}
-            className="relative cursor-zoom-in overflow-hidden rounded-xl bg-muted"
-            style={{ aspectRatio: "1/1" }}
-            onClick={() => setLightbox(img.image)}
-          >
-            <Image
-              src={img.image}
-              alt={img.caption ?? "Photo"}
-              fill
-              className="object-cover transition-transform duration-500 hover:scale-105"
-            />
-          </div>
-        ))}
-      </div>
-
-      {lightbox && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
-          onClick={() => setLightbox(null)}
-        >
-          <button
-            className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
-            onClick={() => setLightbox(null)}
-          >
-            ✕
-          </button>
-          <Image
-            src={lightbox}
-            alt="Preview"
-            width={1200}
-            height={800}
-            className="max-h-[90vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl"
-          />
-        </div>
-      )}
-    </>
-  );
-}
-
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 
 export default function EventDetails({ eventId }: { eventId: string }) {
@@ -228,13 +132,6 @@ export default function EventDetails({ eventId }: { eventId: string }) {
     url: `/api/event/events/${eventId}/`,
     queryKey: SINGLE_EVENT_QUERY_KEY(eventId),
   });
-
-  const { data: galleryData } = useApiQuery<{ results: GalleryImage[] }>({
-    url: `/api/event/events/${eventId}/images/`,
-    queryKey: ["event", "gallery", eventId],
-  });
-
-  const gallery: GalleryImage[] = galleryData?.results ?? [];
 
   // ── Derived display values — real data first, fallback second ─────────────
   const title = event?.title ?? "Loading…";
@@ -268,7 +165,7 @@ export default function EventDetails({ eventId }: { eventId: string }) {
     return () => observer.disconnect();
   }, []);
 
-  const TABS = ["about", "stats", "attendees", "gallery"] as const;
+  const TABS = ["about", "attendees", "gallery"] as const;
 
   if (!event) return null;
 
@@ -523,7 +420,7 @@ export default function EventDetails({ eventId }: { eventId: string }) {
               )}
 
               {/* ── STATS ── */}
-              {tab === "stats" && (
+              {/* {tab === "stats" && (
                 <div className="tc mt-5 flex flex-col gap-4">
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                     {[
@@ -613,47 +510,18 @@ export default function EventDetails({ eventId }: { eventId: string }) {
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
 
-              {/* ── ATTENDEES ── */}
-              {tab === "attendees" && (
-                <div className="tc mt-5 flex flex-col gap-2">
-                  {FALLBACK.attendeeList.map((a, i) => (
-                    <div
-                      key={a.name}
-                      className="ac flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3"
-                      style={{ animationDelay: `${i * 0.05}s` }}
-                    >
-                      <div
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-primary-foreground"
-                        style={{ background: `hsl(var(--${a.color}))` }}
-                      >
-                        {a.initials}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          {a.name}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {a.role}
-                        </p>
-                      </div>
-                      <CheckCircle2 className="ml-auto h-4 w-4 text-secondary" />
-                    </div>
-                  ))}
-                </div>
-              )}
+              {tab === "attendees" && <Attendees eventId={eventId} />}
 
-              {/* ── GALLERY ── */}
               {tab === "gallery" && (
                 <div className="tc mt-5">
-                  <Gallery images={gallery} />
+                  <EventGallery eventId={eventId} />
                 </div>
               )}
             </div>
 
-            {/* Inline gallery preview on About tab */}
-            {tab === "about" && gallery.length > 0 && (
+            {/* {tab === "about" && gallery.length > 0 && (
               <div style={{ animation: "du 0.55s ease 0.23s both" }}>
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -674,7 +542,7 @@ export default function EventDetails({ eventId }: { eventId: string }) {
                 </div>
                 <Gallery images={gallery.slice(0, 4)} />
               </div>
-            )}
+            )} */}
 
             {/* Related */}
             <div style={{ animation: "du 0.55s ease 0.26s both" }}>
