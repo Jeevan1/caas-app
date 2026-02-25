@@ -17,10 +17,10 @@ export async function CategoriesSection() {
   const categories = await getCategories();
 
   return (
-    <section className="bg-background py-24 overflow-hidden">
+    <section className="bg-background py-20 md:py-24 overflow-hidden">
       <div className="mx-auto container">
         <div
-          className="mb-16 text-center cat-header"
+          className="mb-12 md:mb-16 text-center cat-header"
           style={{ animation: "catFadeUp 0.6s ease both" }}
         >
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">

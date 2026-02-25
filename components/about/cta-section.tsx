@@ -1,10 +1,10 @@
-import Link from "next/link"
-import { ArrowRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function CTASection() {
   return (
-    <section className="bg-primary py-24">
+    <section className="bg-primary py-20 md:py-24">
       <div className="mx-auto max-w-3xl px-6 text-center">
         <h2 className="font-heading text-3xl font-bold tracking-tight text-primary-foreground md:text-4xl text-balance">
           Ready to grow your business?
@@ -15,11 +15,7 @@ export function CTASection() {
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Link href="/dashboard">
-            <Button
-              size="lg"
-              variant="secondary"
-              className="gap-2"
-            >
+            <Button size="lg" variant="secondary" className="gap-2">
               Get Started for Free
               <ArrowRight className="h-4 w-4" />
             </Button>
@@ -36,5 +32,5 @@ export function CTASection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

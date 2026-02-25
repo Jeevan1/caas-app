@@ -17,7 +17,7 @@ export async function OnlineEventsSection() {
   const hasEvents = (events?.results?.length ?? 0) > 0;
 
   return (
-    <section className="bg-card py-20">
+    <section className="bg-card py-16 md:py-20">
       <div className="container mx-auto">
         {/* Header */}
         <div className="mb-8 flex items-end justify-between">

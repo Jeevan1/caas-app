@@ -101,7 +101,7 @@ function HeroSkeleton() {
 
 function EmptyState({ categoryName }: { categoryName: string }) {
   return (
-    <div className="col-span-full flex flex-col items-center gap-4 py-24 text-center">
+    <div className="col-span-full flex flex-col items-center gap-4 py-20 md:py-24 text-center">
       <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
         <CalendarX className="h-7 w-7 text-muted-foreground/50" />
       </div>

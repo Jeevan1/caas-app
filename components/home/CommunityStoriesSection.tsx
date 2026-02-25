@@ -30,7 +30,7 @@ const articles = [
 ];
 export function CommunityStoriesSection() {
   return (
-    <section className="bg-card py-20">
+    <section className="bg-card py-16 md:py-20">
       <div className="mx-auto container">
         {/* Label */}
         <p className="mb-1 text-center text-xs font-semibold uppercase tracking-widest text-primary">

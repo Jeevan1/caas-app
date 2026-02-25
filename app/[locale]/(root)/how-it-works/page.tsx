@@ -120,7 +120,7 @@ export default function HowItWorksPage() {
   return (
     <section>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-background py-20">
+      <section className="relative overflow-hidden bg-background py-14 md:py-20">
         <div className="mx-auto container">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div className="text-center lg:text-left">
@@ -149,7 +149,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Detailed Steps */}
-      <section className="bg-card py-24">
+      <section className="bg-card py-20 md:py-24">
         <div className="mx-auto container">
           <div className="flex flex-col gap-16">
             {detailedSteps.map((item, index) => (
@@ -232,9 +232,9 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Campaign Types */}
-      <section className="bg-background py-24">
+      <section className="bg-background py-20 md:py-24">
         <div className="mx-auto container">
-          <div className="mb-16 text-center">
+          <div className="mb-12 md:mb-16 text-center">
             <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-secondary">
               Campaign Types
             </p>

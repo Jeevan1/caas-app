@@ -17,7 +17,7 @@ export async function NearbyEventsSection() {
   const hasEvents = (events?.results?.length ?? 0) > 0;
 
   return (
-    <section className="bg-background py-20">
+    <section className="bg-background py-14 md:py-20">
       <div className="container mx-auto">
         <div className="mb-8 flex items-end justify-between">
           <div>
@@ -30,7 +30,7 @@ export async function NearbyEventsSection() {
             </h2>
           </div>
           {hasEvents && (
-            <Link href="/find">
+            <Link href="/events">
               <Button
                 variant="ghost"
                 size="sm"

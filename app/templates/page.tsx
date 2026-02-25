@@ -156,7 +156,7 @@ export default function TemplatesPage() {
   return (
     <section>
       {/* Hero */}
-      <section className="bg-background py-20">
+      <section className="bg-background py-14 md:py-20">
         <div className="mx-auto container text-center">
           <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-primary">
             Template Library

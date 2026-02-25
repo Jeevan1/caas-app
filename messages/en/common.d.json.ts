@@ -9,7 +9,9 @@ declare const messages: {
     "templates": "Templates",
     "pricing": "Pricing",
     "blog": "Blog",
-    "contact": "Contact"
+    "contact": "Contact",
+    "events": "Events",
+    "categories": "Categories"
   },
   "auth": {
     "login": "Log In",

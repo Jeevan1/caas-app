@@ -26,9 +26,9 @@ const steps = [
 
 export function StepsSection() {
   return (
-    <section className="bg-card py-24">
+    <section className="bg-card py-20 md:py-24">
       <div className="mx-auto container">
-        <div className="mb-16 text-center">
+        <div className="mb-12 md:mb-16 text-center">
           <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-primary">
             How It Works
           </p>

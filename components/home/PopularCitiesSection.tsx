@@ -35,7 +35,7 @@ const cities = [
 
 export function PopularCitiesSection() {
   return (
-    <section className="bg-card py-24 overflow-hidden">
+    <section className="bg-card py-20 md:py-24 overflow-hidden">
       <div className="mx-auto container">
         {/* Header */}
         <div

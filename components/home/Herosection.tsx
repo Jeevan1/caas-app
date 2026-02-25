@@ -56,28 +56,27 @@ const slides = [
 export function HeroSection() {
   const [current, setCurrent] = useState(0);
 
-  // Auto-rotate slides every 4s
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % slides.length);
-    }, 4000);
+    const timer = setInterval(
+      () => setCurrent((p) => (p + 1) % slides.length),
+      4000,
+    );
     return () => clearInterval(timer);
   }, []);
 
   const prev = () => setCurrent((c) => (c - 1 + slides.length) % slides.length);
   const next = () => setCurrent((c) => (c + 1) % slides.length);
-
   const slide = slides[current];
 
   return (
     <>
       <section className="relative w-full overflow-hidden bg-background">
-        <div className="relative mx-auto grid min-h-[88vh] grid-cols-1 items-center gap-0 md:grid-cols-2">
-          {/* ── LEFT: Text ──────────────────────────────────────────────────── */}
-          <div className="flex flex-col gap-7 px-8 py-16 ps-20 lg:ps-64">
+        <div className="relative mx-auto grid min-h-[100svh] grid-cols-1 items-stretch md:grid-cols-2 md:min-h-[88vh]">
+          {/* ── LEFT: Text ──────────────────────────────────────────────── */}
+          <div className="flex flex-col justify-center gap-6 px-6 py-16 sm:px-10 md:px-12 lg:px-16 xl:px-24">
             {/* Headline */}
             <h1
-              className="font-heading text-xl font-bold leading-[1.05] tracking-tight text-foreground md:text-2xl lg:text-4xl text-balance"
+              className="font-heading text-3xl font-bold leading-tight tracking-tight text-foreground text-balance sm:text-4xl lg:text-5xl xl:text-6xl"
               style={{ animation: "heroFadeUp 0.7s ease both" }}
             >
               The{" "}
@@ -85,7 +84,7 @@ export function HeroSection() {
                 className="inline-flex items-center gap-2"
                 style={{ animation: "heroFadeUp 0.7s ease 0.1s both" }}
               >
-                <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-lg hero-icon">
+                <span className="hero-icon relative inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-base sm:h-8 sm:w-8 sm:text-lg">
                   👥
                 </span>
                 <span className="hero-word">people</span>
@@ -96,7 +95,7 @@ export function HeroSection() {
                 className="inline-flex items-center gap-2"
                 style={{ animation: "heroFadeUp 0.7s ease 0.22s both" }}
               >
-                <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent text-accent-foreground text-lg hero-icon">
+                <span className="hero-icon relative inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent text-accent-foreground text-base sm:h-8 sm:w-8 sm:text-lg">
                   ⚡
                 </span>
                 <span className="hero-word">interests</span>
@@ -106,7 +105,7 @@ export function HeroSection() {
                 className="inline-flex items-center gap-2"
                 style={{ animation: "heroFadeUp 0.7s ease 0.34s both" }}
               >
-                <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-secondary-foreground text-lg hero-icon">
+                <span className="hero-icon relative inline-flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-secondary-foreground text-base sm:h-8 sm:w-8 sm:text-lg">
                   ❤️
                 </span>
                 <span className="hero-word">friendships.</span>
@@ -115,7 +114,7 @@ export function HeroSection() {
 
             {/* Body */}
             <p
-              className="max-w-md text-md leading-relaxed text-muted-foreground"
+              className="max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base"
               style={{ animation: "heroFadeUp 0.7s ease 0.46s both" }}
             >
               Whatever your interest, from hiking and reading to networking and
@@ -128,95 +127,93 @@ export function HeroSection() {
               <Link href="/register">
                 <Button
                   size="lg"
-                  className="gap-2 rounded-full px-8 text-base hero-btn"
+                  className="hero-btn gap-2 rounded-full px-6 text-sm sm:px-8 sm:text-base"
                 >
                   Join CaaS
-                  <ArrowRight className="h-4 w-4 hero-arrow" />
+                  <ArrowRight className="hero-arrow h-4 w-4" />
                 </Button>
               </Link>
             </div>
           </div>
 
-          {/* ── RIGHT: Rotating slide visual ────────────────────────────────── */}
-          <div className="relative h-[92vh] w-full overflow-hidden">
+          {/* ── RIGHT: Slide visual ─────────────────────────────────────── */}
+          {/*
+            Mobile: fixed aspect-ratio box so it doesn't take full screen height.
+            md+: stretches to fill the grid row height.
+          */}
+          <div className="relative aspect-[4/3] w-full overflow-hidden md:aspect-auto md:h-auto">
             {/* Slide background */}
             <div
               key={slide.id}
               className={`absolute inset-0 bg-gradient-to-br ${slide.bg} transition-all duration-700`}
             />
 
-            {/* Large emoji / illustration centered */}
+            {/* Large emoji */}
             <div className="absolute inset-0 flex items-center justify-center">
               <span
-                className="select-none text-[120px] opacity-30 transition-all duration-500 md:text-[180px]"
+                className="select-none text-[80px] opacity-30 transition-all duration-500 sm:text-[120px] md:text-[160px]"
                 aria-hidden
               >
                 {slide.emoji}
               </span>
             </div>
 
-            {/* Slide label pill — bottom left (like Meetup's event label) */}
-            <div className="absolute bottom-10 left-8 flex items-center gap-3 rounded-full border border-border bg-card/90 px-5 py-3 shadow-lg backdrop-blur-sm">
-              <span className={`h-2.5 w-2.5 rounded-full ${slide.accent}`} />
-              <span className="text-sm font-semibold text-foreground">
+            {/* Label pill — bottom left */}
+            <div className="absolute bottom-4 left-4 flex items-center gap-2.5 rounded-full border border-border bg-card/90 px-4 py-2 shadow-lg backdrop-blur-sm sm:bottom-8 sm:left-6 sm:px-5 sm:py-3">
+              <span
+                className={`h-2 w-2 rounded-full sm:h-2.5 sm:w-2.5 ${slide.accent}`}
+              />
+              <span className="text-xs font-semibold text-foreground sm:text-sm">
                 {slide.label}
               </span>
             </div>
 
-            {/* Slide nav arrows */}
-            <div className="absolute bottom-10 right-8 flex items-center gap-2">
+            {/* Arrows — bottom right */}
+            <div className="absolute bottom-4 right-4 flex items-center gap-1.5 sm:bottom-8 sm:right-6 sm:gap-2">
               <button
                 onClick={prev}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card/90 text-foreground shadow-md backdrop-blur-sm transition-all hover:bg-card"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card/90 text-foreground shadow-md backdrop-blur-sm transition-all hover:bg-card sm:h-9 sm:w-9"
                 aria-label="Previous slide"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
               <button
                 onClick={next}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card/90 text-foreground shadow-md backdrop-blur-sm transition-all hover:bg-card"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card/90 text-foreground shadow-md backdrop-blur-sm transition-all hover:bg-card sm:h-9 sm:w-9"
                 aria-label="Next slide"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
             </div>
 
-            {/* Dot indicators */}
-            <div className="absolute right-8 top-1/2 flex -translate-y-1/2 flex-col gap-2">
+            {/* Dot indicators — right edge, hidden on very small screens */}
+            <div className="absolute right-3 top-1/2 hidden -translate-y-1/2 flex-col gap-2 sm:flex sm:right-6">
               {slides.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setCurrent(i)}
                   aria-label={`Go to slide ${i + 1}`}
-                  className={`h-1.5 w-1.5 rounded-full transition-all ${
+                  className={[
+                    "h-1.5 w-1.5 rounded-full transition-all",
                     i === current
                       ? "scale-150 bg-foreground"
-                      : "bg-muted-foreground/40"
-                  }`}
+                      : "bg-muted-foreground/40",
+                  ].join(" ")}
                 />
               ))}
             </div>
 
-            {/* Soft left-edge fade so text side blends */}
-            <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-background to-transparent" />
+            {/* Left fade — only on md+ where it blends into the text column */}
+            <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-background to-transparent md:w-16" />
           </div>
         </div>
       </section>
-      {/* ── KEYFRAMES + MICRO-INTERACTIONS ────────────────────────────────── */}
-      <style>{`
-        /* Entrance */
-        @keyframes heroFadeUp {
-          from {
-            opacity: 0;
-            transform: translateY(24px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
 
-        /* Icon bounce on hover */
+      <style>{`
+        @keyframes heroFadeUp {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
         .hero-icon {
           transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
           display: inline-flex;
@@ -224,8 +221,6 @@ export function HeroSection() {
         .hero-icon:hover {
           transform: scale(2.25) rotate(-12deg);
         }
-
-        /* Word highlight sweep on hover */
         .hero-word {
           position: relative;
           display: inline-block;
@@ -242,19 +237,9 @@ export function HeroSection() {
           border-radius: 999px;
           transition: width 0.3s ease;
         }
-        .hero-word:hover::after {
-          width: 100%;
-        }
-
-        /* CTA button arrow slide */
-        .hero-btn .hero-arrow {
-          transition: transform 0.2s ease;
-        }
-        .hero-btn:hover .hero-arrow {
-          transform: translateX(4px);
-        }
-
-        /* Subtle pulse on the icon circles */
+        .hero-word:hover::after { width: 100%; }
+        .hero-btn .hero-arrow { transition: transform 0.2s ease; }
+        .hero-btn:hover .hero-arrow { transform: translateX(4px); }
         @keyframes heroPulse {
           0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.5); }
           50%       { box-shadow: 0 0 0 10px hsl(var(--primary) / 0); }

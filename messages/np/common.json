@@ -6,7 +6,9 @@
     "templates": "टेम्प्लेटहरू",
     "pricing": "मूल्य निर्धारण",
     "blog": "ब्लग",
-    "contact": "सम्पर्क"
+    "contact": "सम्पर्क",
+    "events": "कार्यक्रमहरू",
+    "categories": "वर्गहरू"
   },
   "auth": {
     "login": "लगइन",

@@ -93,7 +93,7 @@ export default function PricingPage() {
   return (
     <section>
       {/* Hero */}
-      <section className="bg-background py-20">
+      <section className="bg-background py-14 md:py-20">
         <div className="mx-auto container text-center">
           <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-primary">
             Pricing
@@ -178,7 +178,7 @@ export default function PricingPage() {
       </section>
 
       {/* FAQs */}
-      <section className="bg-background py-24">
+      <section className="bg-background py-20 md:py-24">
         <div className="mx-auto max-w-3xl px-6">
           <h2 className="mb-12 text-center font-heading text-3xl font-bold tracking-tight text-foreground">
             Frequently asked questions

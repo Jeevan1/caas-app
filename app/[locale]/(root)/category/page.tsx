@@ -385,7 +385,7 @@ export default function CategoryPage() {
       </section>
 
       {/* ══ 2. FIND & MAKE FRIENDS ═══════════════════════════════════════════ */}
-      <section className="py-24">
+      <section className="py-20 md:py-24">
         <div className="mx-auto container px-6">
           <div className="grid gap-6 md:grid-cols-2">
             {[
@@ -435,7 +435,7 @@ export default function CategoryPage() {
       </section>
 
       {/* ══ 3. POPULAR GROUPS ════════════════════════════════════════════════ */}
-      <section className="bg-card py-24">
+      <section className="bg-card py-20 md:py-24">
         <div className="mx-auto container px-6">
           <Reveal>
             <div className="mb-12 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
@@ -501,7 +501,7 @@ export default function CategoryPage() {
       </section>
 
       {/* ══ 4. POPULAR TOPICS ════════════════════════════════════════════════ */}
-      <section className="py-24">
+      <section className="py-20 md:py-24">
         <div className="mx-auto container px-6">
           <Reveal>
             <div className="mb-12 text-center">
@@ -547,7 +547,7 @@ export default function CategoryPage() {
       </section>
 
       {/* ══ 5. UPCOMING EVENTS ═══════════════════════════════════════════════ */}
-      <section className="bg-card py-24">
+      <section className="bg-card py-20 md:py-24">
         <div className="mx-auto container px-6">
           <Reveal>
             <div className="mb-12 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
@@ -629,7 +629,7 @@ export default function CategoryPage() {
 
         <div className="relative mx-auto container px-6">
           <Reveal>
-            <div className="mb-16 text-center">
+            <div className="mb-12 md:mb-16 text-center">
               <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 How it works
               </p>
@@ -666,7 +666,7 @@ export default function CategoryPage() {
       </section>
 
       {/* ══ 7. TESTIMONIAL ═══════════════════════════════════════════════════ */}
-      <section className="bg-card py-24">
+      <section className="bg-card py-20 md:py-24">
         <div className="mx-auto container px-6">
           <Reveal>
             <div className="relative mx-auto max-w-2xl rounded-3xl border border-border bg-background p-10 text-center shadow-sm">
@@ -705,7 +705,7 @@ export default function CategoryPage() {
       </section>
 
       {/* ══ 8. MEMBER STORIES ════════════════════════════════════════════════ */}
-      <section className="py-24">
+      <section className="py-20 md:py-24">
         <div className="mx-auto container px-6">
           <Reveal>
             <div className="mb-12 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">

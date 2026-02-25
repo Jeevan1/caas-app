@@ -60,8 +60,6 @@ function MenuItem({
   );
 }
 
-// ─── USER MENU ────────────────────────────────────────────────────────────────
-
 export default function UserMenu({
   user,
   onLogout,
@@ -85,15 +83,12 @@ export default function UserMenu({
     onLogout?.();
   };
 
-  // ── Logged out ──────────────────────────────────────────────────────────────
   if (!user) {
     return <MenuItem href="/login" icon={LogIn} label="Log in" />;
   }
 
-  // ── Logged in ───────────────────────────────────────────────────────────────
   return (
     <div className="relative" onMouseEnter={show} onMouseLeave={hide}>
-      {/* Trigger */}
       <button
         type="button"
         className={cn(
@@ -113,7 +108,6 @@ export default function UserMenu({
         />
       </button>
 
-      {/* Dropdown */}
       <div
         className={cn(
           "absolute right-0 top-full z-50 mt-1.5 w-52 origin-top-right",
@@ -124,7 +118,6 @@ export default function UserMenu({
             : "pointer-events-none -translate-y-1 opacity-0",
         )}
       >
-        {/* User info header */}
         <div className="flex items-center gap-3 border-b border-border px-4 py-3">
           <Avatar user={user} />
           <div className="min-w-0">
@@ -135,7 +128,6 @@ export default function UserMenu({
           </div>
         </div>
 
-        {/* Items */}
         <div className="p-1.5">
           <MenuItem
             href="/dashboard"
