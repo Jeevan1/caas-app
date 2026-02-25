@@ -1,124 +1,85 @@
 "use client";
 
-import { useState, useRef } from "react";
 import { LayoutDashboard, LogOut, LogIn, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
+import Image from "next/image";
 import { SignOutAction } from "@/actions/signout";
-
-type User = {
-  name?: string | null;
-  image?: string | null;
-};
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { User } from "@/lib/types";
 
 function Avatar({ user }: { user: User }) {
-  return (
-    <img
-      src={user.image ?? "/default-avatar.png"}
-      alt={user.name ?? "User"}
-      className="h-9 w-9 rounded-full border border-border object-cover"
-    />
-  );
-}
-
-// ─── MENU ITEM ────────────────────────────────────────────────────────────────
-
-function MenuItem({
-  href,
-  onClick,
-  icon: Icon,
-  label,
-  destructive = false,
-}: {
-  href?: string;
-  onClick?: () => void;
-  icon: any;
-  label: string;
-  destructive?: boolean;
-}) {
-  const base = cn(
-    "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-    destructive
-      ? "text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
-      : "text-foreground hover:bg-muted",
-  );
-
-  if (href) {
+  if (user.image) {
     return (
-      <Link href={href} className={base}>
-        <Icon className="h-4 w-4 shrink-0" />
-        {label}
-      </Link>
+      <Image
+        src={user.image}
+        alt={user.name ?? "User"}
+        width={36}
+        height={36}
+        className="h-9 w-9 shrink-0 rounded-full border border-border object-cover"
+      />
     );
   }
-
   return (
-    <button type="button" onClick={onClick} className={base}>
-      <Icon className="h-4 w-4 shrink-0" />
-      {label}
-    </button>
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-primary/10 text-xs font-bold text-primary">
+      {user.name?.charAt(0).toUpperCase() ?? "U"}
+    </div>
   );
 }
 
 export default function UserMenu({
   user,
   onLogout,
+  side = "bottom",
 }: {
   user: User | null;
   onLogout?: () => void;
+  side?: "top" | "bottom";
 }) {
-  const [open, setOpen] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  if (!user) {
+    return (
+      <Link
+        href="/login"
+        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <LogIn className="h-4 w-4" /> Log in
+      </Link>
+    );
+  }
 
-  const show = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setOpen(true);
-  };
-
-  const hide = () => {
-    timeoutRef.current = setTimeout(() => setOpen(false), 120);
-  };
   const handleSignOut = async () => {
     await SignOutAction();
     onLogout?.();
   };
 
-  if (!user) {
-    return <MenuItem href="/login" icon={LogIn} label="Log in" />;
-  }
-
   return (
-    <div className="relative" onMouseEnter={show} onMouseLeave={hide}>
-      <button
-        type="button"
-        className={cn(
-          "flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition-colors",
-          open ? "bg-muted" : "hover:bg-muted",
-        )}
-      >
-        <Avatar user={user} />
-        <span className="hidden text-sm font-medium text-foreground md:block">
-          {user.name}
-        </span>
-        <ChevronDown
-          className={cn(
-            "hidden h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200 md:block",
-            open && "rotate-180",
-          )}
-        />
-      </button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className="flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition-colors hover:bg-muted data-[state=open]:bg-muted outline-none"
+        >
+          <Avatar user={user} />
+          <span className="text-sm font-medium text-foreground">
+            {user.name}
+          </span>
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
+        </button>
+      </DropdownMenuTrigger>
 
-      <div
-        className={cn(
-          "absolute right-0 top-full z-50 mt-1.5 w-52 origin-top-right",
-          "overflow-hidden rounded-2xl border border-border bg-card shadow-lg",
-          "transition-all duration-200",
-          open
-            ? "pointer-events-auto translate-y-0 opacity-100"
-            : "pointer-events-none -translate-y-1 opacity-0",
-        )}
+      <DropdownMenuContent
+        side={side}
+        align="end"
+        sideOffset={8}
+        className="z-[9999] w-52 overflow-hidden rounded-2xl border border-border bg-card p-0 shadow-lg"
       >
-        <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+        <DropdownMenuLabel className="flex items-center gap-3 border-b border-border px-4 py-3 font-normal">
           <Avatar user={user} />
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-foreground">
@@ -126,23 +87,30 @@ export default function UserMenu({
             </p>
             <p className="text-[11px] text-muted-foreground">Member</p>
           </div>
-        </div>
+        </DropdownMenuLabel>
 
         <div className="p-1.5">
-          <MenuItem
-            href="/dashboard"
-            icon={LayoutDashboard}
-            label="Dashboard"
-          />
-          <div className="my-1 h-px bg-border/60" />
-          <MenuItem
-            icon={LogOut}
-            label="Log out"
-            destructive
+          <DropdownMenuItem asChild>
+            <Link
+              href="/dashboard"
+              className="flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-foreground"
+            >
+              <LayoutDashboard className="h-4 w-4 shrink-0" />
+              Dashboard
+            </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator className="my-1 bg-border/60" />
+
+          <DropdownMenuItem
             onClick={handleSignOut}
-          />
+            className="flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-red-500 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30"
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            Log out
+          </DropdownMenuItem>
         </div>
-      </div>
-    </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
