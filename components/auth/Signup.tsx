@@ -32,14 +32,26 @@ const otpSchema = z.object({
   code: z.string().min(4, "Enter the OTP code").max(8, "OTP too long"),
 });
 
-const passwordSchema = z.object({
-  new_password: z
-    .string()
-    .min(1, "Password is required")
-    .min(8, "Minimum 8 characters")
-    .regex(/[A-Z]/, "Include at least one uppercase letter")
-    .regex(/[0-9]/, "Include at least one number"),
-});
+const passwordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(1, "Password is required")
+      .min(8, "Minimum 8 characters")
+      .regex(/[A-Z]/, "Include at least one uppercase letter")
+      .regex(/[0-9]/, "Include at least one number"),
+
+    new_password: z.string().min(1, "Please confirm your password"),
+  })
+  .superRefine(({ password, new_password }, ctx) => {
+    if (password !== new_password) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Passwords do not match",
+        path: ["new_password"],
+      });
+    }
+  });
 
 export function RegisterStep({
   onNext,
@@ -312,8 +324,6 @@ export function OtpStep({
   );
 }
 
-// ─── STEP 2 — SET PASSWORD ────────────────────────────────────────────────────
-
 export function SetPasswordStep({
   verificationIdx,
   userIdentifier,
@@ -331,7 +341,7 @@ export function SetPasswordStep({
   const [done, setDone] = useState(false);
 
   const form = useForm({
-    defaultValues: { new_password: "" },
+    defaultValues: { new_password: "", password: "" },
     validators: { onChange: passwordSchema as any },
     onSubmit: (values) => {
       mutate(values.value);
@@ -406,10 +416,21 @@ export function SetPasswordStep({
         }}
         className="flex flex-col gap-3.5 mt-2"
       >
+        <form.Field name="password">
+          {(field) => (
+            <StyledInput
+              label="Password"
+              field={field}
+              icon={Lock}
+              type="password"
+              placeholder="Min. 8 characters"
+            />
+          )}
+        </form.Field>
         <form.Field name="new_password">
           {(field) => (
             <StyledInput
-              label="New password"
+              label="Confirm password"
               field={field}
               icon={Lock}
               type="password"

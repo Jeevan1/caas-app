@@ -146,6 +146,14 @@ export function Navbar() {
             </nav>
 
             <div className="border-t border-border p-4 flex flex-col gap-3">
+              {!user && (
+                <Link
+                  href="/login"
+                  className="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
+                >
+                  Log in
+                </Link>
+              )}
               <div className="flex items-center justify-between">
                 <LanguageSwitcher />
               </div>
