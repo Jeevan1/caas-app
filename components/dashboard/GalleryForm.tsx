@@ -26,6 +26,7 @@ import { FieldSelect } from "../form/FieldSelect";
 import { EVENTS_QUERY_KEY } from "@/constants";
 import { Event } from "@/lib/types";
 import { Switch } from "../ui/switch";
+import { FieldTagInput } from "../form/TagInput";
 
 // ─── SCHEMA ──────────────────────────────────────────────────────────────────
 
@@ -52,7 +53,7 @@ const eventSchema = z.object({
     .instanceof(File)
     .refine((f) => f.size <= 5 * 1024 * 1024, "Max 5 MB")
     .optional(),
-  tags: z.string().optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 type EventValues = z.infer<typeof eventSchema>;
@@ -268,7 +269,7 @@ export function EventForm({
         editing?.price && editing.price > 0 ? editing.price.toString() : "",
       max_attendees: editing?.max_attendees?.toString() ?? "0",
       cover_image: undefined as File | undefined,
-      tags: "",
+      tags: editing?.tags ?? [],
     } satisfies EventValues,
     validators: { onChange: eventSchema as any },
     onSubmit: async ({ value }) => {
@@ -532,11 +533,10 @@ export function EventForm({
 
                 <form.Field name="tags">
                   {(f) => (
-                    <StyledInput
+                    <FieldTagInput
                       field={f}
                       label="Tags"
-                      placeholder="startup, networking (comma separated)"
-                      icon={Tag}
+                      placeholder="Type a tag and press Space…"
                     />
                   )}
                 </form.Field>

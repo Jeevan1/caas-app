@@ -59,6 +59,7 @@ export interface Event {
   total_attendees: number;
   cover_image: string | null;
   duration: string;
+  tags: string[];
 }
 
 export interface Attendee {

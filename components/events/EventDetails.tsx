@@ -21,16 +21,18 @@ import JoinEvent from "./JoinEvents";
 import { useApiQuery } from "@/lib/hooks/use-api-query";
 import {
   EVENTS_QUERY_KEY,
+  FOLLOW_QUERY_KEY,
   RELATED_EVENTS_QUERY_KEY,
   SINGLE_EVENT_QUERY_KEY,
 } from "@/constants";
-import { cn } from "@/lib/utils";
+import { cn, useApiMutation } from "@/lib/utils";
 import Attendees from "./Attendees";
 import { Event, PaginatedAPIResponse } from "@/lib/types";
 import EventGallery from "./EventGallery";
 import { EventCardGridLoader } from "../fallback/EventCardSkeleton";
 import { EventCard } from "./EventCard";
 import { ShareButtons } from "./ShareButtons";
+import { OrganizerCard } from "./OrganizerCard";
 
 // ─── API TYPES ────────────────────────────────────────────────────────────────
 
@@ -148,6 +150,12 @@ export default function EventDetails({
     queryKey: EVENTS_QUERY_KEY,
   });
 
+  const { mutateAsync: follow, isPending: isFollowing } = useApiMutation({
+    apiPath: `/api/event/organizer-follows/`,
+    queryKey: FOLLOW_QUERY_KEY,
+    method: "POST",
+  });
+
   const title = event?.title ?? "Loading…";
   const description = event?.description ?? "";
   const category = event?.category?.name ?? "";
@@ -162,7 +170,9 @@ export default function EventDetails({
     : "—";
   const endTime = event?.end_datetime ? formatTime(event.end_datetime) : "—";
   const timeRange = `${startTime} – ${endTime}`;
+
   const organizer = event?.organizer?.name ?? "";
+  const organizerId = event?.organizer?.idx ?? "";
   const organizerImg = event?.organizer?.image ?? null;
   const maxAttendees = event?.max_attendees ?? 0;
   const isPaid = event?.is_paid ?? false;
@@ -360,38 +370,13 @@ export default function EventDetails({
 
                   {/* Organizer */}
                   {organizer && (
-                    <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
-                      {organizerImg ? (
-                        <Image
-                          src={organizerImg}
-                          alt={organizer}
-                          width={40}
-                          height={40}
-                          className="h-10 w-10 shrink-0 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                          {initials(organizer)}
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-foreground">
-                          {organizer}
-                        </p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          Organizer
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="ml-auto h-7 shrink-0 rounded-full px-3 text-xs"
-                      >
-                        Follow
-                      </Button>
-                    </div>
+                    <OrganizerCard
+                      idx={organizerId}
+                      name={organizer}
+                      image={organizerImg}
+                      variant="inline"
+                    />
                   )}
-
                   {/* Location */}
                   {locationName && (
                     <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
@@ -588,46 +573,12 @@ export default function EventDetails({
               </div>
               {/* Organizer card */}
               {organizer && (
-                <div className="rounded-2xl border border-border bg-card p-4">
-                  <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    Organized by
-                  </p>
-                  <div className="flex items-center gap-3">
-                    {organizerImg ? (
-                      <Image
-                        src={organizerImg}
-                        alt={organizer}
-                        width={40}
-                        height={40}
-                        className="h-10 w-10 shrink-0 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                        {initials(organizer)}
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">
-                        {organizer}
-                      </p>
-                      <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                        <Globe className="h-3 w-3" /> Public group
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                    {FALLBACK.groupStats.map(([val, lbl]) => (
-                      <div key={lbl} className="rounded-lg bg-muted/60 py-2">
-                        <p className="text-sm font-bold text-foreground">
-                          {val}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {lbl}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <OrganizerCard
+                  idx={organizerId}
+                  name={organizer}
+                  image={organizerImg}
+                  variant="inline"
+                />
               )}
 
               {/* Share */}
