@@ -36,28 +36,7 @@ const loginSchema = z.object({
     .min(8, "Minimum 8 characters"),
 });
 
-const signupSchema = z.object({
-  name: z.string().min(1, "Name is required").min(2, "At least 2 characters"),
-  email: z.string().min(1, "Email is required").email("Enter a valid email"),
-  password: z
-    .string()
-    .min(1, "Password is required")
-    .min(8, "Minimum 8 characters")
-    .regex(/[A-Z]/, "Include at least one uppercase letter")
-    .regex(/[0-9]/, "Include at least one number"),
-  terms: z.boolean().refine((v) => v === true, "You must accept the terms"),
-});
-
-const googleContactSchema = z.object({
-  phone: z
-    .string()
-    .min(1, "Phone is required")
-    .regex(/^\+?[0-9\s\-]{7,15}$/, "Enter a valid phone number"),
-  city: z.string().min(1, "City is required").min(2, "At least 2 characters"),
-  bio: z.string().max(100, "Max 100 characters").optional(),
-});
-
-// ─── SHARED UI ────────────────────────────────────────────────────────────────
+// ─── TYPES ────────────────────────────────────────────────────────────────────
 
 type View =
   | "login"
@@ -68,6 +47,7 @@ type View =
   | "set-password";
 
 // ─── LOGIN FORM ───────────────────────────────────────────────────────────────
+
 export function LoginForm({
   switchView,
   onSuccess,
@@ -76,11 +56,10 @@ export function LoginForm({
   onSuccess?: () => void;
 }) {
   const router = useRouter();
+
   const form = useForm({
     defaultValues: { user_identifier: "", password: "" },
-    validators: {
-      onChange: loginSchema,
-    },
+    validators: { onChange: loginSchema },
     onSubmit: async ({ value }) => {
       await login(value);
     },
@@ -90,20 +69,19 @@ export function LoginForm({
     apiPath: "/api/autho/create-token/",
     method: "POST",
     queryKey: "login",
-    onSuccessCallback(data, payload) {
+    onSuccessCallback() {
       toast({
         title: "Success",
         description: "You have successfully logged in",
         duration: 5000,
         variant: "default",
       });
-      onSuccess?.();
       form.reset();
-      router.push("/");
+      router.refresh();
+      onSuccess?.();
     },
   });
 
-  // Read reactive state via useStore (standalone import) — v1 correct API
   const { canSubmit, isSubmitting } = useStore(form.store, (s) => ({
     canSubmit: s.canSubmit,
     isSubmitting: s.isSubmitting,
@@ -169,12 +147,11 @@ export function LoginForm({
           disabled={!canSubmit || isSubmitting || isPending}
           className="sub-btn mt-1"
         >
-          {isSubmitting ? (
+          {isSubmitting || isPending ? (
             "Signing in…"
           ) : (
             <>
-              {" "}
-              Sign in <ArrowRight className="h-4 w-4 sub-arrow" />{" "}
+              Sign in <ArrowRight className="h-4 w-4 sub-arrow" />
             </>
           )}
         </Button>
@@ -210,11 +187,12 @@ export function LoginForm({
 }
 
 // ─── FORM CONTENT WRAPPER ─────────────────────────────────────────────────────
+
 function FormContent({
   view,
   animating,
   switchView,
-  onSuccess,
+  onSuccess, // ← FIX: was missing, so LoginForm never received it
   isOrganizer,
 }: {
   view: View;
@@ -242,7 +220,10 @@ function FormContent({
           animating ? "opacity-0 translate-y-2.5" : "opacity-100 translate-y-0",
         )}
       >
-        {view === "login" && <LoginForm switchView={switchView} />}
+        {/* ── FIX: pass onSuccess so LoginForm can close the modal ── */}
+        {view === "login" && (
+          <LoginForm switchView={switchView} onSuccess={onSuccess} />
+        )}
         {view === "signup" && (
           <SignupFlow switchView={switchView} isOrganizer={isOrganizer} />
         )}
@@ -255,6 +236,7 @@ function FormContent({
 }
 
 // ─── VIEW STATE ───────────────────────────────────────────────────────────────
+
 function useViewState(initial: View) {
   const [view, setView] = useState<View>(initial);
   const [animating, setAnimating] = useState(false);
@@ -272,6 +254,7 @@ function useViewState(initial: View) {
 }
 
 // ─── MAIN EXPORT ─────────────────────────────────────────────────────────────
+
 export default function AuthSection({
   page,
   isOrganizer,
@@ -450,6 +433,7 @@ export default function AuthSection({
               >
                 <X className="h-3.5 w-3.5" />
               </button>
+              {/* ── FIX: pass closeModal as onSuccess ── */}
               <FormContent {...popup} onSuccess={closeModal} />
             </div>
           </div>

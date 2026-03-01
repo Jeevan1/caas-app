@@ -1,40 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "@tanstack/react-form";
-import { useStore } from "@tanstack/react-store";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import {
-  ArrowRight,
-  CheckCircle2,
-  KeyRound,
-  Lock,
-  Mail,
-  MapPin,
-  Phone,
-  ShieldCheck,
-  User,
-} from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
-import GoogleIcon from "@/public/icons/GoogleIcon";
-import StyledInput from "@/components/form/FormInput";
-import FieldTextarea from "@/components/form/FieldTextarea";
-import FieldError from "../form/FIeldError";
 import { LoginForm } from "./login-signup";
 import { OtpStep, RegisterStep, SetPasswordStep } from "./Signup";
 import { GoogleContactForm } from "./GoogleContactForm";
-
-const googleContactSchema = z.object({
-  phone: z
-    .string()
-    .min(1, "Phone is required")
-    .regex(/^\+?[0-9\s\-]{7,15}$/, "Enter a valid phone number"),
-  city: z.string().min(1, "City is required").min(2, "At least 2 characters"),
-  bio: z.string().max(100, "Max 100 characters").optional(),
-});
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -114,7 +91,7 @@ export function SignupStepBar({ current }: { current: number }) {
   );
 }
 
-// ─── SIGNUP FLOW (orchestrates 3 steps) ──────────────────────────────────────
+// ─── SIGNUP FLOW ──────────────────────────────────────────────────────────────
 
 export function SignupFlow({
   switchView,
@@ -137,17 +114,6 @@ export function SignupFlow({
     }, 200);
   };
 
-  const handleRegisterDone = (idx: string, identifier: string) => {
-    setVerificationIdx(idx);
-    setUserIdentifier(identifier);
-    goTo(1);
-  };
-
-  const handleOtpDone = (code: string) => {
-    setOtpCode(code);
-    goTo(2);
-  };
-
   return (
     <div className="flex flex-col gap-4">
       <div
@@ -158,7 +124,11 @@ export function SignupFlow({
       >
         {step === 0 && (
           <RegisterStep
-            onNext={handleRegisterDone}
+            onNext={(idx, identifier) => {
+              setVerificationIdx(idx);
+              setUserIdentifier(identifier);
+              goTo(1);
+            }}
             currentStep={step}
             isOrganizer={isOrganizer}
           />
@@ -167,7 +137,10 @@ export function SignupFlow({
           <OtpStep
             verificationIdx={verificationIdx}
             userIdentifier={userIdentifier}
-            onNext={handleOtpDone}
+            onNext={(code) => {
+              setOtpCode(code);
+              goTo(2);
+            }}
             onBack={() => goTo(0)}
             currentStep={step}
           />
@@ -200,7 +173,7 @@ export function SignupFlow({
 
 // ─── MODAL CONTENT ────────────────────────────────────────────────────────────
 
-function ModalContent({
+export function ModalContent({
   view,
   animating,
   switchView,
@@ -211,6 +184,12 @@ function ModalContent({
   switchView: (v: View) => void;
   onClose: () => void;
 }) {
+  const router = useRouter();
+
+  const handleLoginSuccess = () => {
+    onClose();
+  };
+
   const accentClass =
     view === "login"
       ? "from-primary via-secondary to-accent"
@@ -228,13 +207,12 @@ function ModalContent({
       />
       <div
         className={cn(
-          "px-7 pb-7 pt-5",
-          "transition-all duration-[220ms] ease-[ease]",
+          "px-7 pb-7 pt-5 transition-all duration-[220ms] ease-[ease]",
           animating ? "translate-y-2.5 opacity-0" : "translate-y-0 opacity-100",
         )}
       >
         {view === "login" && (
-          <LoginForm switchView={switchView} onSuccess={onClose} />
+          <LoginForm switchView={switchView} onSuccess={handleLoginSuccess} />
         )}
         {view === "signup" && <SignupFlow switchView={switchView} />}
         {view === "google-contact" && (
@@ -245,16 +223,88 @@ function ModalContent({
   );
 }
 
-// ─── MAIN EXPORT ─────────────────────────────────────────────────────────────
+// ─── CONTROLLED DIALOG ───────────────────────────────────────────────────────
+// Use this when you need to open the auth dialog imperatively (e.g. from
+// JoinEvent or a Follow button) without rendering the navbar buttons.
+//
+// Usage:
+//   const [authOpen, setAuthOpen] = useState(false);
+//   <AuthDialog open={authOpen} onOpenChange={setAuthOpen} defaultView="login" />
+
+export function AuthDialog({
+  open,
+  onOpenChange,
+  defaultView = "login",
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  defaultView?: View;
+}) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { view, animating, switchView } = useViewState(defaultView);
+
+  // Called when dialog is dismissed (X button, backdrop click, etc.)
+  // router.refresh() is NOT needed here — it fires in ModalContent.handleLoginSuccess
+  // right after the login API sets the cookie.
+  const handleClose = () => {
+    onOpenChange(false);
+    queryClient.invalidateQueries({ queryKey: ["me"] });
+  };
+
+  return (
+    <>
+      <Dialog
+        open={open}
+        onOpenChange={(o) => {
+          if (!o) handleClose();
+          else onOpenChange(true);
+        }}
+      >
+        <DialogContent className="overflow-hidden rounded-3xl border border-border bg-card p-0 shadow-2xl sm:max-w-sm">
+          <DialogTitle className="sr-only">
+            {view === "login"
+              ? "Sign in"
+              : view === "signup"
+                ? "Create account"
+                : "Complete profile"}
+          </DialogTitle>
+          <ModalContent
+            view={view}
+            animating={animating}
+            switchView={switchView}
+            onClose={handleClose}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <style>{`
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.85); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+    </>
+  );
+}
+
+// ─── STANDALONE (navbar usage) ────────────────────────────────────────────────
 
 export default function AuthPopup() {
   const t = useTranslations("common");
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const { view, setView, animating, switchView } = useViewState("login");
 
   const openModal = (v: View) => {
     setView(v);
     setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    queryClient.invalidateQueries({ queryKey: ["me"] });
   };
 
   return (
@@ -268,7 +318,13 @@ export default function AuthPopup() {
         </Button>
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(o) => {
+          if (!o) handleClose();
+          else setOpen(true);
+        }}
+      >
         <DialogContent className="overflow-hidden rounded-3xl border border-border bg-card p-0 shadow-2xl sm:max-w-sm">
           <DialogTitle className="sr-only">
             {view === "login"
@@ -281,7 +337,7 @@ export default function AuthPopup() {
             view={view}
             animating={animating}
             switchView={switchView}
-            onClose={() => setOpen(false)}
+            onClose={handleClose}
           />
         </DialogContent>
       </Dialog>

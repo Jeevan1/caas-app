@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { Globe, Loader2, UserCheck, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useCurrentUser } from "@/lib/providers";
 import { useOrganizerFollow } from "@/hooks/Useorganizerfollow";
+import { AuthDialog } from "../auth/AuthModel";
 
 type OrganizerCardProps = {
   idx: string;
@@ -52,9 +55,21 @@ function FollowButton({
   idx: string;
   compact?: boolean;
 }) {
+  const user = useCurrentUser();
+  const isLoggedIn = !!user;
+  const [authOpen, setAuthOpen] = useState(false);
+
   const { isFollowing, toggle, isPending, isLoading } = useOrganizerFollow(idx);
 
-  if (isLoading) {
+  const handleClick = () => {
+    if (!isLoggedIn) {
+      setAuthOpen(true);
+      return;
+    }
+    toggle();
+  };
+
+  if (isLoading && isLoggedIn) {
     return (
       <Button
         variant="outline"
@@ -71,29 +86,38 @@ function FollowButton({
   }
 
   return (
-    <Button
-      variant={isFollowing ? "secondary" : "outline"}
-      size="sm"
-      disabled={isPending}
-      onClick={toggle}
-      className={cn(
-        "shrink-0 rounded-full text-xs transition-all",
-        compact ? "h-7 px-3" : "h-8 px-4",
-        isFollowing && "text-secondary-foreground",
-      )}
-    >
-      {isPending ? (
-        <Loader2 className="h-3 w-3 animate-spin" />
-      ) : isFollowing ? (
-        <>
-          <UserCheck className="mr-1 h-3 w-3" /> Following
-        </>
-      ) : (
-        <>
-          <UserPlus className="mr-1 h-3 w-3" /> Follow
-        </>
-      )}
-    </Button>
+    <>
+      <Button
+        variant={isFollowing ? "secondary" : "outline"}
+        size="sm"
+        disabled={isPending}
+        onClick={handleClick}
+        className={cn(
+          "shrink-0 rounded-full text-xs transition-all",
+          compact ? "h-7 px-3" : "h-8 px-4",
+          isFollowing && "text-secondary-foreground",
+        )}
+      >
+        {isPending ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : isFollowing ? (
+          <>
+            <UserCheck className="mr-1 h-3 w-3" /> Following
+          </>
+        ) : (
+          <>
+            <UserPlus className="mr-1 h-3 w-3" /> Follow
+          </>
+        )}
+      </Button>
+
+      {/* Auth gate — open when unauthenticated user clicks Follow */}
+      <AuthDialog
+        open={authOpen}
+        onOpenChange={setAuthOpen}
+        defaultView="login"
+      />
+    </>
   );
 }
 

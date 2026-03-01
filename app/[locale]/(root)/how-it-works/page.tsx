@@ -4,141 +4,142 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   UserPlus,
-  Palette,
-  Rocket,
+  CalendarPlus,
+  Ticket,
   BarChart3,
   ArrowRight,
-  Target,
-  TrendingUp,
-  Megaphone,
-  Mail,
-  Share2,
-  FileImage,
+  Music,
+  Briefcase,
+  GraduationCap,
+  Heart,
+  Utensils,
+  Trophy,
 } from "lucide-react";
 
 export const metadata = {
-  title: "How It Works - CaaS",
+  title: "How It Works - EventHub",
   description:
-    "Learn how CaaS helps you promote, grow, and track your business in three simple steps.",
+    "Learn how EventHub helps you create, manage, sell tickets, and grow your events in four simple steps.",
 };
 
 const detailedSteps = [
   {
     icon: UserPlus,
     step: "01",
-    title: "Sign Up & Create Your Profile",
+    title: "Create Your Organizer Account",
     description:
-      "Getting started takes less than a minute. Create your free account, add your business name, logo, and connect your social media accounts. Your profile becomes your marketing hub.",
+      "Sign up in seconds and set up your organizer profile. Add your brand, bio, and contact details so attendees know exactly who's behind the event.",
     features: [
       "Quick email or OAuth sign-up",
-      "Add business details and logo",
-      "Connect social media accounts",
-      "Set your marketing goals",
+      "Organizer profile with logo & bio",
+      "Connect payment accounts",
+      "Set your timezone and currency",
     ],
   },
   {
-    icon: Palette,
+    icon: CalendarPlus,
     step: "02",
-    title: "Choose & Customize Templates",
+    title: "Build & Publish Your Event",
     description:
-      "Browse our library of professionally designed marketing templates. Customize text, images, colors, and links to match your brand perfectly.",
+      "Use our intuitive event builder to add every detail — date, venue, schedule, speakers, and more. Choose a stunning page template and go live in minutes.",
     features: [
-      "Social media post templates",
-      "Email campaign templates",
-      "Flyer and poster downloads",
-      "Custom branding options",
+      "Drag-and-drop event page builder",
+      "Add agenda, speakers & sponsors",
+      "Custom branding and cover images",
+      "Publish publicly or as invite-only",
     ],
   },
   {
-    icon: Rocket,
+    icon: Ticket,
     step: "03",
-    title: "Launch Your Campaigns",
+    title: "Sell Tickets & Manage RSVPs",
     description:
-      "Set your campaign goals, choose your audience, and launch. Whether it's an event, product launch, or service promotion, we've got you covered.",
+      "Create free or paid ticket tiers, set capacity limits, and let attendees register with ease. Automated confirmations and QR-code check-in are handled for you.",
     features: [
-      "Set click, lead, or registration goals",
-      "Schedule campaigns in advance",
-      "Multi-channel distribution",
-      "Auto-generate referral links",
+      "Free, paid, and VIP ticket tiers",
+      "Promo codes and early-bird pricing",
+      "Automated confirmation emails",
+      "QR-code check-in app included",
     ],
   },
   {
     icon: BarChart3,
     step: "04",
-    title: "Track & Optimize",
+    title: "Track Registrations & Grow",
     description:
-      "Watch your campaigns perform in real-time. Our analytics dashboard shows you views, clicks, leads, and more. Optimize and grow your reach continuously.",
+      "Monitor ticket sales, attendee demographics, and revenue in real time. Use insights to improve future events and build a loyal audience over time.",
     features: [
-      "Real-time analytics dashboard",
-      "Campaign performance charts",
-      "Lead tracking and reporting",
-      "Earn points and climb leaderboards",
+      "Real-time sales & revenue dashboard",
+      "Attendee demographics & check-in stats",
+      "Post-event surveys and feedback",
+      "Audience re-engagement tools",
     ],
   },
 ];
 
-const campaignTypes = [
+const eventTypes = [
   {
-    icon: Megaphone,
-    title: "Event Promotion",
+    icon: Music,
+    title: "Concerts & Live Shows",
     description:
-      "Promote workshops, concerts, meetups, and conferences with targeted campaigns.",
+      "Sell tickets, manage venue capacity, and engage fans before, during, and after the show.",
   },
   {
-    icon: Target,
-    title: "Product Launch",
+    icon: Briefcase,
+    title: "Conferences & Summits",
     description:
-      "Build hype and drive sales for new product releases with multi-channel marketing.",
+      "Handle multi-day agendas, speaker lineups, sponsor tiers, and badge check-in at scale.",
   },
   {
-    icon: Mail,
-    title: "Email Campaigns",
+    icon: GraduationCap,
+    title: "Workshops & Classes",
     description:
-      "Reach your audience directly with beautifully designed email marketing templates.",
+      "Run paid or free learning sessions with seat limits, waitlists, and follow-up materials.",
   },
   {
-    icon: Share2,
-    title: "Social Media Blitz",
+    icon: Heart,
+    title: "Fundraisers & Galas",
     description:
-      "Create engaging social media content across all platforms simultaneously.",
+      "Collect donations, sell tables, and track fundraising goals all in one place.",
   },
   {
-    icon: FileImage,
-    title: "Print Materials",
+    icon: Utensils,
+    title: "Food & Drink Events",
     description:
-      "Design and download professional flyers, posters, and brochures.",
+      "Manage tasting events, pop-ups, and supper clubs with timed entry and session ticketing.",
   },
   {
-    icon: TrendingUp,
-    title: "Referral Programs",
+    icon: Trophy,
+    title: "Sports & Tournaments",
     description:
-      "Grow organically with automated referral link campaigns and tracking.",
+      "Coordinate registrations, brackets, and spectator tickets for any competitive event.",
   },
 ];
 
 export default function HowItWorksPage() {
   return (
     <section>
-      {/* Hero */}
+      {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-background py-14 md:py-20">
-        <div className="mx-auto container">
+        <div className="container mx-auto">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div className="text-center lg:text-left">
               <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-primary">
                 How It Works
               </p>
-              <h1 className="font-heading text-4xl font-bold tracking-tight text-foreground md:text-5xl text-balance">
-                From zero to marketing hero
+              <h1 className="text-balance font-heading text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+                Your event, live in minutes
               </h1>
               <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground lg:mx-0">
-                CaaS makes it easy for anyone to create professional marketing
-                campaigns, track performance, and grow their business.
+                EventHub gives organizers everything they need to create
+                unforgettable experiences — from the first ticket sale to
+                post-event insights.
               </p>
             </div>
             <div className="relative mx-auto h-64 w-full max-w-md overflow-hidden rounded-2xl lg:h-80">
               <Image
                 src="/images/how-it-works-hero.jpg"
-                alt="Business owner launching marketing campaigns from a tablet"
+                alt="Event organizer managing an event on a laptop"
                 fill
                 className="object-cover"
                 priority
@@ -148,9 +149,9 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* Detailed Steps */}
+      {/* ── DETAILED STEPS ───────────────────────────────────────────────── */}
       <section className="bg-card py-20 md:py-24">
-        <div className="mx-auto container">
+        <div className="container mx-auto">
           <div className="flex flex-col gap-16">
             {detailedSteps.map((item, index) => (
               <div
@@ -180,7 +181,7 @@ export default function HowItWorksPage() {
                         key={f}
                         className="flex items-center gap-2 text-sm text-foreground"
                       >
-                        <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
                           <svg
                             width="12"
                             height="12"
@@ -203,9 +204,11 @@ export default function HowItWorksPage() {
                   </ul>
                 </div>
 
-                {/* Visual Card */}
+                {/* Visual card */}
                 <div
-                  className={`rounded-2xl border border-border bg-background p-8 ${index % 2 !== 0 ? "lg:[direction:ltr]" : ""}`}
+                  className={`rounded-2xl border border-border bg-background p-8 ${
+                    index % 2 !== 0 ? "lg:[direction:ltr]" : ""
+                  }`}
                 >
                   <div className="flex flex-col items-center justify-center gap-4 py-8">
                     <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10">
@@ -231,43 +234,45 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* Campaign Types */}
+      {/* ── EVENT TYPES ──────────────────────────────────────────────────── */}
       <section className="bg-background py-20 md:py-24">
-        <div className="mx-auto container">
-          <div className="mb-12 md:mb-16 text-center">
+        <div className="container mx-auto">
+          <div className="mb-12 text-center md:mb-16">
             <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-secondary">
-              Campaign Types
+              Event Types
             </p>
-            <h2 className="font-heading text-3xl font-bold tracking-tight text-foreground md:text-4xl text-balance">
-              Examples of what you can create
+            <h2 className="text-balance font-heading text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+              Built for every kind of event
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-              From events to products, our platform supports every type of
-              marketing campaign you need.
+              Whether you're hosting 20 people or 20,000, EventHub scales to fit
+              any format, industry, or audience.
             </p>
           </div>
+
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {campaignTypes.map((ct) => (
+            {eventTypes.map((et) => (
               <div
-                key={ct.title}
+                key={et.title}
                 className="group rounded-2xl border border-border bg-card p-8 transition-all hover:border-primary/30 hover:shadow-md"
               >
                 <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <ct.icon className="h-5 w-5" />
+                  <et.icon className="h-5 w-5" />
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-foreground">
-                  {ct.title}
+                  {et.title}
                 </h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  {ct.description}
+                  {et.description}
                 </p>
               </div>
             ))}
           </div>
+
           <div className="mt-12 text-center">
             <Link href="/dashboard">
               <Button size="lg" className="gap-2">
-                Start Creating Campaigns
+                Create Your First Event
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>

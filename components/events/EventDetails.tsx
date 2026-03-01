@@ -33,6 +33,7 @@ import { EventCardGridLoader } from "../fallback/EventCardSkeleton";
 import { EventCard } from "./EventCard";
 import { ShareButtons } from "./ShareButtons";
 import { OrganizerCard } from "./OrganizerCard";
+import EventFavorite from "./EventFaviorate";
 
 // ─── API TYPES ────────────────────────────────────────────────────────────────
 
@@ -208,15 +209,7 @@ export default function EventDetails({
             <ArrowLeft className="h-3.5 w-3.5" /> Events
           </Link>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setLiked(!liked)}
-              className={cn(
-                "ib flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card transition-all",
-                liked ? "border-red-300 text-red-500" : "text-muted-foreground",
-              )}
-            >
-              <Heart className={cn("h-3.5 w-3.5", liked && "fill-red-500")} />
-            </button>
+            <EventFavorite eventId={eventId} />
             <button className="ib flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all">
               <Share2 className="h-3.5 w-3.5" />
             </button>
@@ -369,14 +362,14 @@ export default function EventDetails({
                   )}
 
                   {/* Organizer */}
-                  {organizer && (
+                  {/* {organizer && (
                     <OrganizerCard
                       idx={organizerId}
                       name={organizer}
                       image={organizerImg}
                       variant="inline"
                     />
-                  )}
+                  )} */}
                   {/* Location */}
                   {locationName && (
                     <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
@@ -555,7 +548,7 @@ export default function EventDetails({
                   ) : (
                     relatedEvents?.results
                       ?.slice(0, 4)
-                      .map((ev, i) => <EventCard event={ev} />)
+                      .map((ev, i) => <EventCard event={ev} key={ev.idx} />)
                   )}
                 </div>
               </div>

@@ -19,9 +19,29 @@ import { cn, useApiMutation } from "@/lib/utils";
 import FormInput from "@/components/form/FormInput";
 import FieldTextarea from "@/components/form/FieldTextarea";
 import { FieldImageUpload } from "../form/ImageUploadField";
-import { Event } from "@/lib/types";
+import { Event, PaginatedAPIResponse } from "@/lib/types";
 import { useCurrentUser } from "@/lib/providers";
-import { formatDate, formatTime } from "@/lib/helpers";
+import { AuthDialog } from "../auth/AuthModel";
+import { useApiQuery } from "@/lib/hooks/use-api-query";
+import { JOINED_EVENTS_QUERY_KEY } from "@/constants";
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+const formatTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+// ─── SCHEMAS ─────────────────────────────────────────────────────────────────
 
 const detailsSchema = z.object({
   name: z.string().min(1, "Name is required").min(2, "At least 2 characters"),
@@ -39,6 +59,14 @@ const paymentSchema = z.object({
 type DetailsData = z.infer<typeof detailsSchema>;
 type ScreenshotFile = File;
 
+// ─── STEP MACHINE ─────────────────────────────────────────────────────────────
+//
+//  isLoggedIn  isPaid   Steps
+//  false       false    [details] → success
+//  false       true     [details, payment] → success
+//  true        false    [confirm] → success      (single button, no form)
+//  true        true     [payment] → success
+
 type StepId = "details" | "payment" | "confirm" | "success";
 
 function buildSteps(isLoggedIn: boolean, isPaid: boolean): StepId[] {
@@ -48,10 +76,13 @@ function buildSteps(isLoggedIn: boolean, isPaid: boolean): StepId[] {
   /* loggedIn && paid */ return ["payment", "success"];
 }
 
+// Labels shown in the StepBar (success is never shown)
 const STEP_LABELS: Partial<Record<StepId, string>> = {
   details: "Details",
   payment: "Payment",
 };
+
+// ─── STEP BAR ────────────────────────────────────────────────────────────────
 
 function StepBar({ steps, current }: { steps: StepId[]; current: number }) {
   const visible = steps.filter((s) => s in STEP_LABELS);
@@ -120,6 +151,8 @@ function UserBanner({ name, email }: { name: string; email: string }) {
     </div>
   );
 }
+
+// ─── STEP: DETAILS ────────────────────────────────────────────────────────────
 
 function DetailsStep({ onNext }: { onNext: (data: DetailsData) => void }) {
   const form = useForm({
@@ -194,6 +227,8 @@ function DetailsStep({ onNext }: { onNext: (data: DetailsData) => void }) {
     </form>
   );
 }
+
+// ─── STEP: PAYMENT ────────────────────────────────────────────────────────────
 
 function PaymentStep({
   event,
@@ -270,6 +305,8 @@ function PaymentStep({
   );
 }
 
+// ─── STEP: CONFIRM (free + logged-in) ────────────────────────────────────────
+
 function ConfirmStep({
   event,
   onConfirm,
@@ -308,6 +345,8 @@ function ConfirmStep({
     </div>
   );
 }
+
+// ─── STEP: SUCCESS ────────────────────────────────────────────────────────────
 
 function SuccessStep({
   name,
@@ -369,7 +408,19 @@ function SuccessStep({
   );
 }
 
+// ─── TRIGGER CARD ─────────────────────────────────────────────────────────────
+
 function TriggerCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
+  const { data: joinedEvents, isLoading } = useApiQuery<
+    PaginatedAPIResponse<Event>
+  >({
+    url: `/api/event/events/joined-events/`,
+    queryKey: JOINED_EVENTS_QUERY_KEY,
+    queryParams: { pagesize: 100 },
+  });
+
+  const joined = joinedEvents?.results?.some((e) => e.idx === event.idx);
+
   const isPaid = event.is_paid ?? false;
   const price = event.price ?? 0;
   const startDate = event.start_datetime
@@ -432,7 +483,6 @@ function TriggerCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
             </span>
           )}
         </div>
-
         {metaRows.length > 0 && (
           <div className="flex flex-col gap-2.5 rounded-xl bg-muted/50 p-3.5">
             {metaRows.map(({ icon: Icon, color, text, bold }) => (
@@ -451,19 +501,62 @@ function TriggerCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
             ))}
           </div>
         )}
+        {!joined && !isLoading ? (
+          <div className="flex flex-col gap-3">
+            <Button
+              onClick={onOpen}
+              className="group relative w-full overflow-hidden rounded-2xl bg-primary px-6 py-4 font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary/35 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md"
+            >
+              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
 
-        <Button
-          size="lg"
-          className="w-full gap-2 rounded-xl font-bold"
-          onClick={onOpen}
-        >
-          Join this event <ArrowRight className="h-4 w-4" />
-        </Button>
-        <p className="text-center text-[11px] text-muted-foreground">
-          {isPaid
-            ? "Secure payment · Instant confirmation"
-            : "Free · No credit card required"}
-        </p>
+              <span className="relative flex items-center justify-center gap-2.5 text-base">
+                Join this event
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 transition-transform duration-300 group-hover:translate-x-1">
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </span>
+              </span>
+            </Button>
+
+            <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
+              {isPaid ? (
+                <>
+                  <span className="inline-block h-1 w-1 rounded-full bg-secondary" />
+                  Secure payment
+                  <span className="inline-block h-1 w-1 rounded-full bg-muted-foreground/40" />
+                  Instant confirmation
+                </>
+              ) : (
+                <>
+                  <span className="inline-block h-1 w-1 rounded-full bg-secondary" />
+                  Free entry
+                  <span className="inline-block h-1 w-1 rounded-full bg-muted-foreground/40" />
+                  No credit card required
+                </>
+              )}
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <div className="relative w-full overflow-hidden rounded-2xl border border-secondary/30 bg-secondary/8 px-6 py-3">
+              <span className="absolute left-5 top-1/2 -translate-y-1/2">
+                <span className="relative flex h-5 w-5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-secondary/40 opacity-75 [animation-duration:2s]" />
+                  <span className="relative flex h-5 w-5 items-center justify-center rounded-full bg-secondary/15">
+                    <CheckCircle2 className="h-3 w-3 text-secondary" />
+                  </span>
+                </span>
+              </span>
+
+              <span className="flex items-center justify-center gap-2 font-semibold text-secondary">
+                You're registered
+              </span>
+            </div>
+
+            <p className="text-center text-[11px] text-muted-foreground">
+              Check your email for confirmation details
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -479,12 +572,22 @@ export default function JoinEvent({ event }: { event: Event }) {
   const steps = buildSteps(isLoggedIn, isPaid);
 
   const [open, setOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false); // auth gate dialog
   const [stepIndex, setStepIndex] = useState(0);
   const [anim, setAnim] = useState(false);
   // Seed name/email from logged-in user so success screen always has values
   const [savedName, setSavedName] = useState(user?.name ?? "");
   const [savedEmail, setSavedEmail] = useState(user?.email ?? "");
   const [savedDetails, setSavedDetails] = useState<DetailsData | null>(null);
+
+  // If not logged in, open auth dialog instead of join dialog
+  const handleJoinClick = () => {
+    if (!isLoggedIn) {
+      setAuthOpen(true);
+      return;
+    }
+    setOpen(true);
+  };
 
   const { mutateAsync: joinEvent, isPending: submitting } = useApiMutation({
     apiPath: `/api/event/events/${event.idx}/join/`,
@@ -545,6 +648,7 @@ export default function JoinEvent({ event }: { event: Event }) {
     } catch {}
   };
 
+  // StepBar: count only visible steps (exclude confirm & success)
   const barSteps = steps.filter((s) => s in STEP_LABELS);
   const barCurrent = steps
     .slice(0, stepIndex)
@@ -557,7 +661,14 @@ export default function JoinEvent({ event }: { event: Event }) {
 
   return (
     <>
-      <TriggerCard event={event} onOpen={() => setOpen(true)} />
+      <TriggerCard event={event} onOpen={handleJoinClick} />
+
+      {/* Auth gate — shown when unauthenticated user clicks Join */}
+      <AuthDialog
+        open={authOpen}
+        onOpenChange={setAuthOpen}
+        defaultView="login"
+      />
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="overflow-hidden rounded-3xl border border-border/60 bg-card p-0 shadow-2xl ring-1 ring-inset ring-white/[0.06] sm:max-w-md">
@@ -571,6 +682,7 @@ export default function JoinEvent({ event }: { event: Event }) {
           />
 
           <div className="max-h-[85vh] overflow-y-auto px-6 pb-6 pt-5">
+            {/* Dialog header */}
             <div className="mb-5 flex items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10 text-2xl">
                 {event.cover_image ? (
@@ -593,16 +705,19 @@ export default function JoinEvent({ event }: { event: Event }) {
               </div>
             </div>
 
+            {/* Step bar */}
             {currentStep !== "success" && barSteps.length > 1 && (
               <div className="mb-6">
                 <StepBar steps={steps} current={barCurrent} />
               </div>
             )}
 
+            {/* Logged-in user banner (not on success) */}
             {isLoggedIn && currentStep !== "success" && (
               <UserBanner name={user?.name ?? ""} email={user?.email ?? ""} />
             )}
 
+            {/* Animated step content */}
             <div
               className={cn(
                 "transition-all duration-[220ms] ease-[ease]",
