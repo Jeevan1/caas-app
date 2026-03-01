@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   Megaphone,
@@ -8,8 +8,8 @@ import {
   TrendingUp,
   Trophy,
   Plus,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   BarChart,
   Bar,
@@ -23,7 +23,8 @@ import {
   PieChart,
   Pie,
   Cell,
-} from "recharts"
+} from "recharts";
+import { Link } from "@/i18n/navigation";
 
 const stats = [
   {
@@ -58,7 +59,7 @@ const stats = [
     color: "text-primary",
     bg: "bg-primary/10",
   },
-]
+];
 
 const monthlyData = [
   { month: "Jan", views: 4000, clicks: 2400, leads: 400 },
@@ -68,7 +69,7 @@ const monthlyData = [
   { month: "May", views: 5890, clicks: 4800, leads: 600 },
   { month: "Jun", views: 6390, clicks: 3800, leads: 700 },
   { month: "Jul", views: 7490, clicks: 4300, leads: 850 },
-]
+];
 
 const leadTrend = [
   { week: "W1", leads: 120 },
@@ -79,14 +80,14 @@ const leadTrend = [
   { week: "W6", leads: 310 },
   { week: "W7", leads: 280 },
   { week: "W8", leads: 350 },
-]
+];
 
 const channelData = [
   { name: "Social Media", value: 45, color: "hsl(217, 91%, 50%)" },
   { name: "Email", value: 30, color: "hsl(152, 60%, 42%)" },
   { name: "Referral", value: 15, color: "hsl(28, 90%, 55%)" },
   { name: "Direct", value: 10, color: "hsl(200, 80%, 60%)" },
-]
+];
 
 const campaigns = [
   {
@@ -129,7 +130,7 @@ const campaigns = [
     clicks: 670,
     leads: 98,
   },
-]
+];
 
 const leaderboard = [
   { rank: 1, name: "Sarah M.", points: 12400, campaigns: 24 },
@@ -137,7 +138,7 @@ const leaderboard = [
   { rank: 3, name: "Emily C.", points: 9800, campaigns: 18 },
   { rank: 4, name: "David L.", points: 8500, campaigns: 15 },
   { rank: 5, name: "You", points: 7200, campaigns: 12 },
-]
+];
 
 export function DashboardOverview() {
   return (
@@ -152,9 +153,11 @@ export function DashboardOverview() {
             Welcome back! Here is your campaign overview.
           </p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Campaign
+        <Button className="gap-2" asChild>
+          <Link href="/dashboard/events">
+            <Plus className="h-4 w-4" />
+            New Event
+          </Link>
         </Button>
       </div>
 
@@ -195,8 +198,15 @@ export function DashboardOverview() {
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 20%, 90%)" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(215, 15%, 47%)" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="hsl(214, 20%, 90%)"
+                />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fontSize: 12 }}
+                  stroke="hsl(215, 15%, 47%)"
+                />
                 <YAxis tick={{ fontSize: 12 }} stroke="hsl(215, 15%, 47%)" />
                 <Tooltip
                   contentStyle={{
@@ -206,9 +216,21 @@ export function DashboardOverview() {
                     fontSize: "12px",
                   }}
                 />
-                <Bar dataKey="views" fill="hsl(217, 91%, 50%)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="clicks" fill="hsl(152, 60%, 42%)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="leads" fill="hsl(28, 90%, 55%)" radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey="views"
+                  fill="hsl(217, 91%, 50%)"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  dataKey="clicks"
+                  fill="hsl(152, 60%, 42%)"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  dataKey="leads"
+                  fill="hsl(28, 90%, 55%)"
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -251,7 +273,10 @@ export function DashboardOverview() {
           </div>
           <div className="mt-4 flex flex-col gap-2">
             {channelData.map((c) => (
-              <div key={c.name} className="flex items-center justify-between text-xs">
+              <div
+                key={c.name}
+                className="flex items-center justify-between text-xs"
+              >
                 <span className="flex items-center gap-2 text-muted-foreground">
                   <span
                     className="inline-block h-2.5 w-2.5 rounded-full"
@@ -277,8 +302,15 @@ export function DashboardOverview() {
         <div className="h-56">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={leadTrend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 20%, 90%)" />
-              <XAxis dataKey="week" tick={{ fontSize: 12 }} stroke="hsl(215, 15%, 47%)" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(214, 20%, 90%)"
+              />
+              <XAxis
+                dataKey="week"
+                tick={{ fontSize: 12 }}
+                stroke="hsl(215, 15%, 47%)"
+              />
               <YAxis tick={{ fontSize: 12 }} stroke="hsl(215, 15%, 47%)" />
               <Tooltip
                 contentStyle={{
@@ -306,8 +338,12 @@ export function DashboardOverview() {
         <div className="overflow-hidden rounded-xl border border-border bg-card lg:col-span-2">
           <div className="flex items-center justify-between border-b border-border px-6 py-4">
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Recent Campaigns</h3>
-              <p className="text-xs text-muted-foreground">Manage and track your campaigns</p>
+              <h3 className="text-sm font-semibold text-foreground">
+                Recent Campaigns
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Manage and track your campaigns
+              </p>
             </div>
             <Button variant="outline" size="sm">
               View All
@@ -369,9 +405,13 @@ export function DashboardOverview() {
           <div className="border-b border-border px-6 py-4">
             <div className="flex items-center gap-2">
               <Trophy className="h-4 w-4 text-accent" />
-              <h3 className="text-sm font-semibold text-foreground">Leaderboard</h3>
+              <h3 className="text-sm font-semibold text-foreground">
+                Leaderboard
+              </h3>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">Top promoters this month</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Top promoters this month
+            </p>
           </div>
           <div className="flex flex-col">
             {leaderboard.map((entry) => (
@@ -386,16 +426,18 @@ export function DashboardOverview() {
                     entry.rank === 1
                       ? "bg-accent/10 text-accent"
                       : entry.rank === 2
-                      ? "bg-muted text-muted-foreground"
-                      : entry.rank === 3
-                      ? "bg-accent/10 text-accent"
-                      : "bg-muted text-muted-foreground"
+                        ? "bg-muted text-muted-foreground"
+                        : entry.rank === 3
+                          ? "bg-accent/10 text-accent"
+                          : "bg-muted text-muted-foreground"
                   }`}
                 >
                   {entry.rank}
                 </span>
                 <div className="flex-1">
-                  <p className={`text-sm font-medium ${entry.name === "You" ? "text-primary" : "text-foreground"}`}>
+                  <p
+                    className={`text-sm font-medium ${entry.name === "You" ? "text-primary" : "text-foreground"}`}
+                  >
                     {entry.name}
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -404,7 +446,9 @@ export function DashboardOverview() {
                 </div>
                 <p className="text-sm font-bold text-foreground">
                   {entry.points.toLocaleString()}
-                  <span className="ml-1 text-xs font-normal text-muted-foreground">pts</span>
+                  <span className="ml-1 text-xs font-normal text-muted-foreground">
+                    pts
+                  </span>
                 </p>
               </div>
             ))}
@@ -412,5 +456,5 @@ export function DashboardOverview() {
         </div>
       </div>
     </div>
-  )
+  );
 }
