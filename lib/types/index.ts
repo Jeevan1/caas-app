@@ -10,6 +10,7 @@ export interface User {
   dob_type: DobType;
   image: string | null;
   primary_role: string;
+  perms: string[];
 }
 
 export interface PaginatedAPIResponse<TData> {
