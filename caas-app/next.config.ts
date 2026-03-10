@@ -6,14 +6,18 @@ const withNextIntl = createNextIntlPlugin({
   },
 });
 
+const API_BASE = process.env.MASTER_URL!;
+
+const domain = API_BASE.replace(/^https?:\/\//, "");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  output: "standalone",
   typescript: {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ["wo-mac.batomechanic.com", "caas.batomechanic.com"],
+    domains: [domain],
   },
 };
 
