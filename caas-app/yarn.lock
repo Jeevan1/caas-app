@@ -1181,6 +1181,11 @@
   resolved "https://registry.yarnpkg.com/@radix-ui/rect/-/rect-1.1.0.tgz#f817d1d3265ac5415dadc67edab30ae196696438"
   integrity sha512-A9+lCBZoaMJlVKcRBz2YByCG+Cp2t6nAnMnNba+XiWxnj6r4JUFqfsgwocMBZU9LPtdxC6wB56ySYpc7LQIoJg==
 
+"@react-oauth/google@^0.13.4":
+  version "0.13.4"
+  resolved "https://registry.yarnpkg.com/@react-oauth/google/-/google-0.13.4.tgz#c462a651880162d43fd899ef91526a515ef60a78"
+  integrity sha512-hGKyNEH+/PK8M0sFEuo3MAEk0txtHpgs94tDQit+s2LXg7b6z53NtzHfqDvoB2X8O6lGB+FRg80hY//X6hfD+w==
+
 "@schummar/icu-type-parser@1.21.5":
   version "1.21.5"
   resolved "https://registry.yarnpkg.com/@schummar/icu-type-parser/-/icu-type-parser-1.21.5.tgz#75989085bbbf80ee325874a0137437bde77e9baf"

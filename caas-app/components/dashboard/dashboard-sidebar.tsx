@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { useCurrentUser } from "@/lib/providers";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
+import { cleanImageUrl } from "@/lib/helpers";
 
 const sidebarLinks = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
@@ -73,7 +74,7 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
         <div className="flex items-center gap-2 px-2">
           {user?.image ? (
             <Image
-              src={user.image}
+              src={cleanImageUrl(user.image)}
               alt={user.name ?? ""}
               width={40}
               height={40}

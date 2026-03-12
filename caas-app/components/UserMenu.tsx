@@ -13,12 +13,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User } from "@/lib/types";
+import { cleanImageUrl } from "@/lib/helpers";
 
 function Avatar({ user }: { user: User }) {
   if (user.image) {
     return (
       <Image
-        src={user.image}
+        src={cleanImageUrl(user.image)}
         alt={user.name ?? "User"}
         width={36}
         height={36}

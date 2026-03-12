@@ -23,7 +23,8 @@ import { Event, PaginatedAPIResponse } from "@/lib/types";
 import { useCurrentUser } from "@/lib/providers";
 import { AuthDialog } from "../auth/AuthModel";
 import { useApiQuery } from "@/lib/hooks/use-api-query";
-import { JOINED_EVENTS_QUERY_KEY } from "@/constants";
+import { JOINED_EVENTS_QUERY_KEY, SINGLE_EVENT_QUERY_KEY } from "@/constants";
+import { useQueryClient } from "@tanstack/react-query";
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -501,7 +502,9 @@ function TriggerCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
             ))}
           </div>
         )}
-        {!joined && !isLoading ? (
+        {isLoading ? (
+          <div className="h-12 w-full animate-pulse rounded-2xl bg-muted" />
+        ) : !joined ? (
           <div className="flex flex-col gap-3">
             <Button
               onClick={onOpen}
@@ -592,6 +595,7 @@ export default function JoinEvent({ event }: { event: Event }) {
   const { mutateAsync: joinEvent, isPending: submitting } = useApiMutation({
     apiPath: `/api/event/events/${event.idx}/join/`,
     method: "POST",
+    queryKey: SINGLE_EVENT_QUERY_KEY(event.idx),
     successMessage: "You're in! 🎉",
   });
 
@@ -633,10 +637,12 @@ export default function JoinEvent({ event }: { event: Event }) {
     setSavedDetails(data);
     goTo(stepIndex + 1);
   };
+  const queryClient = useQueryClient();
 
   const handlePaymentNext = async (file: ScreenshotFile) => {
     try {
       await joinEvent(buildPayload(file) as any);
+      queryClient.invalidateQueries({ queryKey: JOINED_EVENTS_QUERY_KEY });
       goTo(stepIndex + 1);
     } catch {}
   };
@@ -644,6 +650,7 @@ export default function JoinEvent({ event }: { event: Event }) {
   const handleConfirm = async () => {
     try {
       await joinEvent(buildPayload() as any);
+      queryClient.invalidateQueries({ queryKey: JOINED_EVENTS_QUERY_KEY });
       goTo(stepIndex + 1);
     } catch {}
   };

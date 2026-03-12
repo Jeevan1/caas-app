@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import AuthPopup from "./auth/AuthModel";
 import { useCurrentUser } from "@/lib/providers";
 import UserMenu from "./UserMenu";
+import { Button } from "./ui/button";
 
 type CommonKeys = Parameters<ReturnType<typeof useTranslations<"common">>>[0];
 
@@ -116,12 +117,12 @@ export function Navbar() {
                   CaaS
                 </span>
               </Link>
-              <button
+              <Button
                 onClick={() => setDrawerOpen(false)}
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:bg-muted"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
 
             <nav className="flex-1 overflow-y-auto px-4 py-4">

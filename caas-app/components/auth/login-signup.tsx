@@ -4,27 +4,15 @@ import { useState, useEffect } from "react";
 import { useForm } from "@tanstack/react-form";
 import { useStore } from "@tanstack/react-store";
 import { z } from "zod";
-import {
-  ArrowRight,
-  Mail,
-  Lock,
-  User,
-  Phone,
-  MapPin,
-  X,
-  CheckCircle2,
-  Sparkles,
-} from "lucide-react";
-import FieldError from "../form/FIeldError";
-import GoogleIcon from "@/public/icons/GoogleIcon";
+import { ArrowRight, Mail, Lock, X, Sparkles } from "lucide-react";
 import StyledInput from "../form/FormInput";
 import { cn, useApiMutation } from "@/lib/utils";
 import { Button } from "../ui/button";
-import FieldTextarea from "../form/FieldTextarea";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "@/i18n/navigation";
 import { GoogleContactForm } from "./GoogleContactForm";
 import { SignupFlow } from "./AuthModel";
+import GoogleLoginButton from "./GoogleAuthButton";
 
 // ─── ZOD SCHEMAS ─────────────────────────────────────────────────────────────
 
@@ -51,9 +39,11 @@ type View =
 export function LoginForm({
   switchView,
   onSuccess,
+  onGoogleUser,
 }: {
   switchView: (v: View) => void;
   onSuccess?: () => void;
+  onGoogleUser?: (u: { email: string; name: string }) => void;
 }) {
   const router = useRouter();
 
@@ -165,13 +155,12 @@ export function LoginForm({
         <div className="h-px flex-1 bg-border/60" />
       </div>
 
-      <button
-        type="button"
-        onClick={() => switchView("google-contact")}
-        className="google-btn flex w-full items-center justify-center gap-2.5 rounded-xl border border-border bg-background py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
-      >
-        <GoogleIcon /> Continue with Google
-      </button>
+      <GoogleLoginButton
+        onNewUser={(email, name) => {
+          onGoogleUser?.({ email, name });
+        }}
+        onSuccess={onSuccess}
+      />
 
       <p className="text-center text-xs text-muted-foreground">
         Don't have an account?{" "}
@@ -187,12 +176,11 @@ export function LoginForm({
 }
 
 // ─── FORM CONTENT WRAPPER ─────────────────────────────────────────────────────
-
 function FormContent({
   view,
   animating,
   switchView,
-  onSuccess, // ← FIX: was missing, so LoginForm never received it
+  onSuccess,
   isOrganizer,
 }: {
   view: View;
@@ -201,6 +189,17 @@ function FormContent({
   onSuccess?: () => void;
   isOrganizer?: boolean;
 }) {
+  // ← Add googleUser state here
+  const [googleUser, setGoogleUser] = useState<{
+    email: string;
+    name: string;
+  } | null>(null);
+
+  const handleGoogleUser = (user: { email: string; name: string }) => {
+    setGoogleUser(user);
+    switchView("google-contact");
+  };
+
   const accentClass =
     view === "login"
       ? "from-primary via-secondary to-accent"
@@ -220,21 +219,33 @@ function FormContent({
           animating ? "opacity-0 translate-y-2.5" : "opacity-100 translate-y-0",
         )}
       >
-        {/* ── FIX: pass onSuccess so LoginForm can close the modal ── */}
         {view === "login" && (
-          <LoginForm switchView={switchView} onSuccess={onSuccess} />
+          <LoginForm
+            switchView={switchView}
+            onSuccess={onSuccess}
+            onGoogleUser={handleGoogleUser} // ← use handler, no more duplicate switchView
+          />
         )}
         {view === "signup" && (
-          <SignupFlow switchView={switchView} isOrganizer={isOrganizer} />
+          <SignupFlow
+            switchView={switchView}
+            isOrganizer={isOrganizer}
+            onSuccess={onSuccess}
+            onGoogleUser={handleGoogleUser} // ← pass down
+          />
         )}
         {view === "google-contact" && (
-          <GoogleContactForm switchView={switchView} onSuccess={onSuccess} />
+          <GoogleContactForm
+            switchView={switchView}
+            onSuccess={onSuccess}
+            email={googleUser?.email} // ← now populated
+            name={googleUser?.name}
+          />
         )}
       </div>
     </>
   );
 }
-
 // ─── VIEW STATE ───────────────────────────────────────────────────────────────
 
 function useViewState(initial: View) {
@@ -267,6 +278,7 @@ export default function AuthSection({
 
   const inline = useViewState(initialView);
   const popup = useViewState("login");
+  const router = useRouter();
 
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -349,7 +361,11 @@ export default function AuthSection({
               animation: "fadeUp 0.55s cubic-bezier(0.34,1.1,0.64,1) both",
             }}
           >
-            <FormContent {...inline} isOrganizer={isOrganizer} />
+            <FormContent
+              {...inline}
+              isOrganizer={isOrganizer}
+              onSuccess={() => router.push("/dashboard")}
+            />
           </div>
         </div>
         <style>{css}</style>

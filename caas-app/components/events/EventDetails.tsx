@@ -210,9 +210,9 @@ export default function EventDetails({
           </Link>
           <div className="flex items-center gap-2">
             <EventFavorite eventId={eventId} />
-            <button className="ib flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all">
+            <Button className="ib flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all">
               <Share2 className="h-3.5 w-3.5" />
-            </button>
+            </Button>
           </div>
         </div>
       </nav>

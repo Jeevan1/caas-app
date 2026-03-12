@@ -17,7 +17,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: [domain],
+    domains: [domain, "lh3.googleusercontent.com"],
   },
 };
 

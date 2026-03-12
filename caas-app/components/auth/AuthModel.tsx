@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { LoginForm } from "./login-signup";
 import { OtpStep, RegisterStep, SetPasswordStep } from "./Signup";
 import { GoogleContactForm } from "./GoogleContactForm";
+import GoogleLoginButton from "./GoogleAuthButton";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -96,9 +97,13 @@ export function SignupStepBar({ current }: { current: number }) {
 export function SignupFlow({
   switchView,
   isOrganizer,
+  onSuccess,
+  onGoogleUser,
 }: {
   switchView: (v: View) => void;
   isOrganizer?: boolean;
+  onSuccess?: () => void;
+  onGoogleUser?: (user: { email: string; name: string }) => void;
 }) {
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [anim, setAnim] = useState(false);
@@ -155,6 +160,12 @@ export function SignupFlow({
           />
         )}
       </div>
+      <GoogleLoginButton
+        onNewUser={(email, name) => {
+          onGoogleUser?.({ email, name });
+        }}
+        onSuccess={onSuccess}
+      />
 
       {step === 0 && (
         <p className="text-center text-xs text-muted-foreground">
@@ -185,6 +196,10 @@ export function ModalContent({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const [googleUser, setGoogleUser] = useState<{
+    email: string;
+    name: string;
+  } | null>(null);
 
   const handleLoginSuccess = () => {
     onClose();
@@ -212,11 +227,31 @@ export function ModalContent({
         )}
       >
         {view === "login" && (
-          <LoginForm switchView={switchView} onSuccess={handleLoginSuccess} />
+          <LoginForm
+            switchView={switchView}
+            onSuccess={handleLoginSuccess}
+            onGoogleUser={({ email, name }) => {
+              setGoogleUser({ email, name });
+              switchView("google-contact");
+            }}
+          />
         )}
-        {view === "signup" && <SignupFlow switchView={switchView} />}
+        {view === "signup" && (
+          <SignupFlow
+            switchView={switchView}
+            onGoogleUser={(user) => {
+              setGoogleUser(user);
+              switchView("google-contact");
+            }}
+          />
+        )}
         {view === "google-contact" && (
-          <GoogleContactForm switchView={switchView} onClose={onClose} />
+          <GoogleContactForm
+            switchView={switchView}
+            onClose={onClose}
+            name={googleUser?.name}
+            email={googleUser?.email}
+          />
         )}
       </div>
     </>

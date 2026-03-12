@@ -219,3 +219,12 @@ export function statusFromDates(start: string, end: string) {
     cls: "bg-secondary/10 text-secondary animate-pulse",
   };
 }
+
+export function cleanImageUrl(raw: string | null | undefined): string {
+  if (!raw) return "";
+  if (raw.includes("/media/")) {
+    const decoded = decodeURIComponent(raw.split("/media/")[1]);
+    return decoded.replace("https:/", "https://");
+  }
+  return raw;
+}

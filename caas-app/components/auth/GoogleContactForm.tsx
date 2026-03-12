@@ -6,6 +6,7 @@ import FieldTextarea from "../form/FieldTextarea";
 import { Button } from "../ui/button";
 import StyledInput from "../form/FormInput";
 import z from "zod";
+import { useApiMutation } from "@/lib/utils";
 
 const googleContactSchema = z.object({
   phone: z
@@ -22,12 +23,27 @@ export function GoogleContactForm({
   switchView,
   onSuccess,
   onClose,
+  email, // ← new
+  name, // ← new
 }: {
   switchView: (v: View) => void;
   onSuccess?: () => void;
   onClose?: () => void;
+  email?: string;
+  name?: string;
 }) {
   const [done, setDone] = useState(false);
+
+  const { mutateAsync: updateProfile, isPending } = useApiMutation({
+    apiPath: "/api/autho/profile/",
+    method: "PATCH",
+    queryKey: "current-user",
+    onSuccessCallback() {
+      setDone(true);
+      if (onSuccess) setTimeout(onSuccess, 1600);
+      if (onClose) setTimeout(onClose, 1600);
+    },
+  });
 
   const form = useForm({
     defaultValues: { phone: "", city: "", bio: "" },
@@ -35,14 +51,14 @@ export function GoogleContactForm({
       onChange: googleContactSchema as any,
     },
     onSubmit: async ({ value }) => {
-      console.log("Google contact submit:", value);
-      setDone(true);
-      if (onSuccess) setTimeout(onSuccess, 1600);
-      if (onClose) setTimeout(onClose, 1600);
+      await updateProfile({
+        phone: value.phone,
+        city: value.city,
+        bio: value.bio,
+      });
     },
   });
 
-  const bio = useStore(form.store, (s) => s.values.bio ?? "");
   const { canSubmit, isSubmitting } = useStore(form.store, (s) => ({
     canSubmit: s.canSubmit,
     isSubmitting: s.isSubmitting,
@@ -81,17 +97,17 @@ export function GoogleContactForm({
         </p>
       </div>
 
-      {/* Google account pill */}
+      {/* Google account pill — now shows real email/name */}
       <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-3.5 py-2.5">
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#4285F4] text-[11px] font-bold text-white">
-          G
+          {name?.charAt(0).toUpperCase() ?? "G"}
         </div>
         <div className="min-w-0">
           <p className="text-xs font-semibold text-foreground">
-            Signing in with Google
+            {name ?? "Signing in with Google"}
           </p>
           <p className="truncate text-[11px] text-muted-foreground">
-            yourname@gmail.com
+            {email ?? "yourname@gmail.com"}
           </p>
         </div>
         <CheckCircle2 className="ml-auto h-4 w-4 shrink-0 text-secondary" />
@@ -150,16 +166,14 @@ export function GoogleContactForm({
           </Button>
           <Button
             type="submit"
-            variant={"default"}
-            disabled={!canSubmit || isSubmitting}
+            disabled={!canSubmit || isSubmitting || isPending}
             className="sub-btn flex flex-1"
           >
-            {isSubmitting ? (
+            {isSubmitting || isPending ? (
               "Saving…"
             ) : (
               <>
-                {" "}
-                Continue <ArrowRight className="h-4 w-4 sub-arrow" />{" "}
+                Continue <ArrowRight className="h-4 w-4 sub-arrow" />
               </>
             )}
           </Button>
