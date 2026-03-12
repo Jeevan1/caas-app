@@ -118,8 +118,8 @@ export function HeroSection() {
               style={{ animation: "heroFadeUp 0.7s ease 0.46s both" }}
             >
               Whatever your interest, from hiking and reading to networking and
-              skill sharing, there are thousands of people who share it on CaaS.
-              Events are happening every day—sign up to join the fun.
+              skill sharing, there are thousands of people who share it on Join
+              My Event. Events are happening every day—sign up to join the fun.
             </p>
 
             {/* CTA */}
@@ -129,7 +129,7 @@ export function HeroSection() {
                   size="lg"
                   className="hero-btn gap-2 rounded-full px-6 text-sm sm:px-8 sm:text-base"
                 >
-                  Join CaaS
+                  Join Join My Event
                   <ArrowRight className="hero-arrow h-4 w-4" />
                 </Button>
               </Link>

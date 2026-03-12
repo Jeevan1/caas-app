@@ -1,9 +1,5 @@
 import EventDetails from "@/components/events/EventDetails";
-import {
-  EVENTS_QUERY_KEY,
-  RELATED_EVENTS_QUERY_KEY,
-  SINGLE_EVENT_QUERY_KEY,
-} from "@/constants";
+import { EVENTS_QUERY_KEY, SINGLE_EVENT_QUERY_KEY } from "@/constants";
 import { serverFetch } from "@/lib/server-fetch";
 import { Event, PaginatedAPIResponse } from "@/lib/types";
 import {
@@ -12,6 +8,72 @@ import {
   QueryClient,
 } from "@tanstack/react-query";
 import { Metadata } from "next";
+
+type Props = {
+  params: Promise<{ locale: string; id: string }>;
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+
+  const res = await fetch(`${process.env.MASTER_URL}/event/events/${id}/`, {
+    cache: "force-cache",
+  });
+
+  if (!res.ok) {
+    return {
+      title: "Event | Join My Event",
+      description: "Discover and join events on Join My Event Platform.",
+    };
+  }
+
+  const event: Event = await res.json();
+
+  const title = `${event.title} | Join My Event`;
+  const description =
+    event.description?.slice(0, 160) ??
+    "Join this event on Join My Event Platform.";
+  const image =
+    event.cover_image ?? "https://caas-app-pro.netlify.app/og-default.png";
+  const url = `https://joinmyevent.com/events/${id}`;
+
+  return {
+    title,
+    description,
+
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "Join My Event Platform",
+      type: "website",
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: event.title,
+        },
+      ],
+    },
+
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
+
+    alternates: {
+      canonical: url,
+    },
+
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
 
 const getEventById = async (id: string) => {
   const res = await serverFetch<Event>(`/event/events/${id}/`);
@@ -22,35 +84,6 @@ const getRelatedEvents = async (id: string) => {
   const res = await serverFetch<PaginatedAPIResponse<Event>>(`/event/events/`);
   return res;
 };
-
-export async function generateMetadata({
-  params,
-}: {
-  params: { id: string };
-}): Promise<Metadata> {
-  const event = await getEventById(params.id);
-
-  if (!event) return {};
-
-  return {
-    title: event.title,
-    description: event.description,
-    openGraph: {
-      title: event.title,
-      description: event.description,
-      url: `https://caas-app-pro.netlify.app/events/${params.id}`,
-      siteName: "CaaS-App",
-      images: [
-        {
-          url: event.cover_image || "",
-          width: 1200,
-          height: 630,
-        },
-      ],
-      type: "website",
-    },
-  };
-}
 
 const EventDetailsPage = async ({
   params,

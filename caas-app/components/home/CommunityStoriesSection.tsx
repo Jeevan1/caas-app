@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 const articles = [
   {
     id: 1,
-    title: "I Used CaaS to Promote My Business at a Local Event",
+    title: "I Used Join My Event to Promote My Business at a Local Event",
     excerpt:
       "A Kathmandu café owner shares how she ran her first campaign and gained 150 new customers in a weekend.",
     href: "/blog/caas-local-event",
@@ -34,7 +34,7 @@ export function CommunityStoriesSection() {
       <div className="mx-auto container">
         {/* Label */}
         <p className="mb-1 text-center text-xs font-semibold uppercase tracking-widest text-primary">
-          CaaS = community
+          Join My Event = community
         </p>
 
         <div className="mb-12 text-center">
@@ -42,8 +42,9 @@ export function CommunityStoriesSection() {
             Success stories from our community
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-            Since 2024, members have used CaaS to grow their businesses, reach
-            new customers, and build loyal audiences. Learn how.
+            Since 2024, members have used Join My Event to grow their
+            businesses, reach new customers, and build loyal audiences. Learn
+            how.
           </p>
         </div>
 
@@ -76,7 +77,7 @@ export function CommunityStoriesSection() {
         {/* Final CTA */}
         <div className="mt-16 rounded-2xl border border-border bg-background p-10 text-center">
           <h3 className="font-heading text-2xl font-bold text-foreground md:text-3xl text-balance">
-            Join CaaS and find your community
+            Join Join My Event and find your community
           </h3>
           <div className="mt-6">
             <Link href="/register">

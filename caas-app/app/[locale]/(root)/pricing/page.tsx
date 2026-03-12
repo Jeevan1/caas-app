@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Check, X, Sparkles } from "lucide-react";
 
 export const metadata = {
-  title: "Pricing - CaaS",
+  title: "Pricing - Join My Event",
   description:
     "Choose the perfect plan for your business. Start free or upgrade for unlimited campaigns and premium features.",
 };

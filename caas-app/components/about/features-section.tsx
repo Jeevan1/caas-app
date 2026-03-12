@@ -58,8 +58,8 @@ export function FeaturesSection() {
             Everything you need to grow
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-            From campaign creation to analytics, CaaS gives you the tools to
-            promote your business like a pro.
+            From campaign creation to analytics, Join My Event gives you the
+            tools to promote your business like a pro.
           </p>
         </div>
 

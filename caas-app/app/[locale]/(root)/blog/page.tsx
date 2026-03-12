@@ -5,14 +5,14 @@ import { ArrowRight, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const metadata = {
-  title: "Blog - CaaS",
+  title: "Blog - Join My Event",
   description:
-    "Marketing tips, case studies, and success stories to help you grow your business with CaaS.",
+    "Marketing tips, case studies, and success stories to help you grow your business with Join My Event.",
 };
 
 const featuredPost = {
   slug: "how-to-triple-leads",
-  title: "How to Triple Your Leads in 30 Days with CaaS",
+  title: "How to Triple Your Leads in 30 Days with Join My Event",
   excerpt:
     "Learn the exact strategy our top users employ to dramatically increase their lead generation using our platform's campaign tools and analytics.",
   category: "Case Study",
@@ -98,7 +98,7 @@ export default function BlogPage() {
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
             Learn how to run better campaigns, grow your audience, and get the
-            most out of CaaS.
+            most out of Join My Event.
           </p>
         </div>
       </section>

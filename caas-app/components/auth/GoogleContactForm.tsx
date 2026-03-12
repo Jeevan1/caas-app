@@ -77,7 +77,9 @@ export function GoogleContactForm({
           <p className="font-heading text-xl font-bold text-foreground">
             You're all set! 🎉
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">Welcome to CaaS</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Welcome to Join My Event
+          </p>
         </div>
       </div>
     );

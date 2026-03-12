@@ -21,10 +21,29 @@ const _spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "CaaS - Consumer as a Service",
+  title: {
+    default: "Join My Event",
+    template: "%s | Join My Event",
+  },
   description:
     "Promote, Grow, and Track Your Business Easily. Affordable DIY marketing tools for small businesses, event organizers, and entrepreneurs.",
-  generator: "v0.app",
+  metadataBase: new URL("https://joinmyevent.com"),
+
+  openGraph: {
+    siteName: "Join My Event Platform",
+    type: "website",
+    images: [
+      {
+        url: "/og-default.png",
+        width: 1200,
+        height: 630,
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export const viewport: Viewport = {

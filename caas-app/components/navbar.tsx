@@ -10,6 +10,7 @@ import AuthPopup from "./auth/AuthModel";
 import { useCurrentUser } from "@/lib/providers";
 import UserMenu from "./UserMenu";
 import { Button } from "./ui/button";
+import Image from "next/image";
 
 type CommonKeys = Parameters<ReturnType<typeof useTranslations<"common">>>[0];
 
@@ -46,12 +47,19 @@ export function Navbar() {
       <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md">
         <nav className="container mx-auto flex items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+            {/* <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
               <Zap className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold tracking-tight text-foreground">
-              CaaS
-            </span>
+              Join My Event
+            </span> */}
+            <Image
+              src="/logo.png"
+              alt="Join My Event"
+              width={200}
+              height={40}
+              className="h-6 w-full object-cover"
+            />
           </Link>
 
           <ul className="hidden items-center gap-1 md:flex">
@@ -114,7 +122,7 @@ export function Navbar() {
                   <Zap className="h-4 w-4 text-primary-foreground" />
                 </div>
                 <span className="text-base font-bold text-foreground">
-                  CaaS
+                  Join My Event
                 </span>
               </Link>
               <Button

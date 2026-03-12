@@ -34,7 +34,7 @@ export function Footer() {
                 <Zap className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold tracking-tight text-foreground">
-                CaaS
+                Join My Event
               </span>
             </Link>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
@@ -68,7 +68,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 md:flex-row">
           <p className="text-sm text-muted-foreground">
-            {"2026 CaaS. All rights reserved."}
+            {"2026 Join My Event. All rights reserved."}
           </p>
           <div className="flex gap-6">
             <Link

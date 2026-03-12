@@ -5,7 +5,7 @@ const testimonials = [
     name: "Sarah Mitchell",
     role: "Event Organizer",
     quote:
-      "CaaS helped me promote my events with zero marketing experience. The templates are gorgeous and the analytics are spot on.",
+      "Join My Event helped me promote my events with zero marketing experience. The templates are gorgeous and the analytics are spot on.",
     rating: 5,
   },
   {

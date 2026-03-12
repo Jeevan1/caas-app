@@ -47,7 +47,7 @@ export function PopularCitiesSection() {
               Discover
             </p>
             <h2 className="font-heading text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-              Popular cities on CaaS
+              Popular cities on Join My Event
             </h2>
             <p className="mt-2 text-muted-foreground">
               See what organizers are planning in cities around the world.

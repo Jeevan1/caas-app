@@ -42,7 +42,7 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
           <Zap className="h-4 w-4 text-primary-foreground" />
         </div>
-        <span className="text-lg font-bold text-foreground">CaaS</span>
+        <span className="text-lg font-bold text-foreground">Join My Event</span>
       </Link>
 
       <nav className="flex-1 px-4 py-4">
@@ -131,7 +131,9 @@ export function DashboardSidebar() {
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
             <Zap className="h-3.5 w-3.5 text-primary-foreground" />
           </div>
-          <span className="text-base font-bold text-foreground">CaaS</span>
+          <span className="text-base font-bold text-foreground">
+            Join My Event
+          </span>
         </Link>
 
         <button
