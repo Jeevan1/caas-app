@@ -129,7 +129,7 @@ export function HeroSection() {
                   size="lg"
                   className="hero-btn gap-2 rounded-full px-6 text-sm sm:px-8 sm:text-base"
                 >
-                  Join Join My Event
+                  Join Join Your Event
                   <ArrowRight className="hero-arrow h-4 w-4" />
                 </Button>
               </Link>

@@ -22,15 +22,15 @@ const _spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: {
-    default: "Join My Event",
-    template: "%s | Join My Event",
+    default: "Join Your Event",
+    template: "%s | Join Your Event",
   },
   description:
     "Promote, Grow, and Track Your Business Easily. Affordable DIY marketing tools for small businesses, event organizers, and entrepreneurs.",
   metadataBase: new URL("https://joinmyevent.com"),
 
   openGraph: {
-    siteName: "Join My Event Platform",
+    siteName: "Join Your Event Platform",
     type: "website",
     images: [
       {

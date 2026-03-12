@@ -14,7 +14,7 @@ export async function CTASection() {
             Ready to grow your business?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-primary-foreground/80">
-            Join thousands of entrepreneurs who use Join My Event to promote
+            Join thousands of entrepreneurs who use Join Your Event to promote
             their businesses, track results, and reach new audiences.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">

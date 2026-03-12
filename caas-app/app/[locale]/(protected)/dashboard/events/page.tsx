@@ -8,9 +8,9 @@ import {
 } from "@tanstack/react-query";
 
 export const metadata = {
-  title: "Events - Join My Event",
+  title: "Events - Join Your Event",
   description:
-    "Manage your campaigns, track analytics, and grow your business from your Join My Event dashboard.",
+    "Manage your campaigns, track analytics, and grow your business from your Join Your Event dashboard.",
 };
 export async function getEvents() {
   const res = await serverFetch("/event/events/my-events/");

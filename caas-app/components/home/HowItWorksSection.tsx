@@ -34,7 +34,7 @@ export function HowItWorksSection() {
       <div className="mx-auto container">
         <div className="mb-14 text-center">
           <h2 className="font-heading text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-            How Join My Event works
+            How Join Your Event works
           </h2>
         </div>
 

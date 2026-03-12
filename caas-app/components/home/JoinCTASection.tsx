@@ -54,7 +54,7 @@ export function JoinCTASection() {
           className="font-heading text-4xl font-bold tracking-tight text-primary-foreground md:text-6xl text-balance"
           style={{ animation: "ctaFadeUp 0.6s ease 0.1s both" }}
         >
-          Join Join My Event
+          Join Join Your Event
         </h2>
 
         {/* Body */}
@@ -62,7 +62,7 @@ export function JoinCTASection() {
           className="mx-auto mt-5 max-w-lg text-lg text-primary-foreground/75 text-balance"
           style={{ animation: "ctaFadeUp 0.6s ease 0.2s both" }}
         >
-          People use Join My Event to promote their businesses, reach new
+          People use Join Your Event to promote their businesses, reach new
           audiences, find support, and pursue their passions — together.
           Membership is free.
         </p>

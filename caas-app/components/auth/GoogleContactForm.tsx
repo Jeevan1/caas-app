@@ -78,7 +78,7 @@ export function GoogleContactForm({
             You're all set! 🎉
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Welcome to Join My Event
+            Welcome to Join Your Event
           </p>
         </div>
       </div>

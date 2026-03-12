@@ -387,7 +387,7 @@ export default function AuthSection({
             <Sparkles className="h-7 w-7 text-primary" />
           </div>
           <h1 className="font-heading text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-            Join My Event Platform
+            Join Your Event Platform
           </h1>
           <p className="mt-3 text-muted-foreground">
             Campaigns as a Service — launch, grow, connect.

@@ -22,17 +22,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!res.ok) {
     return {
-      title: "Event | Join My Event",
-      description: "Discover and join events on Join My Event Platform.",
+      title: "Event | Join Your Event",
+      description: "Discover and join events on Join Your Event Platform.",
     };
   }
 
   const event: Event = await res.json();
 
-  const title = `${event.title} | Join My Event`;
+  const title = `${event.title} | Join Your Event`;
   const description =
     event.description?.slice(0, 160) ??
-    "Join this event on Join My Event Platform.";
+    "Join this event on Join Your Event Platform.";
   const image =
     event.cover_image ?? "https://caas-app-pro.netlify.app/og-default.png";
   const url = `https://joinmyevent.com/events/${id}`;
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       url,
-      siteName: "Join My Event Platform",
+      siteName: "Join Your Event Platform",
       type: "website",
       images: [
         {

@@ -34,15 +34,15 @@ const faqs = [
     a: "After signing up, head to your Dashboard and click 'New Campaign'. Choose a template, customize it, set your goals, and launch.",
   },
   {
-    q: "Can I use Join My Event for free?",
+    q: "Can I use Join Your Event for free?",
     a: "Yes! Our Free plan includes 3 active campaigns, basic analytics, and access to 5 templates. No credit card required.",
   },
   {
     q: "How do referral links work?",
-    a: "When you create a referral campaign, Join My Event auto-generates unique referral links that track clicks and conversions automatically.",
+    a: "When you create a referral campaign, Join Your Event auto-generates unique referral links that track clicks and conversions automatically.",
   },
   {
-    q: "What analytics does Join My Event track?",
+    q: "What analytics does Join Your Event track?",
     a: "We track views, clicks, click-through rates, leads generated, and campaign performance over time with detailed charts.",
   },
   {

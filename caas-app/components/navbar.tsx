@@ -51,11 +51,11 @@ export function Navbar() {
               <Zap className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold tracking-tight text-foreground">
-              Join My Event
+              Join Your Event
             </span> */}
             <Image
               src="/logo.png"
-              alt="Join My Event"
+              alt="Join Your Event"
               width={200}
               height={40}
               className="h-6 w-full object-cover"
@@ -122,7 +122,7 @@ export function Navbar() {
                   <Zap className="h-4 w-4 text-primary-foreground" />
                 </div>
                 <span className="text-base font-bold text-foreground">
-                  Join My Event
+                  Join Your Event
                 </span>
               </Link>
               <Button

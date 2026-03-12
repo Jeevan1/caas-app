@@ -675,7 +675,7 @@ export default function CategoryPage() {
               <blockquote className="font-heading text-xl font-semibold leading-relaxed text-foreground md:text-2xl">
                 "As hard as it is to make new friends as an adult, it's
                 profoundly easier when you share something in common. That's the
-                beauty of Join My Event!"
+                beauty of Join Your Event!"
               </blockquote>
               <div className="mt-8 flex items-center justify-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-sm font-bold text-secondary">
@@ -686,7 +686,7 @@ export default function CategoryPage() {
                     Brianna Stryker
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Join My Event member · Outdoor enthusiast
+                    Join Your Event member · Outdoor enthusiast
                   </p>
                 </div>
               </div>
