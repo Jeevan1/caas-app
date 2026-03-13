@@ -160,23 +160,25 @@ export function SignupFlow({
           />
         )}
       </div>
-      <GoogleLoginButton
-        onNewUser={(email, name) => {
-          onGoogleUser?.({ email, name });
-        }}
-        onSuccess={onSuccess}
-      />
 
       {step === 0 && (
-        <p className="text-center text-xs text-muted-foreground">
-          Already have an account?{" "}
-          <button
-            onClick={() => switchView("login")}
-            className="font-bold text-primary hover:underline"
-          >
-            Log in
-          </button>
-        </p>
+        <>
+          <GoogleLoginButton
+            onNewUser={(email, name) => {
+              onGoogleUser?.({ email, name });
+            }}
+            onSuccess={onSuccess}
+          />
+          <p className="text-center text-xs text-muted-foreground">
+            Already have an account?{" "}
+            <button
+              onClick={() => switchView("login")}
+              className="font-bold text-primary hover:underline"
+            >
+              Log in
+            </button>
+          </p>
+        </>
       )}
     </div>
   );

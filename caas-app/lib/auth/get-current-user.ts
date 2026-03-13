@@ -3,7 +3,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { User } from "../types";
 
-const BASE_URL = process.env.MASTER_URL ?? "http://localhost:7000";
+const BASE_URL = process.env.MASTER_URL!;
 
 export class UnauthorizedError extends Error {
   constructor(message = "Unauthorized") {

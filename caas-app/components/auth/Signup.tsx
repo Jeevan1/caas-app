@@ -1,6 +1,7 @@
 // ─── STEP 0 — REGISTER ───────────────────────────────────────────────────────
 
 import {
+  ArrowLeft,
   ArrowRight,
   Building2,
   CheckCircle2,
@@ -13,7 +14,7 @@ import {
 import { Button } from "../ui/button";
 import StyledInput from "@/components/form/FormInput";
 import { useForm, useStore } from "@tanstack/react-form";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn, useApiMutation } from "@/lib/utils";
 import FieldError from "../form/FIeldError";
 import z from "zod";
@@ -224,14 +225,13 @@ export function OtpStep({
   currentStep: 0 | 1 | 2;
 }) {
   const [serverError, setServerError] = useState("");
+  const [otp, setOtp] = useState("");
+  const otpRef = useRef<HTMLInputElement>(null);
 
-  const form = useForm({
-    defaultValues: { code: "" },
-    validators: { onChange: otpSchema as any },
-    onSubmit: (values) => {
-      mutate(values.value);
-    },
-  });
+  useEffect(() => {
+    otpRef.current?.focus();
+  }, []);
+
   const { mutate, isPending } = useApiMutation({
     apiPath: `/api/autho/verification_code/${verificationIdx}/check_otp/`,
     method: "POST",
@@ -241,76 +241,113 @@ export function OtpStep({
     onErrorCallback(err) {
       setServerError(err.message);
     },
-    payloadTransform: (payload: any) => ({
-      code: payload.code,
-    }),
+    payloadTransform: (payload: any) => ({ code: payload.code }),
   });
 
-  const { canSubmit, isSubmitting } = useStore(form.store, (s) => ({
-    canSubmit: s.canSubmit,
-    isSubmitting: s.isSubmitting,
-  }));
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length < 6) return;
+    setServerError("");
+    mutate({ code: otp });
+  };
+
+  const digits = otp.padEnd(6, " ").split("");
 
   return (
-    <div className="flex flex-col">
-      <AuthHeader icon={ShieldCheck} title="Verify your code">
-        <p className="mt-1 text-xs text-muted-foreground">
+    <div className="flex flex-col gap-5">
+      {/* Header */}
+      <div className="text-center">
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-50 text-2xl shadow-sm border border-orange-100">
+          🔐
+        </div>
+        <h2 className="text-xl font-bold text-foreground tracking-tight">
+          Verify your code
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           We sent an OTP to{" "}
           <span className="font-semibold text-foreground">
             {userIdentifier}
           </span>
         </p>
-      </AuthHeader>
+      </div>
+
       <SignupStepBar current={currentStep} />
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-        className="flex flex-col gap-3.5 mt-2"
-      >
-        <form.Field name="code">
-          {(field) => (
-            <StyledInput
-              label="Verification code"
-              field={field}
-              icon={KeyRound}
-              placeholder="Enter OTP"
-              type="text"
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {/* OTP boxes */}
+        <div className="flex flex-col gap-2">
+          <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground text-center">
+            Verification Code
+          </label>
+
+          {/* Hidden real input */}
+          <div className="relative" onClick={() => otpRef.current?.focus()}>
+            <input
+              ref={otpRef}
+              type="tel"
+              inputMode="numeric"
+              value={otp}
+              maxLength={6}
+              disabled={isPending}
+              onChange={(e) => {
+                setOtp(e.target.value.replace(/\D/g, "").slice(0, 6));
+                if (serverError) setServerError("");
+              }}
+              className="absolute inset-0 opacity-0 cursor-text z-10 w-full"
+              aria-label="OTP code"
             />
+            <div className="flex gap-2 justify-center">
+              {digits.map((d, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "h-12 w-10 rounded-xl border-2 flex items-center justify-center text-lg font-bold transition-all",
+                    i === otp.length
+                      ? "border-orange-400 bg-orange-50 shadow-[0_0_0_3px_rgba(251,146,60,0.15)]"
+                      : d.trim()
+                        ? "border-gray-300 bg-white"
+                        : "border-gray-200 bg-gray-50",
+                  )}
+                >
+                  {d.trim()}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {serverError && (
+            <p className="text-[11px] text-red-500 text-center">
+              {serverError}
+            </p>
           )}
-        </form.Field>
+        </div>
 
-        {serverError && (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600 dark:border-red-900 dark:bg-red-950/30">
-            {serverError}
-          </p>
-        )}
-
+        {/* Buttons */}
         <div className="flex gap-2">
-          <Button
+          <button
             type="button"
-            variant="outline"
-            className="flex-1 rounded-xl"
             onClick={onBack}
+            disabled={isPending}
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-gray-50 py-3 text-sm font-semibold text-foreground hover:bg-gray-100 disabled:opacity-50 transition-colors"
           >
-            Back
-          </Button>
-          <Button
+            <ArrowLeft className="h-4 w-4" /> Back
+          </button>
+          <button
             type="submit"
-            disabled={!canSubmit || isSubmitting || isPending}
-            className="flex-1 gap-2 rounded-xl font-bold"
+            disabled={isPending || otp.length < 6}
+            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-white shadow-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
           >
-            {isSubmitting || isPending ? (
-              "Checking…"
+            {isPending ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />{" "}
+                Checking…
+              </>
             ) : (
               <>
                 Verify <ArrowRight className="h-4 w-4" />
               </>
             )}
-          </Button>
+          </button>
         </div>
       </form>
 
