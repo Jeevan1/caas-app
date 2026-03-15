@@ -23,7 +23,8 @@ const sidebarLinks = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
   { href: "/dashboard/categories", icon: Trophy, label: "Categories" },
   { href: "/dashboard/events", icon: Megaphone, label: "Events" },
-  { href: "/joined-events", icon: FileImage, label: "Joined Events" },
+  { href: "/dashboard/joined-events", icon: FileImage, label: "Joined Events" },
+  { href: "/dashboard/blog", icon: FileImage, label: "Blogs" },
   { href: "/dashboard/profile", icon: User, label: "Profile" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];

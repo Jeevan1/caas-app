@@ -1,7 +1,6 @@
 import { HeroSection } from "./Herosection";
 import { CategoriesSection } from "./CategoriesSection";
 import { JoinCTASection } from "./JoinCTASection";
-import { PopularCitiesSection } from "./PopularCitiesSection";
 import { NearbyEventsSection } from "./NearbyEventsSection";
 import { OnlineEventsSection } from "./OnlineEventsSection";
 import { CommunityStoriesSection } from "./CommunityStoriesSection";
@@ -15,7 +14,7 @@ export async function MeetupHomeSections() {
       <OnlineEventsSection />
       <JoinCTASection />
       <CategoriesSection />
-      <PopularCitiesSection />
+      {/* <PopularCitiesSection /> */}
       <HowItWorksSection />
       <CommunityStoriesSection />
     </>

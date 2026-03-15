@@ -1,7 +1,7 @@
 import {
-  BarChart3,
-  Layout,
-  Trophy,
+  CalendarCheck,
+  Search,
+  Building2,
   Bell,
   CreditCard,
   Users,
@@ -9,40 +9,40 @@ import {
 
 const features = [
   {
-    icon: Layout,
-    title: "Campaign Management",
+    icon: CalendarCheck,
+    title: "Event Publishing",
     description:
-      "Create, schedule, and manage campaigns for events, products, or services all from one place.",
+      "Create and publish events in minutes. Set dates, locations, capacity, ticket prices, and go live instantly to thousands of potential attendees.",
   },
   {
-    icon: BarChart3,
-    title: "Real-Time Analytics",
+    icon: Search,
+    title: "Event Discovery",
     description:
-      "Track views, clicks, and leads with beautiful charts and reports. Know what works instantly.",
+      "Powerful search and filtering lets attendees find events by category, location, date, or interest — so the right people always find your event.",
   },
   {
-    icon: Trophy,
-    title: "Gamification & Rewards",
+    icon: Building2,
+    title: "Organization Profiles",
     description:
-      "Earn points for successful campaigns. Climb the leaderboard and unlock badges and rewards.",
+      "Organizations get a dedicated profile page to showcase their brand, history of events, and upcoming schedule — building trust with their audience.",
   },
   {
     icon: Users,
-    title: "Marketing Templates",
+    title: "Community Management",
     description:
-      "Access a library of pre-built templates for social media, email, flyers, and more.",
+      "Manage RSVPs, track attendance, communicate with registrants, and turn every event into a growing, engaged community.",
   },
   {
     icon: CreditCard,
-    title: "Flexible Pricing",
+    title: "Paid & Free Events",
     description:
-      "Start free with basic campaigns or upgrade for unlimited access and premium features.",
+      "Host free community events or sell tickets with built-in payment support. Flexible pricing options work for organizers of every size.",
   },
   {
     icon: Bell,
     title: "Smart Notifications",
     description:
-      "Get notified about campaign results, new templates, milestones, and reward opportunities.",
+      "Attendees get reminders before events. Organizers get notified about new RSVPs, questions, and community activity — all in real time.",
   },
 ];
 
@@ -55,11 +55,12 @@ export function FeaturesSection() {
             Features
           </p>
           <h2 className="font-heading text-3xl font-bold tracking-tight text-foreground md:text-4xl text-balance">
-            Everything you need to grow
+            Everything you need to host and join events
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-            From campaign creation to analytics, Join Your Event gives you the
-            tools to promote your business like a pro.
+            JoinYourEvent.com gives organizers the tools to reach their audience
+            and gives attendees the easiest way to find what's happening around
+            them.
           </p>
         </div>
 

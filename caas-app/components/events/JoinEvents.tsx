@@ -181,7 +181,7 @@ function DetailsStep({ onNext }: { onNext: (data: DetailsData) => void }) {
           <FormInput
             field={f}
             label="Full name"
-            placeholder="Aarav Karki"
+            placeholder="John Doe"
             required
           />
         )}

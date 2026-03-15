@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { Phone, ArrowLeft, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn, useApiMutation } from "@/lib/utils";
-import { toast } from "@/hooks/use-toast";
 
 const OTP_LEN = 6;
 type Step = "phone" | "otp";
@@ -174,8 +173,9 @@ export function PhoneNumberGate({ userName }: { userName?: string }) {
                   <div className="relative">
                     <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 pointer-events-none" />
                     <span className="absolute left-10 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground select-none pointer-events-none">
-                      +977
+                      +977 -
                     </span>
+
                     <input
                       type="tel"
                       inputMode="numeric"
@@ -187,7 +187,7 @@ export function PhoneNumberGate({ userName }: { userName?: string }) {
                         setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
                       }
                       className={cn(
-                        "w-full rounded-xl border bg-gray-50 py-2.5 pl-[4.5rem] pr-4 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none transition-all",
+                        "w-full rounded-xl border bg-gray-50 py-2.5 pl-[5.25rem] pr-4 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none transition-all",
                         "focus:border-orange-400 focus:bg-white focus:ring-2 focus:ring-orange-400/20",
                         phoneError ? "border-red-400" : "border-gray-200",
                       )}

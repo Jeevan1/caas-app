@@ -2,29 +2,21 @@
 
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import {
-  Calendar,
-  CalendarX,
-  ChevronDown,
-  Loader2,
-  Search,
-  X,
-} from "lucide-react";
+import { Calendar, ChevronDown, Loader2, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Event, PaginatedAPIResponse } from "@/lib/types";
+import {
+  Category,
+  Event,
+  FilterState,
+  PaginatedAPIResponse,
+} from "@/lib/types";
 import EventCardSkeleton from "../fallback/EventCardSkeleton";
 import { EventCard } from "./EventCard";
 import { useApiQuery } from "@/lib/hooks/use-api-query";
-
-type FilterState = {
-  search: string;
-  category: string;
-  is_paid: boolean | null;
-  start_date: string;
-  end_date: string;
-};
-
-type Category = { idx: string; name: string };
+import { EmptyState } from "../EmptyState";
+import { FilterChips } from "../FilterChip";
+import { useThrottle } from "./use-throttle";
+import { Section } from "../section";
 
 const PAGE_SIZE = 10;
 const BASE_URL = "/api/event/events/";
@@ -58,96 +50,10 @@ async function fetchEvents({
   return res.json();
 }
 
-function useThrottle<T extends (...args: any[]) => void>(
-  fn: T,
-  delay: number,
-): T {
-  const lastCall = useRef(0);
-  return useCallback(
-    (...args: Parameters<T>) => {
-      const now = Date.now();
-      if (now - lastCall.current >= delay) {
-        lastCall.current = now;
-        fn(...args);
-      }
-    },
-    [fn, delay],
-  ) as T;
-}
-
 function countActive(f: FilterState): number {
   return [f.category, f.is_paid !== null, f.start_date, f.end_date].filter(
     Boolean,
   ).length;
-}
-
-function FilterChips({
-  applied,
-  categories,
-  onRemove,
-}: {
-  applied: FilterState;
-  categories: Category[];
-  onRemove: (key: keyof FilterState) => void;
-}) {
-  const chips: { key: keyof FilterState; label: string }[] = [];
-
-  if (applied.category) {
-    const name =
-      categories.find((c) => c.idx === applied.category)?.name ??
-      applied.category;
-    chips.push({ key: "category", label: `Category: ${name}` });
-  }
-  if (applied.is_paid === true)
-    chips.push({ key: "is_paid", label: "Paid only" });
-  if (applied.is_paid === false)
-    chips.push({ key: "is_paid", label: "Free only" });
-  if (applied.start_date)
-    chips.push({ key: "start_date", label: `From: ${applied.start_date}` });
-  if (applied.end_date)
-    chips.push({ key: "end_date", label: `To: ${applied.end_date}` });
-
-  if (!chips.length) return null;
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      {chips.map((chip) => (
-        <span
-          key={chip.key}
-          className="flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary"
-        >
-          {chip.label}
-          <button
-            type="button"
-            onClick={() => onRemove(chip.key)}
-            className="ml-0.5 rounded-full hover:text-primary/70"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function EmptyState({ search }: { search: string }) {
-  return (
-    <div className="col-span-full flex flex-col items-center gap-4 py-20 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
-        <CalendarX className="h-7 w-7 text-muted-foreground/60" />
-      </div>
-      <div>
-        <p className="font-heading text-base font-semibold text-foreground">
-          {search ? `No results for "${search}"` : "No events found"}
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {search
-            ? "Try a different search term or clear the filter."
-            : "Check back soon — new events are added regularly."}
-        </p>
-      </div>
-    </div>
-  );
 }
 
 export default function Events() {
@@ -214,7 +120,7 @@ export default function Events() {
   const totalCount = (data?.pages[0] as any)?.count ?? allEvents.length;
 
   return (
-    <div className="min-h-screen bg-background">
+    <Section className="min-h-screen bg-background">
       <div className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-8 sm:px-6">
           <h1 className="font-heading text-3xl font-bold text-foreground md:text-4xl">
@@ -381,7 +287,9 @@ export default function Events() {
               <EmptyState search={applied.search} />
             )}
             {allEvents.map((ev, i) => (
-              <EventCard key={ev.idx} event={ev} index={i} />
+              <Section key={ev.idx} delay={i * 0.1}>
+                <EventCard event={ev} index={i} />
+              </Section>
             ))}
             {isFetchingNextPage &&
               Array.from({ length: 4 }).map((_, i) => (
@@ -406,6 +314,6 @@ export default function Events() {
           )}
         </div>
       </div>
-    </div>
+    </Section>
   );
 }

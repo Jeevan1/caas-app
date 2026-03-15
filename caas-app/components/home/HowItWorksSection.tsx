@@ -1,41 +1,46 @@
 import { Link } from "@/i18n/navigation";
 import { ArrowRight, Search, Sparkles, Users } from "lucide-react";
+import { Section } from "../section";
 
 const howItWorksSteps = [
   {
     icon: Search,
-    title: "Discover events and groups",
+    title: "Discover events near you",
     description:
-      "See who's hosting local campaigns and events for all the things you love.",
-    cta: "Search events and groups",
-    href: "/find",
+      "Browse thousands of events posted by organizations and individuals — from local meetups to large conferences. Find exactly what excites you.",
+    cta: "Explore events",
+    href: "/events",
   },
   {
     icon: Users,
-    title: "Find your people",
+    title: "Join and connect",
     description:
-      "Connect over shared interests and enjoy meaningful experiences together.",
+      "RSVP with one click, connect with attendees who share your interests, and become part of a growing community built around real experiences.",
     cta: null,
     href: null,
   },
   {
     icon: Sparkles,
-    title: "Start a group to host events",
+    title: "Post your own event",
     description:
-      "Create your own group, draw from a community of thousands, and launch campaigns.",
-    cta: "Start a group",
-    href: "/start",
+      "Organizations and individuals can publish events in minutes, reach a targeted audience, and grow their community — all for free.",
+    cta: "Post an event",
+    href: "/create",
   },
 ];
 
 export function HowItWorksSection() {
   return (
-    <section className="bg-background py-14 md:py-20">
+    <Section className="bg-background py-14 md:py-20">
       <div className="mx-auto container">
         <div className="mb-14 text-center">
           <h2 className="font-heading text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-            How Join Your Event works
+            How JoinYourEvent works
           </h2>
+          <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">
+            Whether you're here to attend or to organize — getting started takes
+            less than a minute.
+          </p>
         </div>
 
         <div className="grid gap-8 md:grid-cols-3">
@@ -65,6 +70,6 @@ export function HowItWorksSection() {
           ))}
         </div>
       </div>
-    </section>
+    </Section>
   );
 }

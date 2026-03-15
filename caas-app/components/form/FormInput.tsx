@@ -27,7 +27,7 @@ function FieldInput({
   return (
     <div className="flex flex-col gap-1.5">
       {/* Label */}
-      <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground/60 flex items-center">
+      <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70 flex items-center">
         {label}{" "}
         <span>{required && <span className="text-red-400">*</span>}</span>
       </label>
@@ -68,7 +68,7 @@ function FieldInput({
           value={String(field.state.value ?? "")}
           onChange={(e) => field.handleChange(e.target.value as any)}
           onBlur={field.handleBlur}
-          className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/40"
+          className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
         />
 
         {isPass && (

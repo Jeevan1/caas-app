@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import PageBanner from "@/components/PageBanner";
 
 export const metadata = {
   title: "Blog - Join Your Event",
@@ -87,22 +88,13 @@ const posts = [
 export default function BlogPage() {
   return (
     <section>
-      {/* Hero */}
-      <section className="bg-background py-14 md:py-20">
-        <div className="mx-auto container text-center">
-          <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-primary">
-            Blog & Resources
-          </p>
-          <h1 className="font-heading text-4xl font-bold tracking-tight text-foreground md:text-5xl text-balance">
-            Tips, guides, and success stories
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-            Learn how to run better campaigns, grow your audience, and get the
-            most out of Join Your Event.
-          </p>
-        </div>
-      </section>
-
+      <PageBanner
+        heading={" Blog & Resources"}
+        title={"Tips, guides, and success stories"}
+        description={
+          "Learn how to run better campaigns, grow your audience, and get the most out of Join Your Event."
+        }
+      />
       {/* Featured Post */}
       <section className="bg-card py-12">
         <div className="mx-auto container">

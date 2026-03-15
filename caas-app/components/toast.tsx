@@ -111,14 +111,24 @@ export function showToast({
 }: ToastOptions) {
   if (!title && !description && !action) return;
 
-  return sonnerToast.custom((id) => (
-    <ToastContent
-      toastId={id}
-      title={title}
-      description={description}
-      action={action}
-      variant={variant}
-      showIcon={showIcon}
-    />
-  ));
+  return sonnerToast.custom(
+    (id) => (
+      <ToastContent
+        toastId={id}
+        title={title}
+        description={description}
+        action={action}
+        variant={variant}
+        showIcon={showIcon}
+      />
+    ),
+    {
+      style: {
+        background: "transparent",
+        border: "none",
+        padding: 0,
+        boxShadow: "none",
+      },
+    },
+  );
 }

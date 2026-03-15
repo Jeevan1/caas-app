@@ -3,49 +3,50 @@ import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { Section } from "../section";
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
 
 const slides = [
   {
     id: 1,
-    label: "Dance class",
-    emoji: "💃",
+    label: "Tech Meetup · Every Tuesday",
+    emoji: "💻",
     bg: "from-primary/20 to-primary/5",
     accent: "bg-primary",
   },
   {
     id: 2,
-    label: "Speaking club · Every Thursday",
-    emoji: "🎤",
+    label: "Community Cleanup · This Sunday",
+    emoji: "🌱",
     bg: "from-secondary/20 to-secondary/5",
     accent: "bg-secondary",
   },
   {
     id: 3,
-    label: "Hiking group · Weekends",
-    emoji: "🥾",
+    label: "Startup Pitch Night · Monthly",
+    emoji: "🚀",
     bg: "from-accent/20 to-accent/5",
     accent: "bg-accent",
   },
   {
     id: 4,
-    label: "Dance class",
-    emoji: "💃",
+    label: "Photography Walk · Weekends",
+    emoji: "📸",
     bg: "from-primary/20 to-primary/5",
     accent: "bg-primary",
   },
   {
     id: 5,
-    label: "Speaking club · Every Thursday",
-    emoji: "🎤",
+    label: "Book Club · Every Friday",
+    emoji: "📚",
     bg: "from-secondary/20 to-secondary/5",
     accent: "bg-secondary",
   },
   {
     id: 6,
-    label: "Hiking group · Weekends",
-    emoji: "🥾",
+    label: "Yoga in the Park · Mornings",
+    emoji: "🧘",
     bg: "from-accent/20 to-accent/5",
     accent: "bg-accent",
   },
@@ -73,42 +74,41 @@ export function HeroSection() {
       <section className="relative w-full overflow-hidden bg-background">
         <div className="relative mx-auto grid min-h-[100svh] grid-cols-1 items-stretch md:grid-cols-2 md:min-h-[88vh]">
           {/* ── LEFT: Text ──────────────────────────────────────────────── */}
-          <div className="flex flex-col justify-center gap-6 px-6 py-16 sm:px-10 md:px-12 lg:px-16 xl:px-24">
+          <Section className="flex flex-col justify-center gap-6 px-6 py-16 sm:px-10 md:px-12 lg:px-16 xl:px-24">
             {/* Headline */}
             <h1
               className="font-heading text-3xl font-bold leading-tight tracking-tight text-foreground text-balance sm:text-4xl lg:text-5xl xl:text-6xl"
               style={{ animation: "heroFadeUp 0.7s ease both" }}
             >
-              The{" "}
+              Your{" "}
               <span
                 className="inline-flex items-center gap-2"
                 style={{ animation: "heroFadeUp 0.7s ease 0.1s both" }}
               >
                 <span className="hero-icon relative inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-base sm:h-8 sm:w-8 sm:text-lg">
-                  👥
+                  🏙️
                 </span>
-                <span className="hero-word">people</span>
+                <span className="hero-word">community,</span>
               </span>{" "}
-              platform. <br className="hidden md:block" />
-              Where{" "}
+              your <br className="hidden md:block" />
               <span
                 className="inline-flex items-center gap-2"
                 style={{ animation: "heroFadeUp 0.7s ease 0.22s both" }}
               >
                 <span className="hero-icon relative inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent text-accent-foreground text-base sm:h-8 sm:w-8 sm:text-lg">
-                  ⚡
+                  🎯
                 </span>
-                <span className="hero-word">interests</span>
+                <span className="hero-word">events.</span>
               </span>{" "}
-              become{" "}
+              All in{" "}
               <span
                 className="inline-flex items-center gap-2"
                 style={{ animation: "heroFadeUp 0.7s ease 0.34s both" }}
               >
                 <span className="hero-icon relative inline-flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-secondary-foreground text-base sm:h-8 sm:w-8 sm:text-lg">
-                  ❤️
+                  ✨
                 </span>
-                <span className="hero-word">friendships.</span>
+                <span className="hero-word">one place.</span>
               </span>
             </h1>
 
@@ -117,30 +117,39 @@ export function HeroSection() {
               className="max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base"
               style={{ animation: "heroFadeUp 0.7s ease 0.46s both" }}
             >
-              Whatever your interest, from hiking and reading to networking and
-              skill sharing, there are thousands of people who share it on Join
-              My Event. Events are happening every day—sign up to join the fun.
+              JoinYourEvent.com is the community-as-a-service platform where
+              organizations and individuals post, discover, and join events that
+              matter. From local meetups to large-scale conferences — find your
+              people and make things happen.
             </p>
 
             {/* CTA */}
-            <div style={{ animation: "heroFadeUp 0.7s ease 0.58s both" }}>
+            <div
+              className="flex flex-wrap items-center gap-3"
+              style={{ animation: "heroFadeUp 0.7s ease 0.58s both" }}
+            >
               <Link href="/register">
                 <Button
                   size="lg"
                   className="hero-btn gap-2 rounded-full px-6 text-sm sm:px-8 sm:text-base"
                 >
-                  Join Join Your Event
+                  Join for free
                   <ArrowRight className="hero-arrow h-4 w-4" />
                 </Button>
               </Link>
+              <Link href="/events">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="gap-2 rounded-full px-6 text-sm sm:px-8 sm:text-base"
+                >
+                  Browse events
+                </Button>
+              </Link>
             </div>
-          </div>
+          </Section>
 
           {/* ── RIGHT: Slide visual ─────────────────────────────────────── */}
-          {/*
-            Mobile: fixed aspect-ratio box so it doesn't take full screen height.
-            md+: stretches to fill the grid row height.
-          */}
           <div className="relative aspect-[4/3] w-full overflow-hidden md:aspect-auto md:h-auto">
             {/* Slide background */}
             <div
@@ -186,7 +195,7 @@ export function HeroSection() {
               </button>
             </div>
 
-            {/* Dot indicators — right edge, hidden on very small screens */}
+            {/* Dot indicators */}
             <div className="absolute right-3 top-1/2 hidden -translate-y-1/2 flex-col gap-2 sm:flex sm:right-6">
               {slides.map((_, i) => (
                 <button
@@ -203,7 +212,7 @@ export function HeroSection() {
               ))}
             </div>
 
-            {/* Left fade — only on md+ where it blends into the text column */}
+            {/* Left fade */}
             <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-background to-transparent md:w-16" />
           </div>
         </div>
@@ -218,9 +227,7 @@ export function HeroSection() {
           transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
           display: inline-flex;
         }
-        .hero-icon:hover {
-          transform: scale(2.25) rotate(-12deg);
-        }
+        .hero-icon:hover { transform: scale(2.25) rotate(-12deg); }
         .hero-word {
           position: relative;
           display: inline-block;

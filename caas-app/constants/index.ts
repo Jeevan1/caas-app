@@ -8,3 +8,4 @@ export const CATEGORIES_QUERY_KEY = ["categories"];
 export const SINGLE_CATEGORY_QUERY_KEY = (id: string) => ["category", id];
 export const JOINED_EVENTS_QUERY_KEY = ["events", "joined"];
 export const FAVORITE_QUERY_KEY = (id: string) => ["event-favorite", id];
+export const BLOG_QUERY_KEY = ["blog"];

@@ -1,6 +1,7 @@
 import { Link } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
 import { Button } from "../ui/button";
+import { Section } from "../section";
 
 const articles = [
   {
@@ -30,7 +31,7 @@ const articles = [
 ];
 export function CommunityStoriesSection() {
   return (
-    <section className="bg-card py-16 md:py-20">
+    <Section className="bg-card py-16 md:py-20">
       <div className="mx-auto container">
         {/* Label */}
         <p className="mb-1 text-center text-xs font-semibold uppercase tracking-widest text-primary">
@@ -49,35 +50,36 @@ export function CommunityStoriesSection() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
-          {articles.map((article) => (
-            <Link
-              key={article.id}
-              href={article.href}
-              className="group flex flex-col gap-4 rounded-2xl border border-border bg-background overflow-hidden transition-all hover:border-primary/30 hover:shadow-md"
-            >
-              {/* Article image placeholder */}
-              <div className="flex h-44 items-center justify-center bg-muted text-6xl">
-                {article.emoji}
-              </div>
-              <div className="flex flex-1 flex-col gap-2 p-5">
-                <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
-                  {article.title}
-                </h3>
-                <p className="text-sm leading-relaxed text-muted-foreground flex-1">
-                  {article.excerpt}
-                </p>
-                <span className="mt-3 flex items-center gap-1.5 text-sm font-semibold text-primary">
-                  Read more <ArrowRight className="h-3.5 w-3.5" />
-                </span>
-              </div>
-            </Link>
+          {articles.map((article, index) => (
+            <Section key={article.id} delay={index * 0.1}>
+              <Link
+                href={article.href}
+                className="group flex flex-col gap-4 rounded-2xl border border-border bg-background overflow-hidden transition-all hover:border-primary/30 hover:shadow-md"
+              >
+                {/* Article image placeholder */}
+                <div className="flex h-44 items-center justify-center bg-muted text-6xl">
+                  {article.emoji}
+                </div>
+                <div className="flex flex-1 flex-col gap-2 p-5">
+                  <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
+                    {article.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground flex-1">
+                    {article.excerpt}
+                  </p>
+                  <span className="mt-3 flex items-center gap-1.5 text-sm font-semibold text-primary">
+                    Read more <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+              </Link>
+            </Section>
           ))}
         </div>
 
         {/* Final CTA */}
-        <div className="mt-16 rounded-2xl border border-border bg-background p-10 text-center">
+        <Section className="mt-16 rounded-2xl border border-border bg-background p-10 text-center">
           <h3 className="font-heading text-2xl font-bold text-foreground md:text-3xl text-balance">
-            Join Join Your Event and find your community
+            Join Your Event and find your community
           </h3>
           <div className="mt-6">
             <Link href="/register">
@@ -86,8 +88,8 @@ export function CommunityStoriesSection() {
               </Button>
             </Link>
           </div>
-        </div>
+        </Section>
       </div>
-    </section>
+    </Section>
   );
 }

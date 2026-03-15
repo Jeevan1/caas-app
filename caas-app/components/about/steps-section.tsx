@@ -1,26 +1,26 @@
-import { UserPlus, Rocket, BarChart3 } from "lucide-react";
+import { UserPlus, CalendarPlus, Users } from "lucide-react";
 
 const steps = [
   {
     icon: UserPlus,
     step: "01",
-    title: "Sign Up & Create Your Profile",
+    title: "Create Your Free Account",
     description:
-      "Create your free account in seconds. Add your business details, logo, and connect your social media accounts.",
+      "Sign up in seconds as an individual or organization. Set up your profile, add your details, and you're ready to go — no credit card needed.",
   },
   {
-    icon: Rocket,
+    icon: CalendarPlus,
     step: "02",
-    title: "Launch Campaigns Using Templates",
+    title: "Post or Discover Events",
     description:
-      "Choose from dozens of professionally designed templates for social media, email, flyers, and more. Customize and launch.",
+      "Organizations can publish events instantly and reach thousands of interested attendees. Individuals can browse, filter, and RSVP to events happening near them.",
   },
   {
-    icon: BarChart3,
+    icon: Users,
     step: "03",
-    title: "Track Analytics & Grow Your Reach",
+    title: "Connect & Grow Your Community",
     description:
-      "Monitor views, clicks, and leads in real-time. Optimize your campaigns and watch your business grow.",
+      "Meet people who share your interests, build a loyal audience around your events, and turn one-time attendees into a thriving community.",
   },
 ];
 
@@ -33,11 +33,12 @@ export function StepsSection() {
             How It Works
           </p>
           <h2 className="font-heading text-3xl font-bold tracking-tight text-foreground md:text-4xl text-balance">
-            Get started in three simple steps
+            From sign-up to community in three steps
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-            Our platform makes it easy to promote your business without any
-            marketing expertise.
+            Whether you're hosting your first event or joining one,
+            JoinYourEvent.com makes it effortless to connect with the right
+            people.
           </p>
         </div>
 

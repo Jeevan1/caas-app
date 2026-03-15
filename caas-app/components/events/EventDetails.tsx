@@ -80,7 +80,7 @@ const FALLBACK = {
     },
   ],
   attendeeList: [
-    { initials: "AK", name: "Aarav K.", role: "Founder", color: "primary" },
+    { initials: "AK", name: "John K.", role: "Founder", color: "primary" },
     { initials: "MJ", name: "Mina J.", role: "Designer", color: "secondary" },
     { initials: "SR", name: "Sita R.", role: "Developer", color: "accent" },
     { initials: "PB", name: "Prem B.", role: "Marketer", color: "primary" },

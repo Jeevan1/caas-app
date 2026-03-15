@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Zap } from "lucide-react";
+import Image from "next/image";
 
 const footerLinks = {
   Product: [
@@ -29,13 +30,14 @@ export function Footer() {
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-5">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                <Zap className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold tracking-tight text-foreground">
-                Join Your Event
-              </span>
+            <Link href="/" className="inline-block">
+              <Image
+                src="/logo.png"
+                alt="Join Your Event"
+                width={200}
+                height={40}
+                className="h-6 w-full object-contain "
+              />
             </Link>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
               Promote, Grow, and Track Your Business Easily. Affordable DIY

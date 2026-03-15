@@ -8,12 +8,14 @@ function FieldTextarea({
   placeholder,
   maxLength = 100,
   optional = false,
+  rows,
 }: {
   field: AnyFieldApi;
   label: string;
   placeholder: string;
   maxLength?: number;
   optional?: boolean;
+  rows?: number;
 }) {
   const value = String(field.state.value ?? "");
   const hasError = field.state.meta.isTouched && !field.state.meta.isValid;
@@ -23,7 +25,7 @@ function FieldTextarea({
     <div className="flex flex-col gap-1.5">
       {/* Label row */}
       <div className="flex items-center justify-between">
-        <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground/60">
+        <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70">
           {label}{" "}
           {optional && (
             <span className="font-normal normal-case text-muted-foreground">
@@ -63,12 +65,12 @@ function FieldTextarea({
         <textarea
           placeholder={placeholder}
           value={value}
-          rows={2}
+          rows={rows}
           onChange={(e) =>
             field.handleChange(e.target.value.slice(0, maxLength) as any)
           }
           onBlur={field.handleBlur}
-          className="w-full resize-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/40"
+          className="w-full resize-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
         />
       </div>
 

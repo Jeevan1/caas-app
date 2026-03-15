@@ -1,5 +1,6 @@
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: {
@@ -15,7 +16,7 @@ export default async function ProtectedLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
-
+  if (!user) redirect("/login");
   return (
     <div className="flex min-h-screen bg-background">
       <DashboardSidebar />

@@ -222,9 +222,17 @@ export function statusFromDates(start: string, end: string) {
 
 export function cleanImageUrl(raw: string | null | undefined): string {
   if (!raw) return "";
+
+  try {
+    new URL(raw);
+    return raw;
+  } catch {}
+
   if (raw.includes("/media/")) {
     const decoded = decodeURIComponent(raw.split("/media/")[1]);
     return decoded.replace("https:/", "https://");
   }
-  return raw;
+
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "";
+  return `${base}/${raw.replace(/^\/+/, "")}`;
 }

@@ -21,7 +21,7 @@ export interface PaginatedAPIResponse<TData> {
 }
 
 export interface Category {
-  idx: number;
+  idx: string;
   name: string;
   image: string;
   description: string;
@@ -73,4 +73,23 @@ export interface GalleryImage {
   idx: string;
   image: string;
   caption?: string;
+}
+
+export interface FilterState {
+  search: string;
+  category: string;
+  is_paid: boolean | null;
+  start_date: string;
+  end_date: string;
+}
+
+export interface BlogPost {
+  idx: string;
+  title: string;
+  content: string;
+  created_at: string;
+  tags: string[];
+  is_published: boolean;
+  image: string | null;
+  author: User;
 }

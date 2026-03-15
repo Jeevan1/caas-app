@@ -19,7 +19,7 @@ function Avatar({ user }: { user: User }) {
   if (user.image) {
     return (
       <Image
-        src={cleanImageUrl(user.image)}
+        src={cleanImageUrl(user?.image)}
         alt={user.name ?? "User"}
         width={36}
         height={36}

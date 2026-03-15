@@ -5,10 +5,8 @@ import {
   ArrowRight,
   Building2,
   CheckCircle2,
-  KeyRound,
   Lock,
   Mail,
-  ShieldCheck,
   User,
 } from "lucide-react";
 import { Button } from "../ui/button";
@@ -20,6 +18,8 @@ import FieldError from "../form/FIeldError";
 import z from "zod";
 import AuthHeader from "./AuthHeader";
 import { SignupStepBar } from "./AuthModel";
+import { toast } from "@/hooks/use-toast";
+import { useRouter } from "@/i18n/navigation";
 
 // ─── SCHEMAS ─────────────────────────────────────────────────────────────────
 
@@ -41,7 +41,6 @@ const passwordSchema = z
       .min(8, "Minimum 8 characters")
       .regex(/[A-Z]/, "Include at least one uppercase letter")
       .regex(/[0-9]/, "Include at least one number"),
-
     new_password: z.string().min(1, "Please confirm your password"),
   })
   .superRefine(({ password, new_password }, ctx) => {
@@ -66,16 +65,9 @@ export function RegisterStep({
   const [serverError, setServerError] = useState("");
 
   const form = useForm({
-    defaultValues: {
-      name: "",
-      user_identifier: "",
-      gender: "",
-    },
+    defaultValues: { name: "", user_identifier: "", gender: "" },
     validators: { onChange: registerSchema as any },
     onSubmit: ({ value }) => {
-      const payload = isOrganizer
-        ? { name: value.name, user_identifier: value.user_identifier }
-        : value;
       mutate(value);
     },
   });
@@ -85,10 +77,9 @@ export function RegisterStep({
       ? "/api/autho/user-management/register-organizer/"
       : "/api/autho/user-management/register/",
     method: "POST",
+    successMessage: "Verification code sent successfully!",
     onSuccessCallback: (data, payload) => {
-      if (payload) {
-        onNext(data.verification.idx, payload.user_identifier);
-      }
+      if (payload) onNext(data.verification.idx, payload.user_identifier);
     },
     onErrorCallback(err) {
       setServerError(err.message);
@@ -104,7 +95,7 @@ export function RegisterStep({
     <div className="flex flex-col gap-4">
       <AuthHeader
         icon={"🚀"}
-        title={`${isOrganizer ? "Register as Organizer" : "Create your account"}`}
+        title={isOrganizer ? "Register as Organizer" : "Create your account"}
       >
         <span></span>
       </AuthHeader>
@@ -124,7 +115,7 @@ export function RegisterStep({
               label={isOrganizer ? "Organizer name" : "Full name"}
               field={field}
               icon={isOrganizer ? Building2 : User}
-              placeholder={isOrganizer ? "Organizer name" : "Aarav Karki"}
+              placeholder={isOrganizer ? "Organizer name" : "John Doe"}
             />
           )}
         </form.Field>
@@ -200,7 +191,8 @@ export function RegisterStep({
             "Sending OTP…"
           ) : (
             <>
-              Continue <ArrowRight className="h-4 w-4" />
+              {" "}
+              Continue <ArrowRight className="h-4 w-4" />{" "}
             </>
           )}
         </Button>
@@ -235,6 +227,7 @@ export function OtpStep({
   const { mutate, isPending } = useApiMutation({
     apiPath: `/api/autho/verification_code/${verificationIdx}/check_otp/`,
     method: "POST",
+    successMessage: "OTP verified successfully!",
     onSuccessCallback: (data) => {
       onNext(data.code);
     },
@@ -255,7 +248,6 @@ export function OtpStep({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Header */}
       <div className="text-center">
         <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-50 text-2xl shadow-sm border border-orange-100">
           🔐
@@ -274,13 +266,10 @@ export function OtpStep({
       <SignupStepBar current={currentStep} />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* OTP boxes */}
         <div className="flex flex-col gap-2">
           <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground text-center">
             Verification Code
           </label>
-
-          {/* Hidden real input */}
           <div className="relative" onClick={() => otpRef.current?.focus()}>
             <input
               ref={otpRef}
@@ -314,7 +303,6 @@ export function OtpStep({
               ))}
             </div>
           </div>
-
           {serverError && (
             <p className="text-[11px] text-red-500 text-center">
               {serverError}
@@ -322,7 +310,6 @@ export function OtpStep({
           )}
         </div>
 
-        {/* Buttons */}
         <div className="flex gap-2">
           <button
             type="button"
@@ -374,6 +361,7 @@ export function SetPasswordStep({
   onDone: () => void;
   currentStep: 0 | 1 | 2;
 }) {
+  const router = useRouter(); // ← initialised
   const [serverError, setServerError] = useState("");
   const [done, setDone] = useState(false);
 
@@ -388,28 +376,56 @@ export function SetPasswordStep({
   const { mutate, isPending } = useApiMutation({
     apiPath: `/api/autho/verification_code/${verificationIdx}/verify_otp/`,
     method: "POST",
+    showSuccessuseToast: false,
     payloadTransform: (payload: any) => ({
       new_password: payload.new_password,
       otp_code: otpCode,
       user_identifier: userIdentifier,
       for_account_verification: true,
     }),
-    onSuccessCallback: (data) => {
-      setDone(true);
-      setTimeout(onDone, 1600);
+    onSuccessCallback: async (_data, payload) => {
+      await login({
+        user_identifier: userIdentifier,
+        password: (payload as any).password,
+      });
     },
     onErrorCallback(err) {
       setServerError(err.message);
     },
   });
 
-  const password = useStore(form.store, (s) => s.values.new_password);
+  const { mutateAsync: login } = useApiMutation({
+    apiPath: "/api/autho/create-token/",
+    method: "POST",
+    queryKey: "login",
+    onSuccessCallback() {
+      toast({
+        title: "Welcome aboard! 🎉",
+        description: "Your account has been created and you are now logged in.",
+        duration: 5000,
+      });
+      setDone(true);
+      router.refresh();
+      setTimeout(onDone, 1600);
+    },
+    onErrorCallback(err) {
+      setDone(true);
+      setTimeout(onDone, 1600);
+    },
+  });
+
+  const password = useStore(form.store, (s) => s.values.password);
   const { canSubmit, isSubmitting } = useStore(form.store, (s) => ({
     canSubmit: s.canSubmit,
     isSubmitting: s.isSubmitting,
   }));
 
-  const strength = [password.length >= 8].filter(Boolean).length;
+  const strength = [
+    password.length >= 8,
+    /[A-Z]/.test(password),
+    /[0-9]/.test(password),
+    /[^A-Za-z0-9]/.test(password),
+  ].filter(Boolean).length;
 
   const strengthLabel = ["Too weak", "Weak", "Fair", "Good", "Strong 💪"][
     strength
@@ -517,7 +533,8 @@ export function SetPasswordStep({
             "Creating account…"
           ) : (
             <>
-              Create account <ArrowRight className="h-4 w-4" />
+              {" "}
+              Create account <ArrowRight className="h-4 w-4" />{" "}
             </>
           )}
         </Button>

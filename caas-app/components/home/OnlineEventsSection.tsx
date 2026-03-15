@@ -6,6 +6,7 @@ import { serverFetch } from "@/lib/server-fetch";
 import { Event, PaginatedAPIResponse } from "@/lib/types";
 import { Suspense } from "react";
 import { EventCardGridLoader } from "../fallback/EventCardSkeleton";
+import { Section } from "../section";
 
 const getEvents = async () => {
   const res = await serverFetch<PaginatedAPIResponse<Event>>("/event/events/");
@@ -17,7 +18,7 @@ export async function OnlineEventsSection() {
   const hasEvents = (events?.results?.length ?? 0) > 0;
 
   return (
-    <section className="bg-card py-16 md:py-20">
+    <Section className="bg-card py-16 md:py-20">
       <div className="container mx-auto">
         {/* Header */}
         <div className="mb-8 flex items-end justify-between">
@@ -46,8 +47,10 @@ export async function OnlineEventsSection() {
         <Suspense fallback={<EventCardGridLoader />}>
           {hasEvents ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {events?.results.map((event) => (
-                <EventCard key={event.idx} event={event} online />
+              {events?.results.map((event, i) => (
+                <Section key={event.idx} delay={i * 0.1}>
+                  <EventCard event={event} />
+                </Section>
               ))}
             </div>
           ) : (
@@ -82,6 +85,6 @@ export async function OnlineEventsSection() {
           </div>
         )}
       </div>
-    </section>
+    </Section>
   );
 }
