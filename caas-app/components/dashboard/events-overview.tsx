@@ -12,6 +12,10 @@ import { Event, PaginatedAPIResponse } from "@/lib/types";
 import { DeleteAlertDialog } from "../DeleteAlertDialog";
 import { EventForm } from "./GalleryForm";
 import { statusFromDates } from "@/lib/helpers";
+import { useCurrentUser } from "@/lib/providers";
+import { hasPermission } from "@/lib/permissions/has-permissions";
+import { redirect } from "@/i18n/navigation";
+import { useLocale } from "next-intl";
 
 // ─── SCHEMA ──────────────────────────────────────────────────────────────────
 
@@ -59,6 +63,16 @@ const formatTime = (iso: string) =>
   });
 
 export function EventsOverview() {
+  const user = useCurrentUser();
+  const locale = useLocale();
+  const hasPerms = hasPermission(user, ["events-my-events:get"]);
+
+  if (!hasPerms)
+    redirect({
+      href: "/dashboard",
+      locale,
+    });
+
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Event | null>(null);
 

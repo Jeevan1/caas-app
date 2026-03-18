@@ -30,6 +30,8 @@ import { PaginatedAPIResponse, Event } from "@/lib/types";
 import { EVENTS_QUERY_KEY } from "@/constants";
 import { RecentEventsTable } from "./recent-events-table";
 import { useMemo } from "react";
+import { useCurrentUser } from "@/lib/providers";
+import { hasPermission } from "@/lib/permissions/has-permissions";
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -95,6 +97,10 @@ function CustomTooltip({ active, payload, label }: any) {
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 
 export function DashboardOverview() {
+  const user = useCurrentUser();
+  const hasPerms = hasPermission(user, ["events-my-events:get"]);
+
+  if (!hasPerms) return null;
   // Fetch all events for chart/stat derivation (larger limit)
   const { data: allEventsData, isLoading: isLoadingAll } = useApiQuery<
     PaginatedAPIResponse<Event>

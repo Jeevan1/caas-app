@@ -1,5 +1,6 @@
 import { CategoryOverview } from "@/components/dashboard/category-overview";
 import { CATEGORIES_QUERY_KEY } from "@/constants";
+import { requirePermission } from "@/lib/permissions/require-permission";
 import { serverFetch } from "@/lib/server-fetch";
 import {
   dehydrate,
@@ -18,6 +19,7 @@ export async function getEvents() {
 }
 
 export default async function DashboardPage() {
+  await requirePermission("event_categories-list:get");
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery({

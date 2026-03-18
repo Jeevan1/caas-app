@@ -24,6 +24,8 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn, useApiMutation } from "@/lib/utils";
 import StyledInput from "@/components/form/FormInput";
 import { ChangePassword } from "./change-password";
+import { useCurrentUser } from "@/lib/providers";
+import { CAN } from "@/lib/permissions/CAN";
 
 // ─── SCHEMAS ─────────────────────────────────────────────────────────────────
 
@@ -451,6 +453,7 @@ function DangerZone() {
 // ─── MAIN EXPORT ─────────────────────────────────────────────────────────────
 
 export function SettingsOverview() {
+  const user = useCurrentUser();
   return (
     <div className="flex flex-col gap-8 p-6 lg:p-8">
       {/* Header */}
@@ -465,14 +468,16 @@ export function SettingsOverview() {
 
       <div className="flex flex-col gap-5">
         {/* Password */}
-        <SectionCard
-          icon={Shield}
-          title="Change password"
-          description="Update your password to keep your account secure"
-          accent="primary"
-        >
-          <ChangePassword />
-        </SectionCard>
+        <CAN permission={"user_management-change-password:post"}>
+          <SectionCard
+            icon={Shield}
+            title="Change password"
+            description="Update your password to keep your account secure"
+            accent="primary"
+          >
+            <ChangePassword />
+          </SectionCard>
+        </CAN>
 
         {/* Notifications */}
         <SectionCard

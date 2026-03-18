@@ -20,6 +20,7 @@ import { cn, useApiMutation } from "@/lib/utils";
 import StyledInput from "@/components/form/FormInput";
 import { useApiQuery } from "@/lib/hooks/use-api-query";
 import { useCurrentUser } from "@/lib/providers";
+import { CAN } from "@/lib/permissions/CAN";
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
@@ -416,34 +417,36 @@ export function ProfileOverview() {
             </div>
 
             {/* Save button */}
-            <div className="flex items-center gap-3 pt-1">
-              <Button
-                type="submit"
-                disabled={!canSubmit || isSubmitting}
-                className={cn(
-                  "gap-2 rounded-xl font-bold transition-all duration-300",
-                  saved && "bg-secondary hover:bg-secondary/90",
-                )}
-              >
-                {isSubmitting ? (
-                  "Saving…"
-                ) : saved ? (
-                  <>
-                    <CheckCircle2 className="h-4 w-4" /> Saved!
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" /> Save changes
-                  </>
-                )}
-              </Button>
+            <CAN permission="user_info-me:patch">
+              <div className="flex items-center gap-3 pt-1">
+                <Button
+                  type="submit"
+                  disabled={!canSubmit || isSubmitting}
+                  className={cn(
+                    "gap-2 rounded-xl font-bold transition-all duration-300",
+                    saved && "bg-secondary hover:bg-secondary/90",
+                  )}
+                >
+                  {isSubmitting ? (
+                    "Saving…"
+                  ) : saved ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4" /> Saved!
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" /> Save changes
+                    </>
+                  )}
+                </Button>
 
-              {saved && (
-                <span className="text-xs text-secondary animate-in fade-in slide-in-from-left-2 duration-300">
-                  Profile updated successfully.
-                </span>
-              )}
-            </div>
+                {saved && (
+                  <span className="text-xs text-secondary animate-in fade-in slide-in-from-left-2 duration-300">
+                    Profile updated successfully.
+                  </span>
+                )}
+              </div>
+            </CAN>
           </form>
         </div>
       </div>

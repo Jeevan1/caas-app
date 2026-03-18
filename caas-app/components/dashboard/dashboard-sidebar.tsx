@@ -12,26 +12,88 @@ import {
   Zap,
   Menu,
   X,
+  Heart,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCurrentUser } from "@/lib/providers";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { cleanImageUrl } from "@/lib/helpers";
+import { CAN } from "@/lib/permissions/CAN";
+import { Button } from "../ui/button";
+import { SignOutAction } from "@/actions/signout";
+import { showToast } from "../toast";
 
 const sidebarLinks = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
-  { href: "/dashboard/categories", icon: Trophy, label: "Categories" },
-  { href: "/dashboard/events", icon: Megaphone, label: "Events" },
-  { href: "/dashboard/joined-events", icon: FileImage, label: "Joined Events" },
-  { href: "/dashboard/blog", icon: FileImage, label: "Blogs" },
-  { href: "/dashboard/profile", icon: User, label: "Profile" },
-  { href: "/dashboard/settings", icon: Settings, label: "Settings" },
+  {
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    label: "Overview",
+    permission: "events-my-events:get",
+  },
+  {
+    href: "/dashboard/categories",
+    icon: Trophy,
+    label: "Categories",
+    permission: "event_categories-detail:get",
+  },
+  {
+    href: "/dashboard/events",
+    icon: Megaphone,
+    label: "Events",
+    permission: "events-my-events:get",
+  },
+  {
+    href: "/dashboard/joined-events",
+    icon: FileImage,
+    label: "Joined Events",
+    permission: "events-joined-events:get",
+  },
+  {
+    href: "/dashboard/followed-organizers",
+    icon: Building2,
+    label: "Followed Organizers",
+    permission: "organizer_follows-list:get",
+  },
+  {
+    href: "/dashboard/favorites-events",
+    icon: Heart,
+    label: "Favorite Events",
+    permission: "event_favorites-list:get",
+  },
+  {
+    href: "/dashboard/blog",
+    icon: FileImage,
+    label: "Blogs",
+    permission: "user_info-me:get",
+  },
+  {
+    href: "/dashboard/profile",
+    icon: User,
+    label: "Profile",
+    permission: "user_info-me:get",
+  },
+  {
+    href: "/dashboard/settings",
+    icon: Settings,
+    label: "Settings",
+    permission: "user_info-me:patch",
+  },
 ];
 
 function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname();
   const user = useCurrentUser();
+
+  const handleSignOut = async () => {
+    await SignOutAction();
+    showToast({
+      title: "Signed Out",
+      description: "You have successfully signed out",
+      variant: "success",
+    });
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -53,28 +115,37 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
           {sidebarLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
-              <li key={link.label}>
-                <Link
-                  href={link.href}
-                  onClick={onLinkClick}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                  )}
-                >
-                  <link.icon className="h-4 w-4" />
-                  {link.label}
-                </Link>
-              </li>
+              <CAN permission={link.permission} key={link.label}>
+                <li>
+                  <Link
+                    href={link.href}
+                    onClick={onLinkClick}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
+                  >
+                    <link.icon className="h-4 w-4" />
+                    {link.label}
+                  </Link>
+                </li>
+              </CAN>
             );
           })}
         </ul>
       </nav>
 
       <div className="p-4 md:mb-10">
-        <div className="flex items-center gap-2 px-2">
+        <Button
+          variant="destructive"
+          className="w-full"
+          onClick={handleSignOut}
+        >
+          <span className="">👋</span> Log Out
+        </Button>
+        <div className="flex items-center gap-2 px-2 mt-4">
           {user?.image ? (
             <Image
               src={cleanImageUrl(user.image)}

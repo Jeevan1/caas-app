@@ -17,6 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import StyledInput from "@/components/form/FormInput";
 import { cn, useApiMutation } from "@/lib/utils";
+import { useCurrentUser } from "@/lib/providers";
+import { hasPermission } from "@/lib/permissions/has-permissions";
 
 const step1Schema = z.object({
   old_password: z.string().min(1, "Current password is required"),
@@ -142,6 +144,13 @@ function StepIndicator({ step }: { step: Step }) {
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 
 export function ChangePassword() {
+  const user = useCurrentUser();
+
+  const hasPerms = hasPermission(user, [
+    "user_management-change-password:post",
+  ]);
+  if (!hasPerms) return null;
+
   const [step, setStep] = useState<Step>(1);
   const [recoveryIdx, setRecoveryIdx] = useState("");
   const [anim, setAnim] = useState(false);

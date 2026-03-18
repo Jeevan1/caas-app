@@ -1,4 +1,6 @@
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
+import { getCurrentUser } from "@/lib/auth/get-current-user";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Dashboard - Join Your Event",
@@ -6,6 +8,8 @@ export const metadata = {
     "Manage your campaigns, track analytics, and grow your business from your Join Your Event dashboard.",
 };
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
   return <DashboardOverview />;
 }

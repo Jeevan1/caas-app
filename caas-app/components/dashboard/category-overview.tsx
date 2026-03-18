@@ -22,6 +22,7 @@ import { useApiQuery } from "@/lib/hooks/use-api-query";
 import { CATEGORIES_QUERY_KEY } from "@/constants";
 import Image from "next/image";
 import { DeleteAlertDialog } from "../DeleteAlertDialog";
+import { CAN } from "@/lib/permissions/CAN";
 
 // ─── SCHEMA ──────────────────────────────────────────────────────────────────
 
@@ -264,15 +265,17 @@ export function CategoryOverview() {
             Manage campaign categories and their details.
           </p>
         </div>
-        <Button
-          className="gap-2"
-          onClick={() => {
-            setEditing(null);
-            setOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4" /> Add Category
-        </Button>
+        <CAN permission="event_categories-list:post">
+          <Button
+            className="gap-2"
+            onClick={() => {
+              setEditing(null);
+              setOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4" /> Add Category
+          </Button>
+        </CAN>
       </div>
 
       {/* Stats */}
@@ -339,7 +342,14 @@ export function CategoryOverview() {
               <tr className="border-b border-border bg-muted/50 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <th className="px-6 py-3">Category</th>
                 <th className="px-6 py-3">Description</th>
-                <th className="px-6 py-3 text-right">Actions</th>
+                <CAN
+                  permission={[
+                    "event_categories-list:patch",
+                    "event_categories-detail:delete",
+                  ]}
+                >
+                  <th className="px-6 py-3 text-right">Actions</th>
+                </CAN>
               </tr>
             </thead>
             <tbody>
@@ -397,28 +407,39 @@ export function CategoryOverview() {
                       </span>
                     </td>
 
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 gap-1.5 rounded-lg px-3 text-xs"
-                          onClick={() => {
-                            setEditing(cat);
-                            setOpen(true);
-                          }}
-                        >
-                          <Pencil className="h-3 w-3" /> Edit
-                        </Button>
+                    <CAN
+                      permission={[
+                        "event_categories-list:patch",
+                        "event_categories-detail:delete",
+                      ]}
+                    >
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <CAN permission="event_categories-list:patch">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 gap-1.5 rounded-lg px-3 text-xs"
+                              onClick={() => {
+                                setEditing(cat);
+                                setOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-3 w-3" /> Edit
+                            </Button>
+                          </CAN>
 
-                        <DeleteAlertDialog
-                          url={`/api/event/categories/${cat.idx}`}
-                          queryKey={CATEGORIES_QUERY_KEY}
-                          eventName={cat.name}
-                          onSuccess={() => console.log("deleted!")}
-                        />
-                      </div>
-                    </td>
+                          <CAN permission="event_categories-detail:delete">
+                            <DeleteAlertDialog
+                              url={`/api/event/categories/${cat.idx}`}
+                              queryKey={CATEGORIES_QUERY_KEY}
+                              eventName={cat.name}
+                              onSuccess={() => console.log("deleted!")}
+                            />
+                          </CAN>
+                        </div>
+                      </td>
+                    </CAN>
                   </tr>
                 ))
               )}
