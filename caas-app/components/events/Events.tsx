@@ -18,7 +18,7 @@ import { FilterChips } from "../FilterChip";
 import { useThrottle } from "./use-throttle";
 import { Section } from "../section";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 const BASE_URL = "/api/event/events/";
 
 const EMPTY_FILTERS: FilterState = {

@@ -11,16 +11,29 @@ import FieldInput from "../form/FormInput";
 import FieldTextarea from "../form/FieldTextarea";
 import { mapServerErrors } from "@/lib/api/error-handlers";
 
-const contactSchema = z.object({
-  first_name: z.string().min(1, "First name is required"),
-  last_name: z.string().min(1, "Last name is required"),
-  email: z.string().min(1, "Email is required").email("Invalid email address"),
-  subject: z.string().min(1, "Subject is required"),
-  message: z
-    .string()
-    .min(1, "Message is required")
-    .min(10, "At least 10 characters"),
-});
+const contactSchema = z
+  .object({
+    name: z.string().min(1, "Name is required").min(2, "At least 2 characters"),
+    phone: z.string().optional(),
+    email: z
+      .string()
+      .min(1, "Email is required")
+      .email("Invalid email address"),
+    subject: z.string().min(1, "Subject is required"),
+    message: z
+      .string()
+      .min(1, "Message is required")
+      .min(10, "At least 10 characters"),
+  })
+  .superRefine(({ phone }, ctx) => {
+    if (phone && !/^\d{10}$/.test(phone)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Enter a valid 10-digit phone number",
+        path: ["phone"],
+      });
+    }
+  });
 
 type ContactValues = z.infer<typeof contactSchema>;
 
@@ -29,9 +42,9 @@ const ContactForm = () => {
 
   const form = useForm({
     defaultValues: {
-      first_name: "",
-      last_name: "",
+      name: "",
       email: "",
+      phone: "",
       subject: "",
       message: "",
     } satisfies ContactValues,
@@ -43,7 +56,7 @@ const ContactForm = () => {
     },
   });
   const { mutateAsync: sendMessage } = useApiMutation<ContactValues>({
-    apiPath: "/api/contact/",
+    apiPath: "/api/feedback/contact/",
     method: "POST",
     queryKey: "contact-form",
     onErrorCallback(err) {
@@ -111,24 +124,24 @@ const ContactForm = () => {
           className="flex flex-col gap-5"
         >
           <div className="grid gap-5 sm:grid-cols-2">
-            <form.Field name="first_name">
+            <form.Field name="name">
               {(field) => (
                 <FieldInput
                   field={field}
-                  label="First Name"
-                  placeholder="John"
+                  label="Full Name"
+                  placeholder="John Doe"
                   required
                 />
               )}
             </form.Field>
 
-            <form.Field name="last_name">
+            <form.Field name="phone">
               {(field) => (
                 <FieldInput
                   field={field}
-                  label="Last Name"
-                  placeholder="Doe"
-                  required
+                  label="Phone Number"
+                  placeholder="98XXXXXXXX"
+                  type="tel"
                 />
               )}
             </form.Field>

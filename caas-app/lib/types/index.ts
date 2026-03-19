@@ -61,6 +61,8 @@ export interface Event {
   cover_image: string | null;
   duration: string;
   tags: string[];
+  is_online: boolean;
+  online_url: string | null;
 }
 
 export interface Attendee {

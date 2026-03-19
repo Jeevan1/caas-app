@@ -42,7 +42,7 @@ type SortOption = "date_asc" | "date_desc" | "popular" | "newest";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 20;
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "date_asc", label: "Date: Soonest" },

@@ -56,7 +56,7 @@ export default async function RootLayout({
   const dir = localeConfig[locale as Locale].dir;
   const user = await getCurrentUser();
 
-  const needsPhone = !!user && !user.phone;
+  // const needsPhone = !!user && !user.phone;
 
   return (
     <html
@@ -72,9 +72,9 @@ export default async function RootLayout({
             <CurrentUserProvider user={user}>
               {children}
 
-              {needsPhone && (
+              {/* {needsPhone && (
                 <PhoneNumberGate userName={user.name ?? undefined} />
-              )}
+              )} */}
             </CurrentUserProvider>
           </Providers>
         </NextIntlClientProvider>

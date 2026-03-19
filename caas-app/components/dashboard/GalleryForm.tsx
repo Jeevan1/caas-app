@@ -11,10 +11,10 @@ import {
   Calendar,
   MapPin,
   Users,
-  Tag,
   Clock,
   DollarSign,
   Loader2,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -27,38 +27,100 @@ import { EVENTS_QUERY_KEY } from "@/constants";
 import { Event } from "@/lib/types";
 import { Switch } from "../ui/switch";
 import { FieldTagInput } from "../form/TagInput";
+import { MapPicker } from "../MapPicker";
 
 // ─── SCHEMA ──────────────────────────────────────────────────────────────────
 
 const locationSchema = z.object({
-  name: z.string().min(1, "Location is required"),
+  name: z.string().optional(),
   latitude: z.string().optional(),
   longitude: z.string().optional(),
 });
 
-const eventSchema = z.object({
-  title: z.string().min(1, "Title is required").min(2, "At least 2 characters"),
-  description: z
-    .string()
-    .min(1, "Description is required")
-    .max(1000, "Max 1000 characters"),
-  category: z.string().min(1, "Category is required"),
-  start_datetime: z.string().min(1, "Start date & time is required"),
-  end_datetime: z.string().min(1, "End date & time is required"),
-  location: locationSchema,
-  is_paid: z.boolean(),
-  price: z.string().optional(),
-  max_attendees: z.string().regex(/^\d+$/, "Must be a number"),
-  cover_image: z
-    .instanceof(File)
-    .refine((f) => f.size <= 5 * 1024 * 1024, "Max 5 MB")
-    .optional(),
-  tags: z.array(z.string()).optional(),
-});
+const eventSchema = z
+  .object({
+    title: z
+      .string()
+      .min(1, "Title is required")
+      .min(2, "At least 2 characters"),
+    description: z
+      .string()
+      .min(1, "Description is required")
+      .max(1000, "Max 1000 characters"),
+    category: z.string().min(1, "Category is required"),
+    start_datetime: z.string().min(1, "Start date & time is required"),
+    end_datetime: z.string().min(1, "End date & time is required"),
+    is_online: z.boolean().default(false),
+    online_url: z.string().optional(),
+    location: locationSchema,
+    is_paid: z.boolean(),
+    price: z.string().optional(),
+    max_attendees: z.string().regex(/^\d+$/, "Must be a number"),
+    cover_image: z
+      .instanceof(File)
+      .refine((f) => f.size <= 5 * 1024 * 1024, "Max 5 MB")
+      .optional(),
+    tags: z.array(z.string()).optional(),
+  })
+  .superRefine(
+    (
+      {
+        start_datetime,
+        end_datetime,
+        is_paid,
+        price,
+        location,
+        is_online,
+        online_url,
+      },
+      ctx,
+    ) => {
+      if (start_datetime && end_datetime && start_datetime >= end_datetime) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["end_datetime"],
+          message: "End must be after start date & time",
+        });
+      }
+
+      if (
+        is_paid &&
+        (!price || price.trim() === "" || parseFloat(price) <= 0)
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["price"],
+          message: "Price is required for paid events",
+        });
+      }
+
+      if (is_online && (!online_url || online_url.trim() === "")) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["online_url"],
+          message: "Meeting link is required for online events",
+        });
+      }
+
+      if (!is_online) {
+        const hasCoords = !!location.latitude && !!location.longitude;
+        if (hasCoords && (!location.name || location.name.trim() === "")) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["location", "name"],
+            message: "Venue name is required when a pin is set",
+          });
+        }
+      }
+    },
+  );
 
 type EventValues = z.infer<typeof eventSchema>;
 type FormStep = "event" | "gallery" | "done";
+
 const toLocalInput = (iso: string) => (iso ? iso.slice(0, 16) : "");
+
+// ─── SECTION DIVIDER ─────────────────────────────────────────────────────────
 
 function Section({ label }: { label: string }) {
   return (
@@ -121,9 +183,7 @@ function GalleryStep({
       try {
         await uploadImage(fd as any);
         setUploadedCount((c) => c + 1);
-      } catch {
-        // individual failures toasted by useApiMutation — continue with rest
-      }
+      } catch {}
     }
     setUploading(false);
     onDone();
@@ -152,7 +212,6 @@ function GalleryStep({
         maxSizeMB={5}
       />
 
-      {/* Upload progress bar */}
       {uploading && files.length > 0 && (
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between text-xs text-muted-foreground">
@@ -240,18 +299,6 @@ export function EventForm({
   const [step, setStep] = useState<FormStep>("event");
   const [createdEventIdx, setCreatedEventIdx] = useState("");
 
-  const { mutateAsync: createEvent } = useApiMutation<EventValues>({
-    apiPath: "/api/event/events/",
-    method: "POST",
-    queryKey: EVENTS_QUERY_KEY,
-  });
-
-  const { mutateAsync: updateEvent } = useApiMutation<EventValues>({
-    apiPath: `/api/event/events/${editing?.idx}/`,
-    method: "PATCH",
-    queryKey: EVENTS_QUERY_KEY,
-  });
-
   const form = useForm({
     defaultValues: {
       title: editing?.title ?? "",
@@ -259,6 +306,8 @@ export function EventForm({
       category: editing?.category?.idx ?? "",
       start_datetime: toLocalInput(editing?.start_datetime ?? ""),
       end_datetime: toLocalInput(editing?.end_datetime ?? ""),
+      is_online: editing?.is_online ?? false,
+      online_url: editing?.online_url ?? "",
       location: {
         name: editing?.location?.name ?? "",
         latitude: editing?.location?.latitude?.toString() ?? "",
@@ -274,7 +323,6 @@ export function EventForm({
     validators: { onChange: eventSchema as any },
     onSubmit: async ({ value }) => {
       if (isEdit) {
-        // Edit: save → done (no gallery step)
         await updateEvent(value);
         setStep("done");
         setTimeout(() => {
@@ -282,7 +330,6 @@ export function EventForm({
           onOpenChange(false);
         }, 1400);
       } else {
-        // Create: save → gallery step
         const data: any = await createEvent(value);
         setCreatedEventIdx(data?.idx ?? "");
         setStep("gallery");
@@ -291,10 +338,31 @@ export function EventForm({
   });
 
   const isPaid = useStore(form.store, (s) => s.values.is_paid);
+  const isOnline = useStore(form.store, (s) => s.values.is_online);
   const { canSubmit, isSubmitting } = useStore(form.store, (s) => ({
     canSubmit: s.canSubmit,
     isSubmitting: s.isSubmitting,
   }));
+
+  const { mutateAsync: createEvent } = useApiMutation<EventValues>({
+    apiPath: "/api/event/events/",
+    method: "POST",
+    queryKey: EVENTS_QUERY_KEY,
+    payloadTransform(payload) {
+      if (payload.is_online)
+        return {
+          ...payload,
+          location: undefined,
+        };
+      return payload;
+    },
+  });
+
+  const { mutateAsync: updateEvent } = useApiMutation<EventValues>({
+    apiPath: `/api/event/events/${editing?.idx}/`,
+    method: "PATCH",
+    queryKey: EVENTS_QUERY_KEY,
+  });
 
   const handleOpenChange = (o: boolean) => {
     if (!o) {
@@ -337,10 +405,7 @@ export function EventForm({
         <div className="max-h-[85vh] overflow-y-auto px-6 pb-6 pt-4">
           <StepDots step={step} />
 
-          {/* ── DONE ── */}
           {step === "done" && <SuccessScreen isEdit={isEdit} />}
-
-          {/* ── GALLERY ── */}
           {step === "gallery" && (
             <GalleryStep
               eventIdx={createdEventIdx}
@@ -348,7 +413,6 @@ export function EventForm({
             />
           )}
 
-          {/* ── EVENT DETAILS FORM ── */}
           {step === "event" && (
             <>
               <div className="mb-4 text-center">
@@ -444,39 +508,95 @@ export function EventForm({
 
                 <Section label="Location" />
 
-                <form.Field name="location.name">
+                {/* Online / In-person toggle */}
+                <form.Field name="is_online">
                   {(f) => (
-                    <StyledInput
-                      field={f}
-                      label="Venue name"
-                      placeholder="e.g. Thamel Business Hub"
-                      icon={MapPin}
-                    />
+                    <div className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-3.5 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">
+                            Online event
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Hosted via a link instead of a physical venue
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={Boolean(f.state.value)}
+                        onCheckedChange={(v) => {
+                          f.handleChange(v);
+                          // Clear location when switching to online
+                          if (v) {
+                            form.setFieldValue("location.latitude", "");
+                            form.setFieldValue("location.longitude", "");
+                            form.setFieldValue("location.name", "");
+                          }
+                        }}
+                      />
+                    </div>
                   )}
                 </form.Field>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <form.Field name="location.latitude">
+                {/* Online URL — only when is_online */}
+                {isOnline ? (
+                  <form.Field name="online_url">
                     {(f) => (
                       <StyledInput
                         field={f}
-                        label="Latitude"
-                        type="number"
-                        placeholder="27.7172"
+                        label="Meeting link"
+                        placeholder="https://meet.google.com/..."
+                        icon={Globe}
                       />
                     )}
                   </form.Field>
-                  <form.Field name="location.longitude">
-                    {(f) => (
-                      <StyledInput
-                        field={f}
-                        label="Longitude"
-                        type="number"
-                        placeholder="85.3240"
-                      />
-                    )}
-                  </form.Field>
-                </div>
+                ) : (
+                  /* Map — only when NOT online */
+                  <>
+                    <form.Subscribe
+                      selector={(s) => ({
+                        lat: s.values.location.latitude,
+                        lng: s.values.location.longitude,
+                        name: s.values.location.name,
+                      })}
+                    >
+                      {({ lat, lng, name }) => (
+                        <MapPicker
+                          height={280}
+                          value={
+                            lat && lng
+                              ? { lat: parseFloat(lat), lng: parseFloat(lng) }
+                              : undefined
+                          }
+                          defaultCenter={{ lat: 27.7172, lng: 85.324 }}
+                          onChange={(coords) => {
+                            form.setFieldValue(
+                              "location.latitude",
+                              String(coords.lat),
+                            );
+                            form.setFieldValue(
+                              "location.longitude",
+                              String(coords.lng),
+                            );
+                          }}
+                          onLocationName={(autoName) => {
+                            if (!name || name.trim() === "") {
+                              form.setFieldValue("location.name", autoName);
+                            }
+                          }}
+                        />
+                      )}
+                    </form.Subscribe>
+                    {/* Hidden fields so validation still runs */}
+                    <form.Field name="location.latitude">
+                      {() => null}
+                    </form.Field>
+                    <form.Field name="location.longitude">
+                      {() => null}
+                    </form.Field>
+                  </>
+                )}
 
                 <Section label="Tickets" />
 

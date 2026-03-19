@@ -2,56 +2,7 @@ import { Link } from "@/i18n/navigation";
 import { formatDate } from "@/lib/helpers";
 import { Event } from "@/lib/types";
 import { Calendar, Globe } from "lucide-react";
-const nearbyEvents = [
-  {
-    id: 1,
-    title: "Startup Pitch Night & Networking",
-    group: "Entrepreneurs of Kathmandu",
-    date: "Thu, Feb 20 · 6:00 PM",
-    attendees: 42,
-    emoji: "🚀",
-  },
-  {
-    id: 2,
-    title: "Weekend Hike: Shivapuri Hills Trail",
-    group: "Kathmandu Outdoor Club",
-    date: "Sat, Feb 22 · 7:00 AM",
-    attendees: 67,
-    emoji: "🏔️",
-  },
-  {
-    id: 3,
-    title: "Digital Marketing Masterclass",
-    group: "Growth Hackers Nepal",
-    date: "Sun, Feb 23 · 2:00 PM",
-    attendees: 89,
-    emoji: "📊",
-  },
-  {
-    id: 4,
-    title: "Photography Walk: Thamel District",
-    group: "Nepal Street Photographers",
-    date: "Sat, Feb 22 · 9:00 AM",
-    attendees: 23,
-    emoji: "📸",
-  },
-  {
-    id: 5,
-    title: "Book Club: The Lean Startup",
-    group: "Kathmandu Readers Circle",
-    date: "Wed, Feb 19 · 5:30 PM",
-    attendees: 18,
-    emoji: "📚",
-  },
-  {
-    id: 6,
-    title: "Open Mic Night & Jam Session",
-    group: "Kathmandu Music Community",
-    date: "Fri, Feb 21 · 7:00 PM",
-    attendees: 54,
-    emoji: "🎵",
-  },
-];
+import { useApiMutation } from "@/lib/utils";
 
 function EventCard({
   event,
@@ -62,9 +13,17 @@ function EventCard({
   online?: boolean;
   index?: number;
 }) {
+  const { mutate: trackClick } = useApiMutation({
+    apiPath: `/api/event/events/${event.idx}/click/`,
+    method: "POST",
+    queryKey: `event-click-${event.idx}`,
+    showSuccessuseToast: false,
+  });
+
   return (
     <Link
       href={`/events/${event.idx}`}
+      onClick={() => trackClick({})}
       className="group flex flex-col rounded-2xl border border-border bg-card overflow-hidden transition-all hover:border-primary/40 hover:shadow-md"
       style={{ animationDelay: `${index && (index % 10) * 40}ms` }}
     >
@@ -103,7 +62,6 @@ function EventCard({
 
       {/* Footer */}
       <div className="flex items-center gap-2 border-t border-border px-4 py-3">
-        {/* Stacked avatar placeholders */}
         <div className="flex -space-x-2">
           {[0, 1, 2].map((i) => (
             <div

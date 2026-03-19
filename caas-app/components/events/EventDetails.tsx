@@ -34,6 +34,7 @@ import { EventCard } from "./EventCard";
 import { ShareButtons } from "./ShareButtons";
 import { OrganizerCard } from "./OrganizerCard";
 import EventFavorite from "./EventFaviorate";
+import { MapPicker } from "../MapPicker";
 
 // ─── API TYPES ────────────────────────────────────────────────────────────────
 
@@ -373,7 +374,7 @@ export default function EventDetails({
                   {/* Location */}
                   {locationName && (
                     <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
-                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                      {/* <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                       <div>
                         <p className="text-sm font-semibold text-foreground">
                           {locationName}
@@ -383,7 +384,13 @@ export default function EventDetails({
                             {lat.toFixed(4)}, {lng.toFixed(4)}
                           </p>
                         )}
-                      </div>
+                      </div> */}
+                      <MapPicker
+                        value={{ lat: lat ?? 0, lng: lng ?? 0 }}
+                        readOnly
+                        height={200}
+                        label="Event location"
+                      />
                     </div>
                   )}
 
