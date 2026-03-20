@@ -1,3 +1,4 @@
+"use client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { clsx, type ClassValue } from "clsx";
 import { HTTP_METHOD } from "next/dist/server/web/http";

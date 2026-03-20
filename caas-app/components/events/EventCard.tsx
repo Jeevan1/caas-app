@@ -1,3 +1,4 @@
+"use client";
 import { Link } from "@/i18n/navigation";
 import { formatDate } from "@/lib/helpers";
 import { Event } from "@/lib/types";
