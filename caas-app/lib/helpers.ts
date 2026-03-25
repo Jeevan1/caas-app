@@ -223,16 +223,24 @@ export function statusFromDates(start: string, end: string) {
 export function cleanImageUrl(raw: string | null | undefined): string {
   if (!raw) return "";
 
+  if (raw.includes("googleusercontent")) {
+    let url = raw.replace(
+      "http://caas.joinyourevent.com/media/https%3A/",
+      "https://",
+    );
+    url.replace("https://caas.joinyourevent.com/media/https%3A/", "https://");
+    raw = url;
+  }
+
   try {
     new URL(raw);
     return raw;
   } catch {}
 
-  // if (raw.includes("/media/")) {
-  if (raw.includes("googleusercontent")) {
-    const decoded = decodeURIComponent(raw.split("/media/")[1]);
-    return decoded.replace("https:/", "https://");
-  }
+  // if (raw.includes("googleusercontent")) {
+  //   const decoded = decodeURIComponent(raw.split("/media/")[1]);
+  //   return decoded.replace("https:/", "https://");
+  // }
 
   const base = process.env.NEXT_PUBLIC_API_URL ?? "";
   return `${base}/${raw.replace(/^\/+/, "")}`;
