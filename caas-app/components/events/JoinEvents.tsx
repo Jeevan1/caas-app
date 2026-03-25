@@ -276,7 +276,7 @@ function PaymentStep({
           Payment QR code
         </p>
         <ImagePreview
-          src={event.cover_image}
+          src={event.payment_qr}
           filename="payment.png"
           aspectRatio="16/9"
           lightbox

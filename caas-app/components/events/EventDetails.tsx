@@ -151,6 +151,10 @@ export default function EventDetails({
   >({
     url: `/api/event/events/`,
     queryKey: EVENTS_QUERY_KEY,
+    select: (data) => ({
+      ...data,
+      results: data.results.filter((e) => e.idx !== eventId),
+    }),
   });
 
   const title = event?.title ?? "Loading…";
@@ -555,6 +559,10 @@ export default function EventDetails({
                 <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
                   {isRelatedLoading ? (
                     <EventCardGridLoader count={4} />
+                  ) : relatedEvents?.results.length === 0 ? (
+                    <span className="text-muted-foreground text-sm">
+                      No related events
+                    </span>
                   ) : (
                     relatedEvents?.results
                       ?.slice(0, 4)
