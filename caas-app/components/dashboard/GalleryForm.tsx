@@ -46,7 +46,7 @@ const eventSchema = z
     description: z
       .string()
       .min(1, "Description is required")
-      .max(1000, "Max 1000 characters"),
+      .max(10000, "Max 10000 characters"),
     category: z.string().min(1, "Category is required"),
     start_datetime: z.string().min(1, "Start date & time is required"),
     end_datetime: z.string().min(1, "End date & time is required"),
@@ -55,6 +55,7 @@ const eventSchema = z
     location: locationSchema,
     is_paid: z.boolean(),
     price: z.string().optional(),
+    payment_qr: z.any().optional(),
     max_attendees: z.string().regex(/^\d+$/, "Must be a number"),
     cover_image: z
       .instanceof(File)
@@ -69,6 +70,7 @@ const eventSchema = z
         end_datetime,
         is_paid,
         price,
+        payment_qr,
         location,
         is_online,
         online_url,
@@ -87,6 +89,13 @@ const eventSchema = z
         is_paid &&
         (!price || price.trim() === "" || parseFloat(price) <= 0)
       ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["price"],
+          message: "Price is required for paid events",
+        });
+      }
+      if (is_paid && (!payment_qr || payment_qr.size <= 0)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["price"],
@@ -316,6 +325,7 @@ export function EventForm({
       is_paid: editing?.is_paid ?? false,
       price:
         editing?.price && editing.price > 0 ? editing.price.toString() : "",
+      payment_qr: editing?.payment_qr ?? undefined,
       max_attendees: editing?.max_attendees?.toString() ?? "0",
       cover_image: undefined as File | undefined,
       tags: editing?.tags ?? [],
@@ -459,7 +469,7 @@ export function EventForm({
                     <FieldTextarea
                       field={f}
                       label="Description"
-                      maxLength={1000}
+                      maxLength={10000}
                       placeholder="What's this event about? Include agenda, what to bring, etc."
                     />
                   )}
@@ -630,6 +640,11 @@ export function EventForm({
                         icon={DollarSign}
                       />
                     )}
+                  </form.Field>
+                )}
+                {isPaid && (
+                  <form.Field name="payment_qr">
+                    {(f) => <FieldImageUpload field={f} label="Payment QR" />}
                   </form.Field>
                 )}
 

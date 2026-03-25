@@ -25,6 +25,8 @@ import { AuthDialog } from "../auth/AuthModel";
 import { useApiQuery } from "@/lib/hooks/use-api-query";
 import { JOINED_EVENTS_QUERY_KEY, SINGLE_EVENT_QUERY_KEY } from "@/constants";
 import { useQueryClient } from "@tanstack/react-query";
+import Image from "next/image";
+import ImagePreview from "../ImagePreview";
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -229,8 +231,6 @@ function DetailsStep({ onNext }: { onNext: (data: DetailsData) => void }) {
   );
 }
 
-// ─── STEP: PAYMENT ────────────────────────────────────────────────────────────
-
 function PaymentStep({
   event,
   onNext,
@@ -269,6 +269,19 @@ function PaymentStep({
         <span className="rounded-full bg-secondary/10 px-3 py-1 text-sm font-bold text-secondary">
           NPR {event.price?.toLocaleString()}
         </span>
+      </div>
+
+      <div className="overflow-hidden rounded-2xl">
+        <p className="text-sm font-semibold text-foreground p-2">
+          Payment QR code
+        </p>
+        <ImagePreview
+          src={event.cover_image}
+          filename="payment.png"
+          aspectRatio="16/9"
+          lightbox
+          downloadable
+        />
       </div>
 
       <form.Field name="screenshot">

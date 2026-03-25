@@ -182,7 +182,7 @@ const JoinedEventsOverview = () => {
       {/* Header */}
       <div>
         <h1 className="font-heading text-2xl font-bold text-foreground md:text-3xl">
-          My Events
+          Joined Events
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Events you've registered for.

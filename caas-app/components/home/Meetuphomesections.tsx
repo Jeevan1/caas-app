@@ -5,18 +5,20 @@ import { NearbyEventsSection } from "./NearbyEventsSection";
 import { OnlineEventsSection } from "./OnlineEventsSection";
 import { CommunityStoriesSection } from "./CommunityStoriesSection";
 import { HowItWorksSection } from "./HowItWorksSection";
+import { getCurrentUser } from "@/lib/auth/get-current-user";
 
 export async function MeetupHomeSections() {
+  const user = await getCurrentUser();
   return (
     <>
-      <HeroSection />
+      <HeroSection user={user} />
       <NearbyEventsSection />
       <OnlineEventsSection />
-      <JoinCTASection />
+      <JoinCTASection user={user} />
       <CategoriesSection />
       {/* <PopularCitiesSection /> */}
       <HowItWorksSection />
-      <CommunityStoriesSection />
+      <CommunityStoriesSection user={user} />
     </>
   );
 }

@@ -35,6 +35,7 @@ import { ShareButtons } from "./ShareButtons";
 import { OrganizerCard } from "./OrganizerCard";
 import EventFavorite from "./EventFaviorate";
 import { MapPicker } from "../MapPicker";
+import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 
 // ─── API TYPES ────────────────────────────────────────────────────────────────
 
@@ -93,7 +94,7 @@ const FALLBACK = {
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-US", {
+  new Date(iso).toLocaleDateString("en-NP", {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -101,7 +102,7 @@ const formatDate = (iso: string) =>
   });
 
 const formatTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString("en-US", {
+  new Date(iso).toLocaleTimeString("en-NP", {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -152,12 +153,6 @@ export default function EventDetails({
     queryKey: EVENTS_QUERY_KEY,
   });
 
-  const { mutateAsync: follow, isPending: isFollowing } = useApiMutation({
-    apiPath: `/api/event/organizer-follows/`,
-    queryKey: FOLLOW_QUERY_KEY,
-    method: "POST",
-  });
-
   const title = event?.title ?? "Loading…";
   const description = event?.description ?? "";
   const category = event?.category?.name ?? "";
@@ -180,6 +175,7 @@ export default function EventDetails({
   const isPaid = event?.is_paid ?? false;
   const price = event?.price ?? 0;
   const coverImage = event?.cover_image ?? null;
+  const [shareOpen, setShareOpen] = useState(false);
 
   // ── Sticky bar via IntersectionObserver ───────────────────────────────────
   useEffect(() => {
@@ -211,7 +207,10 @@ export default function EventDetails({
           </Link>
           <div className="flex items-center gap-2">
             <EventFavorite eventId={eventId} />
-            <Button className="ib flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all">
+            <Button
+              onClick={() => setShareOpen(true)}
+              className="ib flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all"
+            >
               <Share2 className="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -232,7 +231,7 @@ export default function EventDetails({
                   src={coverImage}
                   alt={title}
                   fill
-                  className="object-cover"
+                  className="object-contain"
                   priority
                 />
               ) : (
@@ -307,7 +306,7 @@ export default function EventDetails({
                         </span>
                       ))}
                   </div>
-                  <div className="mt-2.5 flex items-center gap-1.5">
+                  {/* <div className="mt-2.5 flex items-center gap-1.5">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star
                         key={i}
@@ -325,7 +324,7 @@ export default function EventDetails({
                     <span className="text-xs text-muted-foreground">
                       ({FALLBACK.reviews})
                     </span>
-                  </div>
+                  </div> */}
                 </>
               )}
             </div>
@@ -353,9 +352,13 @@ export default function EventDetails({
               {tab === "about" && (
                 <div className="tc mt-5 flex flex-col gap-4">
                   {description ? (
-                    <p className="text-sm leading-relaxed text-muted-foreground">
-                      {description}
-                    </p>
+                    // <p className="text-sm leading-relaxed text-muted-foreground">
+                    //   {description}
+                    // </p>
+                    <div
+                      dangerouslySetInnerHTML={{ __html: description }}
+                      className=" font-serif"
+                    />
                   ) : (
                     <p className="text-sm italic text-muted-foreground/50">
                       No description provided.
@@ -402,14 +405,14 @@ export default function EventDetails({
                           Capacity
                         </span>
                         <span className="text-muted-foreground">
-                          {FALLBACK.attendees}/{maxAttendees} joined
+                          {event.total_attendees ?? 0}/{maxAttendees} joined
                         </span>
                       </div>
                       <div className="h-2 overflow-hidden rounded-full bg-muted">
                         <div
                           className="pb h-full rounded-full bg-primary"
                           style={{
-                            width: `${Math.min((FALLBACK.attendees / maxAttendees) * 100, 100)}%`,
+                            width: `${Math.min((event.total_attendees ?? 0 / maxAttendees) * 100, 100)}%`,
                           }}
                         />
                       </div>
@@ -583,7 +586,7 @@ export default function EventDetails({
 
               {/* Share */}
               <ShareButtons
-                url={`https://caas-app-pro.netlify.app/events/${event.idx}`}
+                url={`https://joinyourevent.com/events/${event.idx}`}
                 title={event.title}
                 description={event.description}
                 hashtags={["events", "kathmandu"]}
@@ -592,6 +595,19 @@ export default function EventDetails({
           )}
         </div>
       </div>
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent className="overflow-hidden rounded-3xl border border-border/60 bg-card p-6 shadow-2xl sm:max-w-sm">
+          <DialogTitle className="font-heading text-base font-bold text-foreground mb-4">
+            Share this event
+          </DialogTitle>
+          <ShareButtons
+            url={`https://joinyourevent.com/events/${event.idx}`}
+            title={event.title}
+            description={event.description}
+            hashtags={["events", "kathmandu"]}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* ── STICKY BOTTOM BAR ─────────────────────────────────────────────── */}
       {!isDashboard && (

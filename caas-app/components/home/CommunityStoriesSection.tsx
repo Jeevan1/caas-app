@@ -2,6 +2,7 @@ import { Link } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
 import { Button } from "../ui/button";
 import { Section } from "../section";
+import { User } from "@/lib/types";
 
 const articles = [
   {
@@ -29,7 +30,8 @@ const articles = [
     emoji: "📈",
   },
 ];
-export function CommunityStoriesSection() {
+export function CommunityStoriesSection({ user }: { user: User | null }) {
+  const isOrganizer = user?.roles.includes("organizer");
   return (
     <Section className="bg-card py-16 md:py-20">
       <div className="mx-auto container">
@@ -77,18 +79,20 @@ export function CommunityStoriesSection() {
         </div>
 
         {/* Final CTA */}
-        <Section className="mt-16 rounded-2xl border border-border bg-background p-10 text-center">
-          <h3 className="font-heading text-2xl font-bold text-foreground md:text-3xl text-balance">
-            Join Your Event and find your community
-          </h3>
-          <div className="mt-6">
-            <Link href="/register">
-              <Button size="lg" className="gap-2">
-                Sign up <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        </Section>
+        {!isOrganizer && (
+          <Section className="mt-16 rounded-2xl border border-border bg-background p-10 text-center">
+            <h3 className="font-heading text-2xl font-bold text-foreground md:text-3xl text-balance">
+              Join Your Event and find your community
+            </h3>
+            <div className="mt-6">
+              <Link href="/register">
+                <Button size="lg" className="gap-2">
+                  Sign up <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </Section>
+        )}
       </div>
     </Section>
   );

@@ -2,8 +2,10 @@ import { Link } from "@/i18n/navigation";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "../ui/button";
 import { Section } from "../section";
+import { User } from "@/lib/types";
 
-export function JoinCTASection() {
+export function JoinCTASection({ user }: { user: User | null }) {
+  const isOrganizer = user?.roles.includes("organizer");
   return (
     <Section className="relative overflow-hidden bg-primary py-32">
       {/* ── Animated background orbs ─────────────────────────────────────── */}
@@ -68,21 +70,23 @@ export function JoinCTASection() {
           className="mt-8 flex flex-wrap items-center justify-center gap-3"
           style={{ animation: "ctaFadeUp 0.6s ease 0.3s both" }}
         >
-          <Link href="/register">
-            <Button
-              size="lg"
-              variant="secondary"
-              className="cta-btn gap-2 rounded-full px-8 text-base shadow-xl"
-            >
-              Create a free account
-              <ArrowRight className="h-4 w-4 cta-arrow" />
-            </Button>
-          </Link>
+          {!isOrganizer && (
+            <Link href="/register">
+              <Button
+                size="lg"
+                variant="secondary"
+                className="cta-btn gap-2 rounded-full px-8 text-base shadow-xl"
+              >
+                Create a free account
+                <ArrowRight className="h-4 w-4 cta-arrow" />
+              </Button>
+            </Link>
+          )}
           <Link href="/events">
             <Button
               size="lg"
-              variant="ghost"
-              className="gap-2 rounded-full px-8 text-base text-primary-foreground hover:bg-primary-foreground/10"
+              variant={isOrganizer ? "secondary" : "default"}
+              className="gap-2 rounded-full"
             >
               Browse events
             </Button>

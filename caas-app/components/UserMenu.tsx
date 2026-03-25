@@ -86,7 +86,9 @@ export default function UserMenu({
             <p className="truncate text-sm font-semibold text-foreground">
               {user.name}
             </p>
-            <p className="text-[11px] text-muted-foreground">Member</p>
+            <p className="text-sm text-muted-foreground capitalize">
+              {user.roles.includes("organizer") ? "Organizer" : "Consumer"}
+            </p>
           </div>
         </DropdownMenuLabel>
 

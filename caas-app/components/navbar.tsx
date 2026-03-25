@@ -20,8 +20,8 @@ const navLinks: { href: string; labelKey: CommonKeys }[] = [
   { href: "/events", labelKey: "nav.events" },
   { href: "/category", labelKey: "nav.categories" },
   { href: "/how-it-works", labelKey: "nav.howItWorks" },
-  { href: "/pricing", labelKey: "nav.pricing" },
-  { href: "/blog", labelKey: "nav.blog" },
+  // { href: "/pricing", labelKey: "nav.pricing" },
+  // { href: "/blog", labelKey: "nav.blog" },
   { href: "/contact", labelKey: "nav.contact" },
 ];
 

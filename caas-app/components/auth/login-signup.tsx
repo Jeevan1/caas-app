@@ -13,6 +13,7 @@ import { useRouter } from "@/i18n/navigation";
 import { GoogleContactForm } from "./GoogleContactForm";
 import { SignupFlow } from "./AuthModel";
 import GoogleLoginButton from "./GoogleAuthButton";
+import { redirect } from "next/navigation";
 
 // ─── ZOD SCHEMAS ─────────────────────────────────────────────────────────────
 
@@ -364,7 +365,7 @@ export default function AuthSection({
             <FormContent
               {...inline}
               isOrganizer={isOrganizer}
-              onSuccess={() => router.push("/dashboard")}
+              onSuccess={() => redirect("/dashboard")}
             />
           </div>
         </div>

@@ -62,12 +62,12 @@ const sidebarLinks = [
     label: "Favorite Events",
     permission: "event_favorites-list:get",
   },
-  {
-    href: "/dashboard/blog",
-    icon: FileImage,
-    label: "Blogs",
-    permission: "user_info-me:get",
-  },
+  // {
+  //   href: "/dashboard/blog",
+  //   icon: FileImage,
+  //   label: "Blogs",
+  //   permission: "user_info-me:get",
+  // },
   {
     href: "/dashboard/profile",
     icon: User,

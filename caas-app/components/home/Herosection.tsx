@@ -4,6 +4,8 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Section } from "../section";
+import { useCurrentUser } from "@/lib/providers";
+import { User } from "@/lib/types";
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
 
@@ -54,8 +56,10 @@ const slides = [
 
 // ─── COMPONENT ───────────────────────────────────────────────────────────────
 
-export function HeroSection() {
+export function HeroSection({ user }: { user: User | null }) {
   const [current, setCurrent] = useState(0);
+
+  const isIsOrganizer = user?.roles.includes("organizer");
 
   useEffect(() => {
     const timer = setInterval(
@@ -128,15 +132,17 @@ export function HeroSection() {
               className="flex flex-wrap items-center gap-3"
               style={{ animation: "heroFadeUp 0.7s ease 0.58s both" }}
             >
-              <Link href="/register">
-                <Button
-                  size="lg"
-                  className="hero-btn gap-2 rounded-full px-6 text-sm sm:px-8 sm:text-base"
-                >
-                  Join for free
-                  <ArrowRight className="hero-arrow h-4 w-4" />
-                </Button>
-              </Link>
+              {!isIsOrganizer && (
+                <Link href="/register">
+                  <Button
+                    size="lg"
+                    className="hero-btn gap-2 rounded-full px-6 text-sm sm:px-8 sm:text-base"
+                  >
+                    Join for free
+                    <ArrowRight className="hero-arrow h-4 w-4" />
+                  </Button>
+                </Link>
+              )}
               <Link href="/events">
                 <Button
                   size="lg"

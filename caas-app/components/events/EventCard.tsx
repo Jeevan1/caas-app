@@ -4,6 +4,7 @@ import { formatDate } from "@/lib/helpers";
 import { Event } from "@/lib/types";
 import { Calendar, Globe } from "lucide-react";
 import { useApiMutation } from "@/lib/utils";
+import Image from "next/image";
 
 function EventCard({
   event,
@@ -31,10 +32,12 @@ function EventCard({
       {/* Cover image area */}
       <div className="relative flex h-36 w-full items-center justify-center bg-muted text-5xl">
         {event.cover_image && (
-          <img
+          <Image
             src={event.cover_image}
             alt={event.title}
-            className="h-full w-full object-cover"
+            height={156}
+            width={256}
+            className="h-full w-full object-contain"
           />
         )}
         <span className="absolute left-3 top-3 rounded-full bg-secondary/90 px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">

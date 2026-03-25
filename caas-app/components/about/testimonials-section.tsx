@@ -16,7 +16,7 @@ const testimonials = [
     rating: 5,
   },
   {
-    name: "Asmit Dhajal",
+    name: "Asmit Dhakal",
     role: "Attendee & Volunteer",
     quote:
       "I discovered three amazing local events in my first week. The platform makes it genuinely fun to find things happening around you and connect with people.",

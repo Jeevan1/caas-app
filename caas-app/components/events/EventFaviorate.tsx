@@ -7,6 +7,8 @@ import { Heart } from "lucide-react";
 import { useCurrentUser } from "@/lib/providers";
 import { Event, PaginatedAPIResponse, User } from "@/lib/types";
 import { FAVORITE_QUERY_KEY } from "@/constants";
+import { useToast } from "@/hooks/use-toast";
+import { showToast } from "../toast";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -36,6 +38,7 @@ const EventFavorite = ({
     {
       url: `/api/event/favorites`,
       queryKey: FAVORITE_QUERY_KEY(eventId),
+      enabled: !!user,
     },
   );
 
@@ -75,6 +78,14 @@ const EventFavorite = ({
   };
 
   const handleToggle = async () => {
+    if (!user) {
+      showToast({
+        title: "Login Required",
+        description: "You must be logged in to favorite events",
+        variant: "warning",
+      });
+      return;
+    }
     if (isPending) return;
 
     const next = !liked;

@@ -15,8 +15,9 @@ const getEvents = async () => {
 
 export async function OnlineEventsSection() {
   const events = await getEvents();
-  const hasEvents = (events?.results?.length ?? 0) > 0;
 
+  const onlineEvents = events?.results?.filter((event) => event.is_online);
+  const hasEvents = (onlineEvents?.length ?? 0) > 0;
   return (
     <Section className="bg-card py-16 md:py-20">
       <div className="container mx-auto">
@@ -32,7 +33,7 @@ export async function OnlineEventsSection() {
             </h2>
           </div>
           {hasEvents && (
-            <Link href="/find/online">
+            <Link href="/events">
               <Button
                 variant="ghost"
                 size="sm"
@@ -47,7 +48,7 @@ export async function OnlineEventsSection() {
         <Suspense fallback={<EventCardGridLoader />}>
           {hasEvents ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {events?.results.map((event, i) => (
+              {onlineEvents?.map((event, i) => (
                 <Section key={event.idx} delay={i * 0.1}>
                   <EventCard event={event} />
                 </Section>
@@ -66,7 +67,7 @@ export async function OnlineEventsSection() {
                   Check back soon — new online events are added regularly.
                 </p>
               </div>
-              <Link href="/find/online">
+              <Link href="/events">
                 <Button variant="outline" size="sm" className="gap-2">
                   Browse all events <ArrowRight className="h-4 w-4" />
                 </Button>
@@ -77,7 +78,7 @@ export async function OnlineEventsSection() {
 
         {hasEvents && (
           <div className="mt-6 text-center sm:hidden">
-            <Link href="/find/online">
+            <Link href="/events">
               <Button variant="outline" className="gap-2">
                 See all events <ArrowRight className="h-4 w-4" />
               </Button>

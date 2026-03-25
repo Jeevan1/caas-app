@@ -40,9 +40,9 @@ export function Footer() {
               />
             </Link>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
-              Promote, Grow, and Track Your Business Easily. Affordable DIY
-              marketing tools for small businesses, event organizers, and
-              entrepreneurs.
+              JoinYourEvent.com is the platform where organizations and
+              individuals post, discover, and join events that matter — from
+              local meetups to large-scale conferences, all in one place.
             </p>
           </div>
 

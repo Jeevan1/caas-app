@@ -8,14 +8,16 @@ import { useState, useEffect } from "react";
 import { FOLLOW_QUERY_KEY } from "@/constants";
 import { useApiQuery } from "@/lib/hooks/use-api-query";
 import { useApiMutation } from "@/lib/utils";
+import { useCurrentUser } from "@/lib/providers";
 
 export function useOrganizerFollow(organizerId: string) {
+  const user = useCurrentUser();
   const { data: followData, isLoading } = useApiQuery<{
     is_following: boolean;
   }>({
     url: `/api/event/organizer-follows/is-following/?organizer=${organizerId}`,
     queryKey: [...FOLLOW_QUERY_KEY, organizerId],
-    enabled: !!organizerId,
+    enabled: !!organizerId && !!user,
   });
 
   const [isFollowing, setIsFollowing] = useState(false);

@@ -11,6 +11,7 @@ export interface User {
   image: string | null;
   primary_role: string;
   perms: string[];
+  roles: string[];
 }
 
 export interface PaginatedAPIResponse<TData> {
@@ -63,6 +64,7 @@ export interface Event {
   tags: string[];
   is_online: boolean;
   online_url: string | null;
+  payment_qr: string | null;
 }
 
 export interface Attendee {

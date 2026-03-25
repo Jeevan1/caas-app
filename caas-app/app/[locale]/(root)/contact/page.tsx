@@ -8,19 +8,19 @@ const contactMethods = [
     icon: Mail,
     title: "Email Us",
     description: "Our team typically responds within 24 hours.",
-    detail: "support@caas.app",
+    detail: "contact@joinyourevent.com",
   },
   {
     icon: MessageSquare,
     title: "Live Chat",
-    description: "Available Monday through Friday, 9am to 5pm EST.",
+    description: "Available Monday through Friday, 9am to 5pm.",
     detail: "Start a conversation",
   },
   {
     icon: Phone,
     title: "Call Us",
     description: "Speak directly with our support team.",
-    detail: "+1 (555) 123-4567",
+    detail: "+977 9810322739",
   },
 ];
 
@@ -31,7 +31,7 @@ const faqs = [
   },
   {
     q: "Can I use Join Your Event for free?",
-    a: "Yes! Our Free plan includes 3 active campaigns, basic analytics, and access to 5 templates. No credit card required.",
+    a: "Yes! You can start for free with access to essential event management features. Upgrade anytime as your needs grow. No credit card required.",
   },
   {
     q: "How do referral links work?",

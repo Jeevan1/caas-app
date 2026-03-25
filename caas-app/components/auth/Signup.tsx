@@ -219,6 +219,17 @@ export function OtpStep({
   const [serverError, setServerError] = useState("");
   const [otp, setOtp] = useState("");
   const otpRef = useRef<HTMLInputElement>(null);
+  const [timer, setTimer] = useState(0);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timer]);
 
   useEffect(() => {
     otpRef.current?.focus();
@@ -229,12 +240,27 @@ export function OtpStep({
     method: "POST",
     successMessage: "OTP verified successfully!",
     onSuccessCallback: (data) => {
-      onNext(data.code);
+      onNext(otp);
     },
     onErrorCallback(err) {
       setServerError(err.message);
     },
     payloadTransform: (payload: any) => ({ code: payload.code }),
+  });
+
+  const { mutate: mutateResend, isPending: isPendingResend } = useApiMutation({
+    apiPath: `/api/autho/verification_code/send_otp_uid/`,
+    method: "POST",
+    payloadTransform: () => ({ user_identifier: userIdentifier }),
+    successMessage: "OTP sent successfully!",
+    onSuccessCallback: () => {
+      setServerError("");
+      setTimer(30);
+    },
+    onErrorCallback(err) {
+      setTimer(30);
+      setServerError(err.message);
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -340,8 +366,17 @@ export function OtpStep({
 
       <p className="text-center text-[11px] text-muted-foreground">
         Didn't receive it?{" "}
-        <button className="font-semibold text-primary hover:underline">
-          Resend OTP
+        <button
+          type="button" // Always specify type="button" to prevent form submission
+          disabled={isPendingResend || timer > 0}
+          className="font-semibold text-primary hover:underline disabled:text-muted-foreground disabled:no-underline disabled:cursor-not-allowed"
+          onClick={mutateResend}
+        >
+          {isPendingResend
+            ? "Resending..."
+            : timer > 0
+              ? `Resend in ${timer}s`
+              : "Resend OTP"}
         </button>
       </p>
     </div>
@@ -364,11 +399,13 @@ export function SetPasswordStep({
   const router = useRouter(); // ← initialised
   const [serverError, setServerError] = useState("");
   const [done, setDone] = useState(false);
+  const passwordRef = useRef("");
 
   const form = useForm({
     defaultValues: { new_password: "", password: "" },
     validators: { onChange: passwordSchema as any },
     onSubmit: (values) => {
+      passwordRef.current = values.value.password;
       mutate(values.value);
     },
   });
@@ -383,10 +420,11 @@ export function SetPasswordStep({
       user_identifier: userIdentifier,
       for_account_verification: true,
     }),
+    successMessage: "Welcome to Join Your Event! 🎉",
     onSuccessCallback: async (_data, payload) => {
       await login({
         user_identifier: userIdentifier,
-        password: (payload as any).password,
+        password: passwordRef.current,
       });
     },
     onErrorCallback(err) {

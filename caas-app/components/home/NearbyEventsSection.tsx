@@ -24,10 +24,10 @@ export async function NearbyEventsSection() {
           <div>
             <p className="mb-1 flex items-center gap-1.5 text-sm text-muted-foreground">
               <MapPin className="h-3.5 w-3.5 text-primary" />
-              Near you
+              Latst Events
             </p>
             <h2 className="font-heading text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-              Events near Kathmandu
+              Upcoming events
             </h2>
           </div>
           {hasEvents && (
@@ -59,14 +59,14 @@ export async function NearbyEventsSection() {
               </div>
               <div>
                 <p className="font-heading text-lg font-semibold text-foreground">
-                  No events near Kathmandu
+                  No events
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Nothing scheduled nearby yet — explore events in other
                   locations.
                 </p>
               </div>
-              <Link href="/find">
+              <Link href="/events">
                 <Button variant="outline" size="sm" className="gap-2">
                   Browse all events <ArrowRight className="h-4 w-4" />
                 </Button>
@@ -77,7 +77,7 @@ export async function NearbyEventsSection() {
 
         {hasEvents && (
           <div className="mt-6 text-center sm:hidden">
-            <Link href="/find">
+            <Link href="/events">
               <Button variant="outline" className="gap-2">
                 See all events <ArrowRight className="h-4 w-4" />
               </Button>
