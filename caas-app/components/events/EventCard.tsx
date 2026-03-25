@@ -77,7 +77,7 @@ function EventCard({
           ))}
         </div>
         <span className="text-xs text-muted-foreground">
-          {event.total_attendees} attendees
+          {event.joined_attendees} attendees
         </span>
       </div>
     </Link>

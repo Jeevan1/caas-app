@@ -234,7 +234,7 @@ export function RecentEventsTable() {
                       <div className="flex items-center justify-end gap-1.5">
                         <Users className="h-3 w-3 text-muted-foreground/60" />
                         <span className="text-sm font-medium text-foreground">
-                          {fmtNum(event.total_attendees ?? 0)}
+                          {fmtNum(event.joined_attendees ?? 0)}
                         </span>
                       </div>
                     </td>

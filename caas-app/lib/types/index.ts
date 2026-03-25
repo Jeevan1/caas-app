@@ -59,6 +59,7 @@ export interface Event {
   organizer: EventOrganizer;
   max_attendees: number;
   total_attendees: number;
+  joined_attendees: number;
   cover_image: string | null;
   duration: string;
   tags: string[];

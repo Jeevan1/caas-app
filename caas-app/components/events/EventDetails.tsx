@@ -411,14 +411,14 @@ export default function EventDetails({
                           Capacity
                         </span>
                         <span className="text-muted-foreground">
-                          {event.total_attendees ?? 0}/{maxAttendees} joined
+                          {event.joined_attendees}/{maxAttendees} joined
                         </span>
                       </div>
                       <div className="h-2 overflow-hidden rounded-full bg-muted">
                         <div
                           className="pb h-full rounded-full bg-primary"
                           style={{
-                            width: `${Math.min((event.total_attendees ?? 0 / maxAttendees) * 100, 100)}%`,
+                            width: `${Math.min((event.joined_attendees / maxAttendees) * 100, 100)}%`,
                           }}
                         />
                       </div>

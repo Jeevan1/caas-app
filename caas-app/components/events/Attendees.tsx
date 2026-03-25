@@ -1,3 +1,4 @@
+import { cleanImageUrl } from "@/lib/helpers";
 import { useApiQuery } from "@/lib/hooks/use-api-query";
 import { Attendee } from "@/lib/types";
 import { CheckCircle2, Users } from "lucide-react";
@@ -63,7 +64,7 @@ const Attendees = ({ eventId }: { eventId: string }) => {
           <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-[11px] font-bold text-primary">
             {a.image ? (
               <Image
-                src={a.image}
+                src={cleanImageUrl(a.image)}
                 alt={a.name}
                 width={32}
                 height={32}

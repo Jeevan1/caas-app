@@ -228,7 +228,8 @@ export function cleanImageUrl(raw: string | null | undefined): string {
     return raw;
   } catch {}
 
-  if (raw.includes("/media/")) {
+  // if (raw.includes("/media/")) {
+  if (raw.includes("googleusercontent")) {
     const decoded = decodeURIComponent(raw.split("/media/")[1]);
     return decoded.replace("https:/", "https://");
   }
