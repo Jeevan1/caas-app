@@ -578,9 +578,49 @@ function TriggerCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
   );
 }
 
+function CompactTrigger({
+  event,
+  onOpen,
+}: {
+  event: Event;
+  onOpen: () => void;
+}) {
+  const { data: joinedEvents } = useApiQuery<PaginatedAPIResponse<Event>>({
+    url: `/api/event/events/joined-events/`,
+    queryKey: JOINED_EVENTS_QUERY_KEY,
+    queryParams: { pagesize: 100 },
+  });
+
+  const joined = joinedEvents?.results?.some((e) => e.idx === event.idx);
+
+  if (joined) {
+    return (
+      <div className="flex shrink-0 items-center gap-1.5 rounded-xl border border-secondary/30 bg-secondary/10 px-4 py-2.5">
+        <CheckCircle2 className="h-4 w-4 text-secondary" />
+        <span className="text-sm font-bold text-secondary">Joined</span>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={onOpen}
+      className="bar-btn flex shrink-0 items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground"
+    >
+      Join <ArrowRight className="bar-arrow h-4 w-4" />
+    </button>
+  );
+}
+
 // ─── MAIN EXPORT ─────────────────────────────────────────────────────────────
 
-export default function JoinEvent({ event }: { event: Event }) {
+export default function JoinEvent({
+  event,
+  compact,
+}: {
+  event: Event;
+  compact?: boolean;
+}) {
   const user = useCurrentUser();
   const isLoggedIn = !!user;
   const isPaid = event.is_paid ?? false;
@@ -678,6 +718,97 @@ export default function JoinEvent({ event }: { event: Event }) {
     currentStep === "success"
       ? "from-secondary via-green-400 to-secondary"
       : "from-primary via-secondary to-accent";
+  if (compact) {
+    return (
+      <>
+        <CompactTrigger event={event} onOpen={handleJoinClick} />
+        <AuthDialog
+          open={authOpen}
+          onOpenChange={setAuthOpen}
+          defaultView="login"
+        />
+        <Dialog open={open} onOpenChange={handleOpenChange}>
+          <DialogContent className="overflow-hidden rounded-3xl border border-border/60 bg-card p-0 shadow-2xl ring-1 ring-inset ring-white/[0.06] sm:max-w-md">
+            <DialogTitle className="sr-only">Join this event</DialogTitle>
+            <div
+              className={cn(
+                "h-[2.5px] w-full bg-gradient-to-r transition-all duration-700",
+                accentLine,
+              )}
+            />
+            <div className="max-h-[85vh] overflow-y-auto px-6 pb-6 pt-5">
+              {/* Dialog header */}
+              <div className="mb-5 flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10 text-2xl">
+                  {event.cover_image ? (
+                    <img
+                      src={event.cover_image}
+                      alt={event.title}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    "🚀"
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <h2 className="font-heading text-lg font-bold text-foreground">
+                    Join the event
+                  </h2>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {event.title}
+                  </p>
+                </div>
+              </div>
+              {currentStep !== "success" && barSteps.length > 1 && (
+                <div className="mb-6">
+                  <StepBar steps={steps} current={barCurrent} />
+                </div>
+              )}
+              {isLoggedIn && currentStep !== "success" && (
+                <UserBanner name={user?.name ?? ""} email={user?.email ?? ""} />
+              )}
+              <div
+                className={cn(
+                  "transition-all duration-[220ms] ease-[ease]",
+                  anim
+                    ? "translate-y-2 opacity-0"
+                    : "translate-y-0 opacity-100",
+                )}
+              >
+                {currentStep === "details" && (
+                  <DetailsStep onNext={handleDetailsNext} />
+                )}
+                {currentStep === "payment" && (
+                  <PaymentStep
+                    event={event}
+                    onNext={handlePaymentNext}
+                    onBack={() => goTo(stepIndex - 1)}
+                    submitting={submitting}
+                    canGoBack={!isLoggedIn}
+                  />
+                )}
+                {currentStep === "confirm" && (
+                  <ConfirmStep
+                    event={event}
+                    onConfirm={handleConfirm}
+                    submitting={submitting}
+                  />
+                )}
+                {currentStep === "success" && (
+                  <SuccessStep
+                    name={savedName}
+                    email={savedEmail}
+                    event={event}
+                    onClose={() => setOpen(false)}
+                  />
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
 
   return (
     <>

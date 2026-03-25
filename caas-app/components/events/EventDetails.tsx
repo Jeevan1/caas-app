@@ -101,12 +101,14 @@ const formatDate = (iso: string) =>
     year: "numeric",
   });
 
-const formatTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString("en-NP", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
+const formatTime = (iso: string) => {
+  const date = new Date(iso);
+  const h = date.getUTCHours();
+  const m = date.getUTCMinutes();
+  const ampm = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 || 12;
+  return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
+};
 function initials(name: string) {
   return name
     .split(" ")
@@ -700,7 +702,8 @@ export default function EventDetails({
                 </div>
 
                 {/* CTA */}
-                <button
+                <JoinEvent event={event} compact />
+                {/* <button
                   onClick={() => setJoined(!joined)}
                   className={cn(
                     "bar-btn flex shrink-0 items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold",
@@ -718,7 +721,7 @@ export default function EventDetails({
                       Join <ArrowRight className="bar-arrow h-4 w-4" />
                     </>
                   )}
-                </button>
+                </button> */}
               </div>
             </div>
           </div>
