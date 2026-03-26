@@ -1,4 +1,5 @@
 import createNextIntlPlugin from "next-intl/plugin";
+import type { NextConfig } from "next";
 
 const withNextIntl = createNextIntlPlugin({
   experimental: {
@@ -6,18 +7,29 @@ const withNextIntl = createNextIntlPlugin({
   },
 });
 
-const API_BASE = process.env.MASTER_URL!;
-
-const domain = API_BASE.replace(/^https?:\/\//, "");
-
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+const nextConfig: NextConfig = {
   output: "standalone",
   typescript: {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: [domain, "lh3.googleusercontent.com"],
+    remotePatterns: [
+      {
+        protocol: "http",
+        hostname: "caas.joinyourevent.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "caas.joinyourevent.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
+      },
+    ],
   },
 };
 
