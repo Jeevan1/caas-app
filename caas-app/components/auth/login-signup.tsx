@@ -14,6 +14,7 @@ import { GoogleContactForm } from "./GoogleContactForm";
 import { SignupFlow } from "./AuthModel";
 import GoogleLoginButton from "./GoogleAuthButton";
 import { redirect } from "next/navigation";
+import { loginAction } from "@/actions/auth-action";
 
 // ─── ZOD SCHEMAS ─────────────────────────────────────────────────────────────
 
@@ -35,7 +36,7 @@ type View =
   | "otp"
   | "set-password";
 
-// ─── LOGIN FORM ───────────────────────────────────────────────────────────────
+// ─── COMPONENT ───────────────────────────────────────────────────────────────
 
 export function LoginForm({
   switchView,
@@ -46,30 +47,33 @@ export function LoginForm({
   onSuccess?: () => void;
   onGoogleUser?: (u: { email: string; name: string }) => void;
 }) {
-  const router = useRouter();
+  // Plain React state for the server-returned non-field error.
+  // Avoids fighting TanStack Form's GlobalFormValidationError generic type.
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: { user_identifier: "", password: "" },
     validators: { onChange: loginSchema },
     onSubmit: async ({ value }) => {
-      await login(value);
-    },
-  });
+      setServerError(null);
 
-  const { mutateAsync: login, isPending } = useApiMutation({
-    apiPath: "/api/autho/create-token/",
-    method: "POST",
-    queryKey: "login",
-    onSuccessCallback() {
-      toast({
-        title: "Success",
-        description: "You have successfully logged in",
-        duration: 5000,
-        variant: "default",
-      });
-      form.reset();
-      router.refresh();
-      onSuccess?.();
+      const result = await loginAction(value);
+
+      // loginAction calls redirect() on success so we only reach here on error
+      if (!result.success) {
+        // Push field-level errors into each field
+        if (result.fieldErrors) {
+          for (const [field, message] of Object.entries(result.fieldErrors)) {
+            form.setFieldMeta(field as keyof typeof value, (prev) => ({
+              ...prev,
+              errors: [message],
+              errorMap: { onSubmit: message },
+            }));
+          }
+        }
+        // Non-field / generic error → local state, not form.setErrorMap
+        setServerError(result.error);
+      }
     },
   });
 
@@ -103,7 +107,7 @@ export function LoginForm({
         <form.Field name="user_identifier">
           {(field) => (
             <StyledInput
-              label="Email/Phone"
+              label="Email / Phone"
               field={field}
               icon={Mail}
               type="text"
@@ -124,6 +128,13 @@ export function LoginForm({
           )}
         </form.Field>
 
+        {/* Non-field server error banner */}
+        {serverError && (
+          <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
+            {serverError}
+          </p>
+        )}
+
         <div className="flex justify-end">
           <button
             type="button"
@@ -135,10 +146,10 @@ export function LoginForm({
 
         <Button
           type="submit"
-          disabled={!canSubmit || isSubmitting || isPending}
+          disabled={!canSubmit || isSubmitting}
           className="sub-btn mt-1"
         >
-          {isSubmitting || isPending ? (
+          {isSubmitting ? (
             "Signing in…"
           ) : (
             <>
@@ -157,9 +168,7 @@ export function LoginForm({
       </div>
 
       <GoogleLoginButton
-        onNewUser={(email, name) => {
-          onGoogleUser?.({ email, name });
-        }}
+        onNewUser={(email, name) => onGoogleUser?.({ email, name })}
         onSuccess={onSuccess}
       />
 
@@ -365,7 +374,7 @@ export default function AuthSection({
             <FormContent
               {...inline}
               isOrganizer={isOrganizer}
-              onSuccess={() => redirect("/dashboard")}
+              onSuccess={() => router.push("/dashboard")}
             />
           </div>
         </div>

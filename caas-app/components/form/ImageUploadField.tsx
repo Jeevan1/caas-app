@@ -28,8 +28,16 @@ type ImageUploadProps = (ImageUploadSingleProps | ImageUploadMultipleProps) & {
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
-function toPreview(file: File) {
-  return URL.createObjectURL(file);
+function toPreview(file: File | string) {
+  if (file instanceof File) {
+    return URL.createObjectURL(file);
+  }
+
+  if (typeof file === "string") {
+    return file;
+  }
+
+  return "";
 }
 
 // ─── PREVIEW THUMB ────────────────────────────────────────────────────────────

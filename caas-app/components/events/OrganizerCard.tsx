@@ -128,6 +128,7 @@ export function OrganizerCard({
   stats,
   variant = "inline",
 }: OrganizerCardProps) {
+  const user = useCurrentUser();
   if (variant === "sidebar") {
     return (
       <div className="rounded-2xl border border-border bg-card p-4">
@@ -142,7 +143,7 @@ export function OrganizerCard({
               <Globe className="h-3 w-3" /> Public group
             </p>
           </div>
-          <FollowButton idx={idx} />
+          {user?.idx === idx ? null : <FollowButton idx={idx} />}
         </div>
 
         {stats && (
@@ -167,7 +168,7 @@ export function OrganizerCard({
         <p className="text-sm font-semibold text-foreground">{name}</p>
         <p className="truncate text-xs text-muted-foreground">Organizer</p>
       </div>
-      <FollowButton idx={idx} compact />
+      {user?.idx === idx ? null : <FollowButton idx={idx} compact />}
     </div>
   );
 }

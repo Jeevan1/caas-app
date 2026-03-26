@@ -1,8 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { z } from "zod";
-import { Plus, Pencil, CheckCircle2, Calendar, Users } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  CheckCircle2,
+  Calendar,
+  Users,
+  ImageUp,
+} from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -16,36 +22,6 @@ import { useCurrentUser } from "@/lib/providers";
 import { hasPermission } from "@/lib/permissions/has-permissions";
 import { redirect } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
-
-// ─── SCHEMA ──────────────────────────────────────────────────────────────────
-
-const locationSchema = z.object({
-  name: z.string().min(1, "Location is required"),
-  latitude: z.string().optional(),
-  longitude: z.string().optional(),
-});
-
-const eventSchema = z.object({
-  title: z.string().min(1, "Title is required").min(2, "At least 2 characters"),
-  description: z
-    .string()
-    .min(1, "Description is required")
-    .max(1000, "Max 1000 characters"),
-  category: z.string().min(1, "Category is required"),
-  start_datetime: z.string().min(1, "Start date & time is required"),
-  end_datetime: z.string().min(1, "End date & time is required"),
-  location: locationSchema,
-  is_paid: z.boolean(),
-  price: z.string().optional(),
-  max_attendees: z.string().regex(/^\d+$/, "Must be a number"),
-  cover_image: z
-    .instanceof(File)
-    .refine((f) => f.size <= 5 * 1024 * 1024, "Max 5 MB")
-    .optional(),
-  tags: z.string().optional(),
-});
-
-type EventValues = z.infer<typeof eventSchema>;
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -62,19 +38,22 @@ const formatTime = (iso: string) =>
     minute: "2-digit",
   });
 
+// ─── COMPONENT ───────────────────────────────────────────────────────────────
+
 export function EventsOverview() {
   const user = useCurrentUser();
   const locale = useLocale();
-  const hasPerms = hasPermission(user, ["events-my-events:get"]);
 
-  if (!hasPerms)
-    redirect({
-      href: "/dashboard",
-      locale,
-    });
+  if (!hasPermission(user, ["events-my-events:get"])) {
+    redirect({ href: "/dashboard", locale });
+  }
 
-  const [open, setOpen] = useState(false);
+  // Single dialog state — initialStep controls which step opens first
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Event | null>(null);
+  const [initialStep, setInitialStep] = useState<"event" | "gallery" | "done">(
+    "event",
+  );
 
   const { data, isLoading } = useApiQuery<PaginatedAPIResponse<Event>>({
     url: "/api/event/events/my-events",
@@ -82,6 +61,27 @@ export function EventsOverview() {
   });
 
   const events = data?.results ?? [];
+
+  /** Open the dialog for creating a new event */
+  const openCreate = () => {
+    setEditing(null);
+    setInitialStep("event");
+    setDialogOpen(true);
+  };
+
+  /** Open the dialog to edit an existing event */
+  const openEdit = (ev: Event) => {
+    setEditing(ev);
+    setInitialStep("event");
+    setDialogOpen(true);
+  };
+
+  /** Open the dialog straight on the gallery step for an existing event */
+  const openGallery = (ev: Event) => {
+    setEditing(ev);
+    setInitialStep("gallery");
+    setDialogOpen(true);
+  };
 
   const statCards = [
     {
@@ -120,13 +120,7 @@ export function EventsOverview() {
             Manage and publish your events.
           </p>
         </div>
-        <Button
-          className="gap-2"
-          onClick={() => {
-            setEditing(null);
-            setOpen(true);
-          }}
-        >
+        <Button className="gap-2" onClick={openCreate}>
           <Plus className="h-4 w-4" /> Add Event
         </Button>
       </div>
@@ -248,7 +242,7 @@ export function EventsOverview() {
                       </td>
                       <td className="max-w-[160px] px-6 py-4 text-sm text-muted-foreground">
                         <span className="line-clamp-1">
-                          {ev.location?.name}
+                          {ev.is_online ? "Online" : ev.location?.name}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -276,12 +270,17 @@ export function EventsOverview() {
                             size="sm"
                             variant="outline"
                             className="h-8 gap-1.5 rounded-lg px-3 text-xs"
-                            onClick={() => {
-                              setEditing(ev);
-                              setOpen(true);
-                            }}
+                            onClick={() => openEdit(ev)}
                           >
                             <Pencil className="h-3 w-3" /> Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 gap-1.5 rounded-lg px-3 text-xs"
+                            onClick={() => openGallery(ev)}
+                          >
+                            <ImageUp className="h-3 w-3" /> Gallery
                           </Button>
                           <DeleteAlertDialog
                             url={`/api/event/events/${ev.idx}`}
@@ -300,7 +299,13 @@ export function EventsOverview() {
         </div>
       </div>
 
-      <EventForm open={open} onOpenChange={setOpen} editing={editing} />
+      {/* Single dialog for create / edit / gallery */}
+      <EventForm
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        editing={editing}
+        initialStep={initialStep}
+      />
     </div>
   );
 }

@@ -66,7 +66,11 @@ function FieldInput({
           type={isPass ? (show ? "text" : "password") : type}
           placeholder={placeholder}
           value={String(field.state.value ?? "")}
-          onChange={(e) => field.handleChange(e.target.value as any)}
+          onChange={(e) =>
+            type === "datetime-local"
+              ? field.handleChange(new Date(e.target.value))
+              : field.handleChange(e.target.value as any)
+          }
           onBlur={field.handleBlur}
           className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
         />

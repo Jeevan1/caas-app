@@ -9,7 +9,9 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
+  Loader,
   Loader2,
+  Loader2Icon,
   MapPin,
   Users,
 } from "lucide-react";
@@ -373,9 +375,10 @@ function SuccessStep({
   event: Event;
   onClose: () => void;
 }) {
+  const user = useCurrentUser();
   const rows = [
-    { label: "Name", value: name, cls: "" },
-    { label: "Email", value: email, cls: "" },
+    { label: "Name", value: user?.name || name, cls: "" },
+    { label: "Email", value: user?.email || email, cls: "" },
     { label: "Event", value: event.title, cls: "" },
     {
       label: "Payment",
@@ -425,12 +428,18 @@ function SuccessStep({
 // ─── TRIGGER CARD ─────────────────────────────────────────────────────────────
 
 function TriggerCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
+  const user = useCurrentUser();
+  const isExpired = event.end_datetime
+    ? new Date(event.end_datetime).getTime() < Date.now()
+    : false;
+
   const { data: joinedEvents, isLoading } = useApiQuery<
     PaginatedAPIResponse<Event>
   >({
     url: `/api/event/events/joined-events/`,
     queryKey: JOINED_EVENTS_QUERY_KEY,
     queryParams: { pagesize: 100 },
+    enabled: !!user && !isExpired,
   });
 
   const joined = joinedEvents?.results?.some((e) => e.idx === event.idx);
@@ -475,6 +484,8 @@ function TriggerCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
     bold: boolean;
   }[];
 
+  const isMYEvent = user?.idx === event.organizer?.idx;
+
   return (
     <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-md">
       <div className="h-1 w-full bg-gradient-to-r from-primary via-secondary to-accent" />
@@ -515,63 +526,77 @@ function TriggerCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
             ))}
           </div>
         )}
-        {isLoading ? (
-          <div className="h-12 w-full animate-pulse rounded-2xl bg-muted" />
-        ) : !joined ? (
-          <div className="flex flex-col gap-3">
-            <Button
-              onClick={onOpen}
-              className="group relative w-full overflow-hidden rounded-2xl bg-primary px-6 py-4 font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary/35 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md"
-            >
-              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+        {!isMYEvent && (
+          <>
+            {isExpired ? (
+              <Button className="group relative w-full overflow-hidden rounded-2xl bg-primary px-6 py-4 font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary/35 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md">
+                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
 
-              <span className="relative flex items-center justify-center gap-2.5 text-base">
-                Join this event
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 transition-transform duration-300 group-hover:translate-x-1">
-                  <ArrowRight className="h-3.5 w-3.5" />
+                <span className="relative flex items-center justify-center gap-2.5 text-sm">
+                  Event Ended
                 </span>
-              </span>
-            </Button>
+              </Button>
+            ) : user && isLoading ? (
+              <div className="h-12 w-full animate-pulse rounded-2xl bg-muted flex items-center justify-center">
+                <Loader2Icon className="animate-spin" size={16} />
+              </div>
+            ) : !joined ? (
+              <div className="flex flex-col gap-3">
+                <Button
+                  onClick={onOpen}
+                  className="group relative w-full overflow-hidden rounded-2xl bg-primary px-6 py-4 font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary/35 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md"
+                >
+                  <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
 
-            <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
-              {isPaid ? (
-                <>
-                  <span className="inline-block h-1 w-1 rounded-full bg-secondary" />
-                  Secure payment
-                  <span className="inline-block h-1 w-1 rounded-full bg-muted-foreground/40" />
-                  Instant confirmation
-                </>
-              ) : (
-                <>
-                  <span className="inline-block h-1 w-1 rounded-full bg-secondary" />
-                  Free entry
-                  <span className="inline-block h-1 w-1 rounded-full bg-muted-foreground/40" />
-                  No credit card required
-                </>
-              )}
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            <div className="relative w-full overflow-hidden rounded-2xl border border-secondary/30 bg-secondary/8 px-6 py-3">
-              <span className="absolute left-5 top-1/2 -translate-y-1/2">
-                <span className="relative flex h-5 w-5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-secondary/40 opacity-75 [animation-duration:2s]" />
-                  <span className="relative flex h-5 w-5 items-center justify-center rounded-full bg-secondary/15">
-                    <CheckCircle2 className="h-3 w-3 text-secondary" />
+                  <span className="relative flex items-center justify-center gap-2.5 text-base">
+                    Join this event
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 transition-transform duration-300 group-hover:translate-x-1">
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </span>
                   </span>
-                </span>
-              </span>
+                </Button>
 
-              <span className="flex items-center justify-center gap-2 font-semibold text-secondary">
-                You're registered
-              </span>
-            </div>
+                <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
+                  {isPaid ? (
+                    <>
+                      <span className="inline-block h-1 w-1 rounded-full bg-secondary" />
+                      Secure payment
+                      <span className="inline-block h-1 w-1 rounded-full bg-muted-foreground/40" />
+                      Instant confirmation
+                    </>
+                  ) : (
+                    <>
+                      <span className="inline-block h-1 w-1 rounded-full bg-secondary" />
+                      Free entry
+                      <span className="inline-block h-1 w-1 rounded-full bg-muted-foreground/40" />
+                      No credit card required
+                    </>
+                  )}
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <div className="relative w-full overflow-hidden rounded-2xl border border-secondary/30 bg-secondary/8 px-6 py-3">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2">
+                    <span className="relative flex h-5 w-5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-secondary/40 opacity-75 [animation-duration:2s]" />
+                      <span className="relative flex h-5 w-5 items-center justify-center rounded-full bg-secondary/15">
+                        <CheckCircle2 className="h-3 w-3 text-secondary" />
+                      </span>
+                    </span>
+                  </span>
 
-            <p className="text-center text-[11px] text-muted-foreground">
-              Check your email for confirmation details
-            </p>
-          </div>
+                  <span className="flex items-center justify-center gap-2 font-semibold text-secondary">
+                    You're registered
+                  </span>
+                </div>
+
+                <p className="text-center text-[11px] text-muted-foreground">
+                  Check your email for confirmation details
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -714,6 +739,8 @@ export default function JoinEvent({
     .slice(0, stepIndex)
     .filter((s) => s in STEP_LABELS).length;
 
+  const isMyEvent = event.organizer.idx === user?.idx;
+
   const accentLine =
     currentStep === "success"
       ? "from-secondary via-green-400 to-secondary"
@@ -721,7 +748,9 @@ export default function JoinEvent({
   if (compact) {
     return (
       <>
-        <CompactTrigger event={event} onOpen={handleJoinClick} />
+        {!isMyEvent && (
+          <CompactTrigger event={event} onOpen={handleJoinClick} />
+        )}
         <AuthDialog
           open={authOpen}
           onOpenChange={setAuthOpen}

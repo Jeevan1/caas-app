@@ -113,17 +113,14 @@ export function Navbar() {
             }}
           >
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <Link
-                href="/"
-                onClick={() => setDrawerOpen(false)}
-                className="flex items-center gap-2"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                  <Zap className="h-4 w-4 text-primary-foreground" />
-                </div>
-                <span className="text-base font-bold text-foreground">
-                  Join Your Event
-                </span>
+              <Link href="/" className="flex items-center gap-2">
+                <Image
+                  src="/logo.png"
+                  alt="Join Your Event"
+                  width={200}
+                  height={40}
+                  className="h-5 w-full object-cover"
+                />
               </Link>
               <Button
                 onClick={() => setDrawerOpen(false)}

@@ -1,7 +1,7 @@
 type DobType = "ad" | "bs";
 type Gender = "male" | "female" | "other";
 export interface User {
-  id: string;
+  idx: string;
   name: string;
   email: string;
   role: string;

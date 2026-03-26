@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       url,
-      siteName: "Join Your Event Platform",
+      siteName: "Join Your Event",
       type: "website",
       images: [
         {

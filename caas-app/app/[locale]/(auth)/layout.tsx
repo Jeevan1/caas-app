@@ -3,7 +3,7 @@ import { Navbar } from "@/components/navbar";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { redirect } from "next/navigation";
 
-export default async function PublicLayout({
+export default async function AuthLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

@@ -10,7 +10,7 @@ export const metadata = {
   description: "MHR Dashboard",
 };
 
-export default async function ProtectedLayout({
+export default async function ProtectLayout({
   children,
 }: {
   children: React.ReactNode;

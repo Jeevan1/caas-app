@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     "Promote, Grow, and Track Your Business Easily. Affordable DIY marketing tools for small businesses, event organizers, and entrepreneurs.",
   metadataBase: new URL("https://joinmyevent.com"),
   openGraph: {
-    siteName: "Join Your Event Platform",
+    siteName: "Join Your Event",
     type: "website",
     images: [{ url: "/og-default.png", width: 1200, height: 630 }],
   },

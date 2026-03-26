@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { useStore } from "@tanstack/react-store";
 import { z } from "zod";
@@ -24,10 +24,11 @@ import FieldTextarea from "@/components/form/FieldTextarea";
 import ImageUpload, { FieldImageUpload } from "../form/ImageUploadField";
 import { FieldSelect } from "../form/FieldSelect";
 import { EVENTS_QUERY_KEY } from "@/constants";
-import { Event } from "@/lib/types";
+import { Event, GalleryImage, PaginatedAPIResponse } from "@/lib/types";
 import { Switch } from "../ui/switch";
 import { FieldTagInput } from "../form/TagInput";
 import { MapPicker } from "../MapPicker";
+import { useApiQuery } from "@/lib/hooks/use-api-query";
 
 // ─── SCHEMA ──────────────────────────────────────────────────────────────────
 
@@ -57,10 +58,7 @@ const eventSchema = z
     price: z.string().optional(),
     payment_qr: z.any().optional(),
     max_attendees: z.string().regex(/^\d+$/, "Must be a number"),
-    cover_image: z
-      .instanceof(File)
-      .refine((f) => f.size <= 5 * 1024 * 1024, "Max 5 MB")
-      .optional(),
+    cover_image: z.any(),
     tags: z.array(z.string()).optional(),
   })
   .superRefine(
@@ -95,11 +93,15 @@ const eventSchema = z
           message: "Price is required for paid events",
         });
       }
-      if (is_paid && (!payment_qr || payment_qr.size <= 0)) {
+      if (
+        is_paid &&
+        (!payment_qr ||
+          (!(payment_qr instanceof File) && typeof payment_qr !== "string"))
+      ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          path: ["price"],
-          message: "Price is required for paid events",
+          path: ["payment_qr"],
+          message: "Please upload QR image for payment",
         });
       }
 
@@ -128,6 +130,86 @@ type EventValues = z.infer<typeof eventSchema>;
 type FormStep = "event" | "gallery" | "done";
 
 const toLocalInput = (iso: string) => (iso ? iso.slice(0, 16) : "");
+
+// ─── Build PATCH payload — only changed fields ────────────────────────────────
+
+function buildPatchPayload(
+  values: EventValues,
+  original: Event,
+): Partial<EventValues> {
+  const patch: Record<string, any> = {};
+
+  // Scalar fields — direct comparison
+  const scalarKeys = [
+    "title",
+    "description",
+    "is_online",
+    "online_url",
+    "is_paid",
+    "max_attendees",
+    "tags",
+  ] as const;
+
+  for (const key of scalarKeys) {
+    const newVal = values[key];
+    let oldVal: any = (original as any)[key];
+
+    // Normalise: API returns numbers, form holds strings
+    if (key === "max_attendees") oldVal = String(oldVal ?? 0);
+
+    // tags: compare JSON stringified
+    if (key === "tags") {
+      const newTags = JSON.stringify(newVal ?? []);
+      const oldTags = JSON.stringify(oldVal ?? []);
+      if (newTags !== oldTags) patch[key] = newVal;
+      continue;
+    }
+
+    if (newVal !== oldVal) patch[key] = newVal;
+  }
+
+  // category — form stores idx string, API returns object with idx
+  const newCat = values.category;
+  const oldCat = original.category?.idx ?? "";
+  if (newCat !== oldCat) patch["category"] = newCat;
+
+  // start_datetime / end_datetime — compare truncated ISO strings
+  const newStart = values.start_datetime;
+  const oldStart = toLocalInput(original.start_datetime ?? "");
+  if (newStart !== oldStart) patch["start_datetime"] = newStart;
+
+  const newEnd = values.end_datetime;
+  const oldEnd = toLocalInput(original.end_datetime ?? "");
+  if (newEnd !== oldEnd) patch["end_datetime"] = newEnd;
+
+  // price — API returns number, form holds string
+  const newPrice = values.price ?? "";
+  const oldPrice =
+    original.price && original.price > 0 ? String(original.price) : "";
+  if (newPrice !== oldPrice) patch["price"] = newPrice;
+
+  // File fields — only include if a new File was selected
+  if (values.cover_image instanceof File)
+    patch["cover_image"] = values.cover_image;
+  if (values.payment_qr instanceof File)
+    patch["payment_qr"] = values.payment_qr;
+
+  // location — skip entirely for online events; otherwise compare each sub-field
+  if (!values.is_online) {
+    const oldLat = String(original.location?.latitude ?? "");
+    const oldLng = String(original.location?.longitude ?? "");
+    const oldName = original.location?.name ?? "";
+
+    const locChanged =
+      values.location.name !== oldName ||
+      (values.location.latitude ?? "") !== oldLat ||
+      (values.location.longitude ?? "") !== oldLng;
+
+    if (locChanged) patch["location"] = values.location;
+  }
+
+  return patch as Partial<EventValues>;
+}
 
 // ─── SECTION DIVIDER ─────────────────────────────────────────────────────────
 
@@ -163,7 +245,7 @@ function StepDots({ step }: { step: FormStep }) {
 
 // ─── GALLERY STEP ────────────────────────────────────────────────────────────
 
-function GalleryStep({
+export function GalleryStep({
   eventIdx,
   onDone,
 }: {
@@ -178,6 +260,7 @@ function GalleryStep({
     apiPath: `/api/event/events/${eventIdx}/images/`,
     method: "POST",
     queryKey: EVENTS_QUERY_KEY,
+    showSuccessuseToast: false,
   });
 
   const handleUpload = async () => {
@@ -272,7 +355,7 @@ function GalleryStep({
 
 // ─── SUCCESS SCREEN ──────────────────────────────────────────────────────────
 
-function SuccessScreen({ isEdit }: { isEdit: boolean }) {
+export function SuccessScreen({ isEdit }: { isEdit: boolean }) {
   return (
     <div
       className="flex flex-col items-center gap-4 py-10 text-center"
@@ -299,13 +382,22 @@ export function EventForm({
   open,
   onOpenChange,
   editing,
+  initialStep = "event",
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   editing: Event | null;
+  /** Jump straight to gallery (e.g. from the Gallery button in the table) */
+  initialStep?: FormStep;
 }) {
   const isEdit = !!editing;
-  const [step, setStep] = useState<FormStep>("event");
+  const [step, setStep] = useState<FormStep>(initialStep);
+
+  // Keep step in sync when the dialog is opened with a different initialStep
+  useEffect(() => {
+    if (open) setStep(initialStep);
+  }, [open, initialStep]);
+
   const [createdEventIdx, setCreatedEventIdx] = useState("");
 
   const form = useForm({
@@ -325,20 +417,26 @@ export function EventForm({
       is_paid: editing?.is_paid ?? false,
       price:
         editing?.price && editing.price > 0 ? editing.price.toString() : "",
+      // Keep URL string so FieldImageUpload can show existing preview
       payment_qr: editing?.payment_qr ?? undefined,
       max_attendees: editing?.max_attendees?.toString() ?? "0",
-      cover_image: undefined as File | undefined,
+      // Keep URL string so FieldImageUpload can show existing preview
+      cover_image: editing?.cover_image ?? undefined,
       tags: editing?.tags ?? [],
     } satisfies EventValues,
     validators: { onChange: eventSchema as any },
     onSubmit: async ({ value }) => {
-      if (isEdit) {
-        await updateEvent(value);
+      if (isEdit && editing) {
+        const patch = buildPatchPayload(value, editing);
+        // Nothing changed — skip the request and close
+        if (Object.keys(patch).length === 0) {
+          setStep("done");
+          setTimeout(() => handleOpenChange(false), 1400);
+          return;
+        }
+        await updateEvent(patch as any);
         setStep("done");
-        setTimeout(() => {
-          setStep("event");
-          onOpenChange(false);
-        }, 1400);
+        setTimeout(() => handleOpenChange(false), 1400);
       } else {
         const data: any = await createEvent(value);
         setCreatedEventIdx(data?.idx ?? "");
@@ -359,16 +457,13 @@ export function EventForm({
     method: "POST",
     queryKey: EVENTS_QUERY_KEY,
     payloadTransform(payload) {
-      if (payload.is_online)
-        return {
-          ...payload,
-          location: undefined,
-        };
+      if (payload.is_online) return { ...payload, location: undefined };
       return payload;
     },
   });
 
-  const { mutateAsync: updateEvent } = useApiMutation<EventValues>({
+  // PATCH — payload is already diffed; just forward it as-is
+  const { mutateAsync: updateEvent } = useApiMutation<Partial<EventValues>>({
     apiPath: `/api/event/events/${editing?.idx}/`,
     method: "PATCH",
     queryKey: EVENTS_QUERY_KEY,
@@ -385,10 +480,7 @@ export function EventForm({
 
   const handleGalleryDone = () => {
     setStep("done");
-    setTimeout(() => {
-      setStep("event");
-      onOpenChange(false);
-    }, 1400);
+    setTimeout(() => handleOpenChange(false), 1400);
   };
 
   const accentClass =
@@ -416,9 +508,10 @@ export function EventForm({
           <StepDots step={step} />
 
           {step === "done" && <SuccessScreen isEdit={isEdit} />}
+
           {step === "gallery" && (
             <GalleryStep
-              eventIdx={createdEventIdx}
+              eventIdx={createdEventIdx || editing?.idx || ""}
               onDone={handleGalleryDone}
             />
           )}
@@ -518,7 +611,6 @@ export function EventForm({
 
                 <Section label="Location" />
 
-                {/* Online / In-person toggle */}
                 <form.Field name="is_online">
                   {(f) => (
                     <div className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-3.5 py-3">
@@ -537,7 +629,6 @@ export function EventForm({
                         checked={Boolean(f.state.value)}
                         onCheckedChange={(v) => {
                           f.handleChange(v);
-                          // Clear location when switching to online
                           if (v) {
                             form.setFieldValue("location.latitude", "");
                             form.setFieldValue("location.longitude", "");
@@ -549,7 +640,6 @@ export function EventForm({
                   )}
                 </form.Field>
 
-                {/* Online URL — only when is_online */}
                 {isOnline ? (
                   <form.Field name="online_url">
                     {(f) => (
@@ -562,7 +652,6 @@ export function EventForm({
                     )}
                   </form.Field>
                 ) : (
-                  /* Map — only when NOT online */
                   <>
                     <form.Subscribe
                       selector={(s) => ({
@@ -598,7 +687,6 @@ export function EventForm({
                         />
                       )}
                     </form.Subscribe>
-                    {/* Hidden fields so validation still runs */}
                     <form.Field name="location.latitude">
                       {() => null}
                     </form.Field>
@@ -606,6 +694,20 @@ export function EventForm({
                       {() => null}
                     </form.Field>
                   </>
+                )}
+
+                {/* Venue name — shown below the map for in-person events */}
+                {!isOnline && (
+                  <form.Field name="location.name">
+                    {(f) => (
+                      <StyledInput
+                        field={f}
+                        label="Venue name"
+                        placeholder="e.g. Kathmandu Convention Centre"
+                        icon={MapPin}
+                      />
+                    )}
+                  </form.Field>
                 )}
 
                 <Section label="Tickets" />
@@ -692,13 +794,11 @@ export function EventForm({
                     )
                   ) : isEdit ? (
                     <>
-                      {" "}
-                      Save changes <ArrowRight className="h-4 w-4" />{" "}
+                      Save changes <ArrowRight className="h-4 w-4" />
                     </>
                   ) : (
                     <>
-                      {" "}
-                      Next: Add photos <Images className="h-4 w-4" />{" "}
+                      Next: Add photos <Images className="h-4 w-4" />
                     </>
                   )}
                 </Button>
