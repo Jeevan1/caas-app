@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "@tanstack/react-form";
-import { useStore } from "@tanstack/react-store";
+import { useEffect, useState, useTransition } from "react";
 import { z } from "zod";
 import {
   Bell,
@@ -24,8 +22,13 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn, useApiMutation } from "@/lib/utils";
 import StyledInput from "@/components/form/FormInput";
 import { ChangePassword } from "./change-password";
-import { useCurrentUser } from "@/lib/providers";
+import { useCurrentUser, useCurrentUserSettings } from "@/lib/providers";
 import { CAN } from "@/lib/permissions/CAN";
+import { showToast } from "../toast";
+import { SignOutAction } from "@/actions/signout";
+import { Locale, useLocale } from "next-intl";
+import { setLocaleCookie } from "@/i18n/utils";
+import { usePathname, useRouter } from "@/i18n/navigation";
 
 // ─── SCHEMAS ─────────────────────────────────────────────────────────────────
 
@@ -123,59 +126,80 @@ function SettingRow({
 // ─── NOTIFICATION SETTINGS ───────────────────────────────────────────────────
 
 type NotifKey =
-  | "email_events"
-  | "email_reminders"
+  | "is_new_event_alerts_enabled"
+  | "is_event_remainder_enabled"
   | "email_marketing"
   | "push_events"
   | "push_reminders";
 
 const NOTIF_ROWS: { key: NotifKey; label: string; description: string }[] = [
   {
-    key: "email_events",
+    key: "is_new_event_alerts_enabled",
     label: "New event alerts",
     description: "When events matching your interests are posted",
   },
   {
-    key: "email_reminders",
+    key: "is_event_remainder_enabled",
     label: "Event reminders",
     description: "24h and 1h before events you've joined",
   },
-  {
-    key: "email_marketing",
-    label: "Tips & announcements",
-    description: "Product updates and community highlights",
-  },
-  {
-    key: "push_events",
-    label: "Push: new events",
-    description: "Real-time alerts for nearby or followed events",
-  },
-  {
-    key: "push_reminders",
-    label: "Push: reminders",
-    description: "Mobile push reminders before your events",
-  },
+  // {
+  //   key: "email_marketing",
+  //   label: "Tips & announcements",
+  //   description: "Product updates and community highlights",
+  // },
+  // {
+  //   key: "push_events",
+  //   label: "Push: new events",
+  //   description: "Real-time alerts for nearby or followed events",
+  // },
+  // {
+  //   key: "push_reminders",
+  //   label: "Push: reminders",
+  //   description: "Mobile push reminders before your events",
+  // },
 ];
 
 function NotificationSettings() {
   const [prefs, setPrefs] = useState<Record<NotifKey, boolean>>({
-    email_events: true,
-    email_reminders: true,
+    is_new_event_alerts_enabled: false,
+    is_event_remainder_enabled: false,
     email_marketing: false,
     push_events: true,
     push_reminders: true,
   });
+
   const [saving, setSaving] = useState<NotifKey | null>(null);
+
+  const settings = useCurrentUserSettings();
+  useEffect(() => {
+    if (settings) {
+      setPrefs((p) => ({
+        ...p,
+        is_new_event_alerts_enabled: settings.is_new_event_alerts_enabled,
+        is_event_remainder_enabled: settings.is_event_remainder_enabled,
+        email_marketing: settings.email_marketing,
+        push_events: settings.push_events,
+        push_reminders: settings.push_reminders,
+      }));
+    }
+  }, [settings]);
 
   const toggle = async (key: NotifKey) => {
     const next = !prefs[key];
     setPrefs((p) => ({ ...p, [key]: next }));
     setSaving(key);
     try {
-      await fetch("/api/autho/user-management/notifications/", {
+      await fetch("/api/autho/user-settings/me/", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ [key]: next }),
+      });
+
+      showToast({
+        title: "Success!",
+        variant: "success",
+        description: `Successfully ${next ? "enabled" : "disabled"} ${key === "is_new_event_alerts_enabled" ? "alerts" : "notifications"}`,
       });
     } finally {
       setSaving(null);
@@ -187,10 +211,10 @@ function NotificationSettings() {
 
   return (
     <div className="flex flex-col gap-0">
-      <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      {/* <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         Email
-      </p>
-      {emailRows.map((row, i) => (
+      </p> */}
+      {NOTIF_ROWS.map((row, i) => (
         <SettingRow
           key={row.key}
           label={row.label}
@@ -205,7 +229,7 @@ function NotificationSettings() {
         </SettingRow>
       ))}
 
-      <p className="mb-3 mt-5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      {/* <p className="mb-3 mt-5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         Push
       </p>
       {pushRows.map((row, i) => (
@@ -221,7 +245,7 @@ function NotificationSettings() {
             disabled={saving === row.key}
           />
         </SettingRow>
-      ))}
+      ))} */}
     </div>
   );
 }
@@ -229,20 +253,32 @@ function NotificationSettings() {
 // ─── LANGUAGE / LOCALE ───────────────────────────────────────────────────────
 
 const LANGUAGES = [
-  { code: "en", label: "English", flag: "🇬🇧" },
-  { code: "ne", label: "नेपाली", flag: "🇳🇵" },
-  { code: "hi", label: "हिन्दी", flag: "🇮🇳" },
+  { code: "en", value: 0, label: "English", flag: "🇬🇧" },
+  { code: "ne", value: 1, label: "नेपाली", flag: "🇳🇵" },
+  { code: "hi", value: 2, label: "हिन्दी", flag: "🇮🇳" },
 ];
 
 function LanguageSettings() {
-  const [selected, setSelected] = useState("en");
+  const [selected, setSelected] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const locale = useLocale() as Locale;
+  const pathname = usePathname();
+
+  const settings = useCurrentUserSettings();
+  useEffect(() => {
+    if (settings) {
+      setSelected(settings.language);
+    }
+  }, [settings]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await fetch("/api/autho/user-management/preferences/", {
+      await fetch("/api/autho/user-settings/me/", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ language: selected }),
@@ -254,6 +290,17 @@ function LanguageSettings() {
     }
   };
 
+  function switchLocale(next: Locale) {
+    if (next === locale) {
+      return;
+    }
+    setLocaleCookie(next);
+    startTransition(() => {
+      router.replace(pathname, { locale: next });
+    });
+    handleSave();
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-3 gap-2">
@@ -261,10 +308,10 @@ function LanguageSettings() {
           <button
             key={lang.code}
             type="button"
-            onClick={() => setSelected(lang.code)}
+            onClick={() => setSelected(lang.value)}
             className={cn(
               "flex flex-col items-center gap-1.5 rounded-xl border py-4 text-xs font-semibold transition-all duration-200",
-              selected === lang.code
+              selected === lang.value
                 ? "border-primary bg-primary/5 text-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.12)]"
                 : "border-border bg-muted/30 text-muted-foreground hover:bg-muted",
             )}
@@ -279,7 +326,7 @@ function LanguageSettings() {
         <Button
           type="button"
           disabled={saving}
-          onClick={handleSave}
+          onClick={() => switchLocale(locale === "en" ? "np" : "en")}
           className={cn(
             "gap-2 rounded-xl font-bold transition-all duration-300",
             saved && "bg-secondary hover:bg-secondary/90",
@@ -325,6 +372,14 @@ function DangerZone() {
       setDeleting(false);
     }
   };
+  const handleSignOut = async () => {
+    await SignOutAction();
+    showToast({
+      title: "Signed Out",
+      description: "You have successfully signed out",
+      variant: "success",
+    });
+  };
 
   return (
     <>
@@ -338,8 +393,9 @@ function DangerZone() {
             variant="outline"
             size="sm"
             className="gap-1.5 rounded-lg text-xs"
+            onClick={handleSignOut}
           >
-            <LogOut className="h-3.5 w-3.5" /> Sign out all
+            <LogOut className="h-3.5 w-3.5" /> Log out
           </Button>
         </SettingRow>
 

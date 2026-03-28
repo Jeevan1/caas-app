@@ -20,9 +20,18 @@ import { EventForm } from "./GalleryForm";
 import { statusFromDates } from "@/lib/helpers";
 import { useCurrentUser } from "@/lib/providers";
 import { hasPermission } from "@/lib/permissions/has-permissions";
-import { redirect } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 
+import { MoreHorizontal, ExternalLink, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Section } from "../section";
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 const formatDate = (iso: string) =>
@@ -39,6 +48,63 @@ const formatTime = (iso: string) =>
   });
 
 // ─── COMPONENT ───────────────────────────────────────────────────────────────
+
+const ActionItem = ({
+  ev,
+  openEdit,
+  openGallery,
+}: {
+  ev: Event;
+  openEdit: (ev: Event) => void;
+  openGallery: (ev: Event) => void;
+}) => (
+  <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg">
+        <MoreHorizontal className="h-4 w-4" />
+        <span className="sr-only">Open menu</span>
+      </Button>
+    </DropdownMenuTrigger>
+
+    <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuItem onClick={() => openEdit(ev)}>
+        <Pencil className="h-3.5 w-3.5 mr-2" /> Edit
+      </DropdownMenuItem>
+
+      <DropdownMenuItem onClick={() => openGallery(ev)}>
+        <ImageUp className="h-3.5 w-3.5 mr-2" /> Gallery
+      </DropdownMenuItem>
+
+      <DropdownMenuItem asChild>
+        <Link href={`/dashboard/events/${ev.idx}/join-requests`}>
+          <ExternalLink className="h-3.5 w-3.5 mr-2" /> View Requests
+        </Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem asChild>
+        <Link href={`/dashboard/events/${ev.idx}/summary`}>
+          <Calendar className="h-3.5 w-3.5 mr-2" /> View Summary
+        </Link>
+      </DropdownMenuItem>
+
+      <DropdownMenuSeparator />
+
+      <DeleteAlertDialog
+        url={`/api/event/events/${ev.idx}`}
+        queryKey={EVENTS_QUERY_KEY}
+        eventName={ev.title}
+        onSuccess={() => console.log("deleted!")}
+        trigger={(open) => (
+          <DropdownMenuItem
+            onClick={open}
+            className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/30"
+          >
+            <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+          </DropdownMenuItem>
+        )}
+      />
+    </DropdownMenuContent>
+  </DropdownMenu>
+);
 
 export function EventsOverview() {
   const user = useCurrentUser();
@@ -127,8 +193,9 @@ export function EventsOverview() {
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
-        {statCards.map((s) => (
-          <div
+        {statCards.map((s, i) => (
+          <Section
+            delay={i * 0.1}
             key={s.label}
             className="flex items-center gap-4 rounded-xl border border-border bg-card p-5"
           >
@@ -144,12 +211,15 @@ export function EventsOverview() {
               <p className="text-sm text-muted-foreground">{s.label}</p>
               <p className="text-2xl font-bold text-foreground">{s.value}</p>
             </div>
-          </div>
+          </Section>
         ))}
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <Section
+        delay={0.2}
+        className="overflow-hidden rounded-xl border border-border bg-card"
+      >
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
             <h3 className="text-sm font-semibold text-foreground">
@@ -171,6 +241,7 @@ export function EventsOverview() {
                 <th className="px-6 py-3">Location</th>
                 <th className="px-6 py-3">Status</th>
                 <th className="px-6 py-3 text-right">Seats</th>
+                <th className="px-6 py-3 text-right">Attendees</th>
                 <th className="px-6 py-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -205,7 +276,10 @@ export function EventsOverview() {
                       className="border-b border-border last:border-0 transition-colors hover:bg-muted/30"
                     >
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
+                        <Link
+                          href={`/dashboard/events/${ev.idx}/summary`}
+                          className="flex items-center gap-3 group"
+                        >
                           {ev.cover_image ? (
                             <Image
                               src={ev.cover_image}
@@ -220,14 +294,14 @@ export function EventsOverview() {
                             </div>
                           )}
                           <div>
-                            <p className="text-sm font-semibold text-foreground">
+                            <p className="text-sm font-semibold text-foreground group-hover:text-primary">
                               {ev.title}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {ev.organizer?.name}
                             </p>
                           </div>
-                        </div>
+                        </Link>
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground">
                         {ev.category?.name}
@@ -264,31 +338,21 @@ export function EventsOverview() {
                           ev.max_attendees
                         )}
                       </td>
+                      <td className="px-6 py-4 text-right text-sm text-foreground">
+                        {ev.max_attendees === 0 ? (
+                          <span className="text-muted-foreground">
+                            Unlimited
+                          </span>
+                        ) : (
+                          ev.joined_attendees
+                        )}
+                      </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 gap-1.5 rounded-lg px-3 text-xs"
-                            onClick={() => openEdit(ev)}
-                          >
-                            <Pencil className="h-3 w-3" /> Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 gap-1.5 rounded-lg px-3 text-xs"
-                            onClick={() => openGallery(ev)}
-                          >
-                            <ImageUp className="h-3 w-3" /> Gallery
-                          </Button>
-                          <DeleteAlertDialog
-                            url={`/api/event/events/${ev.idx}`}
-                            queryKey={EVENTS_QUERY_KEY}
-                            eventName={ev.title}
-                            onSuccess={() => console.log("deleted!")}
-                          />
-                        </div>
+                        <ActionItem
+                          ev={ev}
+                          openEdit={openEdit}
+                          openGallery={openGallery}
+                        />
                       </td>
                     </tr>
                   );
@@ -297,7 +361,7 @@ export function EventsOverview() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Section>
 
       {/* Single dialog for create / edit / gallery */}
       <EventForm

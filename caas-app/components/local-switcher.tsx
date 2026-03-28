@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useEffect, useRef, useTransition } from "react";
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { locales, localeConfig, Locale } from "@/i18n/config";
@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useCurrentUserSettings } from "@/lib/providers";
 
 export function LanguageSwitcher() {
   const locale = useLocale() as Locale;
@@ -21,6 +22,13 @@ export function LanguageSwitcher() {
   const [pending, startTransition] = useTransition();
 
   const current = localeConfig[locale];
+  const handleSave = async (next: Locale) => {
+    await fetch("/api/autho/user-settings/me/", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ language: next === "np" ? 1 : 0 }),
+    });
+  };
 
   function switchLocale(next: Locale) {
     if (next === locale) return;
@@ -28,7 +36,25 @@ export function LanguageSwitcher() {
     startTransition(() => {
       router.replace(pathname, { locale: next });
     });
+    handleSave(next);
   }
+
+  const settings = useCurrentUserSettings();
+  const hasSynced = useRef(false);
+
+  useEffect(() => {
+    if (hasSynced.current) return;
+    if (!settings) return;
+
+    const preferredLocale = settings.language === 1 ? "np" : "en";
+    if (preferredLocale === locale) return;
+
+    hasSynced.current = true;
+    setLocaleCookie(preferredLocale);
+    startTransition(() => {
+      router.replace(pathname, { locale: preferredLocale as Locale });
+    });
+  }, [settings]);
 
   return (
     <DropdownMenu>

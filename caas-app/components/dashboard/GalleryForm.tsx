@@ -15,6 +15,8 @@ import {
   DollarSign,
   Loader2,
   Globe,
+  X,
+  Loader,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -23,12 +25,14 @@ import StyledInput from "@/components/form/FormInput";
 import FieldTextarea from "@/components/form/FieldTextarea";
 import ImageUpload, { FieldImageUpload } from "../form/ImageUploadField";
 import { FieldSelect } from "../form/FieldSelect";
-import { EVENTS_QUERY_KEY } from "@/constants";
+import { EVENT_DETAILS_QUERY_KEY, EVENTS_QUERY_KEY } from "@/constants";
 import { Event, GalleryImage, PaginatedAPIResponse } from "@/lib/types";
 import { Switch } from "../ui/switch";
 import { FieldTagInput } from "../form/TagInput";
 import { MapPicker } from "../MapPicker";
 import { useApiQuery } from "@/lib/hooks/use-api-query";
+import Image from "next/image";
+import DateInput from "../form/DateInput";
 
 // ─── SCHEMA ──────────────────────────────────────────────────────────────────
 
@@ -49,8 +53,8 @@ const eventSchema = z
       .min(1, "Description is required")
       .max(10000, "Max 10000 characters"),
     category: z.string().min(1, "Category is required"),
-    start_datetime: z.string().min(1, "Start date & time is required"),
-    end_datetime: z.string().min(1, "End date & time is required"),
+    start_datetime: z.coerce.date(),
+    end_datetime: z.coerce.date(),
     is_online: z.boolean().default(false),
     online_url: z.string().optional(),
     location: locationSchema,
@@ -174,11 +178,19 @@ function buildPatchPayload(
   if (newCat !== oldCat) patch["category"] = newCat;
 
   // start_datetime / end_datetime — compare truncated ISO strings
-  const newStart = values.start_datetime;
+  // start_datetime
+  const newStart =
+    values.start_datetime instanceof Date
+      ? values.start_datetime.toISOString().slice(0, 16)
+      : values.start_datetime;
   const oldStart = toLocalInput(original.start_datetime ?? "");
   if (newStart !== oldStart) patch["start_datetime"] = newStart;
 
-  const newEnd = values.end_datetime;
+  // end_datetime
+  const newEnd =
+    values.end_datetime instanceof Date
+      ? values.end_datetime.toISOString().slice(0, 16)
+      : values.end_datetime;
   const oldEnd = toLocalInput(original.end_datetime ?? "");
   if (newEnd !== oldEnd) patch["end_datetime"] = newEnd;
 
@@ -243,18 +255,36 @@ function StepDots({ step }: { step: FormStep }) {
   );
 }
 
-// ─── GALLERY STEP ────────────────────────────────────────────────────────────
-
 export function GalleryStep({
   eventIdx,
   onDone,
+  onSkip,
 }: {
   eventIdx: string;
   onDone: () => void;
+  onSkip: () => void;
 }) {
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadedCount, setUploadedCount] = useState(0);
+  const [deletingIdx, setDeletingIdx] = useState<string | null>(null);
+
+  const { data: images } = useApiQuery<{
+    results: { idx: string; image: string }[];
+  }>({
+    url: `/api/event/events/${eventIdx}/images/`,
+    queryKey: EVENT_DETAILS_QUERY_KEY(eventIdx),
+  });
+
+  const [existingImages, setExistingImages] = useState<
+    { idx: string; image: string }[]
+  >([]);
+
+  useEffect(() => {
+    if (images?.results) {
+      setExistingImages(images.results);
+    }
+  }, [images]);
 
   const { mutateAsync: uploadImage } = useApiMutation({
     apiPath: `/api/event/events/${eventIdx}/images/`,
@@ -263,6 +293,24 @@ export function GalleryStep({
     showSuccessuseToast: false,
   });
 
+  const { mutateAsync: deleteImage, isPending: deleting } = useApiMutation({
+    apiPath: (idx) => `/api/event/events/${eventIdx}/images/${idx}/`,
+    method: "DELETE",
+    queryKey: EVENT_DETAILS_QUERY_KEY(eventIdx),
+    successMessage: "Image deleted successfully!",
+  });
+
+  const handleRemoveExisting = async (idx: string) => {
+    try {
+      setDeletingIdx(idx);
+      await deleteImage(idx);
+      setExistingImages((prev) => prev.filter((img) => img.idx !== idx));
+    } catch (err) {
+      console.error("Failed to delete image", err);
+    } finally {
+      setDeletingIdx(null);
+    }
+  };
   const handleUpload = async () => {
     if (!files.length) {
       onDone();
@@ -295,6 +343,39 @@ export function GalleryStep({
         </p>
       </div>
 
+      {/* Existing images from API */}
+      {existingImages.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {existingImages.map((img) => (
+            <div
+              key={img.image}
+              className="relative h-20 w-20 overflow-hidden rounded-xl border border-border"
+            >
+              {deletingIdx === img.idx && (
+                <span className="absolute inset-0 z-10 flex items-center justify-center bg-background/50">
+                  <Loader2 className="animate-spin text-primary" />
+                </span>
+              )}
+              <Image
+                src={img.image}
+                alt="existing"
+                width={80}
+                height={80}
+                className="h-full w-full object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => handleRemoveExisting(img.idx)}
+                className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-foreground/70 text-background hover:bg-foreground"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* New file uploads */}
       <ImageUpload
         multiple
         value={files}
@@ -327,7 +408,7 @@ export function GalleryStep({
           variant="outline"
           className="flex-1 rounded-xl"
           disabled={uploading}
-          onClick={onDone}
+          onClick={onSkip}
         >
           Skip
         </Button>
@@ -405,8 +486,12 @@ export function EventForm({
       title: editing?.title ?? "",
       description: editing?.description ?? "",
       category: editing?.category?.idx ?? "",
-      start_datetime: toLocalInput(editing?.start_datetime ?? ""),
-      end_datetime: toLocalInput(editing?.end_datetime ?? ""),
+      start_datetime: editing?.start_datetime
+        ? new Date(editing.start_datetime)
+        : new Date(),
+      end_datetime: editing?.end_datetime
+        ? new Date(editing.end_datetime)
+        : new Date(),
       is_online: editing?.is_online ?? false,
       online_url: editing?.online_url ?? "",
       location: {
@@ -470,12 +555,14 @@ export function EventForm({
   });
 
   const handleOpenChange = (o: boolean) => {
-    if (!o) {
-      setStep("event");
-      setCreatedEventIdx("");
-      form.reset();
-    }
     onOpenChange(o);
+    if (!o) {
+      setTimeout(() => {
+        setStep("event");
+        setCreatedEventIdx("");
+        form.reset();
+      }, 300);
+    }
   };
 
   const handleGalleryDone = () => {
@@ -513,6 +600,7 @@ export function EventForm({
             <GalleryStep
               eventIdx={createdEventIdx || editing?.idx || ""}
               onDone={handleGalleryDone}
+              onSkip={() => handleOpenChange(false)}
             />
           )}
 
@@ -587,7 +675,7 @@ export function EventForm({
                 <div className="grid grid-cols-2 gap-6">
                   <form.Field name="start_datetime">
                     {(f) => (
-                      <StyledInput
+                      <DateInput
                         field={f}
                         label="Start"
                         type="datetime-local"
@@ -598,7 +686,7 @@ export function EventForm({
                   </form.Field>
                   <form.Field name="end_datetime">
                     {(f) => (
-                      <StyledInput
+                      <DateInput
                         field={f}
                         label="End"
                         type="datetime-local"

@@ -25,14 +25,12 @@ export async function loginAction(payload: LoginPayload): Promise<LoginResult> {
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    // Surface field-level errors (e.g. { user_identifier: ["Not found"] })
     const fieldErrors: Record<string, string> = {};
     for (const [key, val] of Object.entries(data)) {
       if (key !== "detail" && Array.isArray(val)) {
         fieldErrors[key] = val[0] as string;
       }
     }
-
     return {
       success: false,
       error:
@@ -41,31 +39,27 @@ export async function loginAction(payload: LoginPayload): Promise<LoginResult> {
     };
   }
 
-  // Set tokens as httpOnly cookies server-side
-  // (only needed if your API returns tokens in the body instead of Set-Cookie)
+  const cookieStore = await cookies();
+
   if (data.access) {
-    const cookieStore = await cookies();
     cookieStore.set("accessToken", data.access, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24, // 1 day
+      maxAge: 60 * 60 * 24,
     });
   }
   if (data.refresh) {
-    const cookieStore = await cookies();
     cookieStore.set("refreshToken", data.refresh, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: 60 * 60 * 24 * 30,
     });
   }
 
-  // Invalidate ALL cached RSC payloads so dashboard fetches fresh data
   revalidatePath("/", "layout");
-
   redirect("/dashboard");
 }

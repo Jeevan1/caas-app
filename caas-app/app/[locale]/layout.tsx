@@ -3,13 +3,17 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import { NextIntlClientProvider } from "next-intl";
 import "../globals.css";
-import { CurrentUserProvider, Providers } from "@/lib/providers";
+import {
+  CurrentUserProvider,
+  CurrentUserSettingsProvider,
+  Providers,
+} from "@/lib/providers";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { routing } from "@/i18n/routing";
 import { notFound } from "next/navigation";
 import { Locale, localeConfig, locales } from "@/i18n/config";
 import { getMessages } from "next-intl/server";
-import { PhoneNumberGate } from "@/components/auth/PhoneNumberGate";
+import { getCurrentUserSettings } from "@/lib/auth/get-current-user-settings";
 
 const _inter = Space_Grotesk({
   subsets: ["latin"],
@@ -55,6 +59,7 @@ export default async function RootLayout({
   const messages = await getMessages();
   const dir = localeConfig[locale as Locale].dir;
   const user = await getCurrentUser();
+  const settings = await getCurrentUserSettings();
 
   // const needsPhone = !!user && !user.phone;
 
@@ -70,11 +75,13 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages} locale={locale}>
           <Providers>
             <CurrentUserProvider user={user}>
-              {children}
+              <CurrentUserSettingsProvider settings={settings ?? null}>
+                {children}
 
-              {/* {needsPhone && (
+                {/* {needsPhone && (
                 <PhoneNumberGate userName={user.name ?? undefined} />
               )} */}
+              </CurrentUserSettingsProvider>
             </CurrentUserProvider>
           </Providers>
         </NextIntlClientProvider>

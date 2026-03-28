@@ -14,7 +14,7 @@ export interface GenericMutationOptions<TPayload, TResult = any> {
   apiPath: string | ((payload: TPayload) => string);
   method?: HTTP_METHOD;
   onErrorCallback?: (err: ApiError, payload?: TPayload) => void;
-  queryKey?: any;
+  queryKey?: (string | number)[] | string;
   payloadTransform?: (payload: TPayload) => any;
   optimisticUpdate?: (prevData: any, payload: TPayload) => any;
   successMessage?: string;
@@ -88,6 +88,11 @@ export const useApiMutation = <TPayload, TResult = any>({
   showSuccessuseToast = true,
 }: GenericMutationOptions<TPayload, TResult>) => {
   const queryClient = useQueryClient();
+  const normalizedKey = queryKey
+    ? Array.isArray(queryKey)
+      ? queryKey
+      : [queryKey]
+    : undefined;
 
   return useMutation<TResult, ApiError, TPayload>({
     mutationFn: async (payload: TPayload) => {
@@ -109,11 +114,11 @@ export const useApiMutation = <TPayload, TResult = any>({
     },
 
     onMutate: async (payload: TPayload) => {
-      if (!queryKey) return;
-      await queryClient.cancelQueries({ queryKey });
-      const previous = queryClient.getQueryData(queryKey);
+      if (!normalizedKey) return;
+      await queryClient.cancelQueries({ queryKey: normalizedKey });
+      const previous = queryClient.getQueryData(normalizedKey);
       if (optimisticUpdate) {
-        queryClient.setQueryData(queryKey, (oldData = []) =>
+        queryClient.setQueryData(normalizedKey, (oldData = []) =>
           optimisticUpdate(oldData, payload),
         );
       }
@@ -122,8 +127,8 @@ export const useApiMutation = <TPayload, TResult = any>({
 
     onError: (err: ApiError, _vars, context: any) => {
       onErrorCallback?.(err);
-      if (context?.previous && queryKey) {
-        queryClient.setQueryData(queryKey, context.previous);
+      if (context?.previous && normalizedKey) {
+        queryClient.setQueryData(normalizedKey, context.previous);
       }
 
       // Field errors → one useToast per field
@@ -153,7 +158,8 @@ export const useApiMutation = <TPayload, TResult = any>({
     },
 
     onSuccess: (data, variables: TPayload) => {
-      if (queryKey) queryClient.invalidateQueries({ queryKey });
+      if (normalizedKey)
+        queryClient.invalidateQueries({ queryKey: normalizedKey });
       onSuccessCallback?.(data, variables);
       if (!showSuccessuseToast) return;
       showToast({

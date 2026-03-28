@@ -14,6 +14,17 @@ export interface User {
   roles: string[];
 }
 
+export type CurrentUserSettings = {
+  idx: string;
+  language: 1 | 2;
+  theme: 1 | 2;
+  is_new_event_alerts_enabled: boolean;
+  is_event_remainder_enabled: boolean;
+  email_marketing: boolean;
+  push_events: boolean;
+  push_reminders: boolean;
+};
+
 export interface PaginatedAPIResponse<TData> {
   count: number;
   previous?: string;
@@ -66,6 +77,19 @@ export interface Event {
   is_online: boolean;
   online_url: string | null;
   payment_qr: string | null;
+  status: number;
+}
+
+export interface EventSummary {
+  total_clicks: number;
+  total_attendees: number;
+  joined_attendees: number;
+  pending_attendees: number;
+  total_favorites: number;
+  max_attendees: number;
+  potential_revenue: number;
+  confirmed_revenue: number;
+  spots_left: number;
 }
 
 export interface Attendee {
@@ -97,4 +121,13 @@ export interface BlogPost {
   is_published: boolean;
   image: string | null;
   author: User;
+}
+
+export interface EventJoinRequest {
+  idx: string;
+  user: User;
+  event: Event;
+  payment_status: number;
+  payment_proof?: string;
+  created_at: string;
 }

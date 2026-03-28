@@ -102,12 +102,13 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
         onClick={onLinkClick}
         className="flex items-center gap-2 border-b border-border px-6 py-5"
       >
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-          <Zap className="h-4 w-4 text-primary-foreground" />
-        </div>
-        <span className="text-lg font-bold text-foreground">
-          Join Your Event
-        </span>
+        <Image
+          src="/logo.png"
+          alt="Join Your Event"
+          width={200}
+          height={40}
+          className="h-7 w-full shrink-0 object-contain"
+        />
       </Link>
 
       <nav className="flex-1 px-4 py-4">

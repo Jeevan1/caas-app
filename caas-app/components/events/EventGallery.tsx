@@ -25,7 +25,13 @@ function GallerySkeleton() {
   );
 }
 
-const EventGallery = ({ eventId }: { eventId: string }) => {
+const EventGallery = ({
+  eventId,
+  className,
+}: {
+  eventId: string;
+  className?: string;
+}) => {
   const { data: galleryData, isLoading } = useApiQuery<{
     results: GalleryImage[];
   }>({
@@ -50,7 +56,12 @@ const EventGallery = ({ eventId }: { eventId: string }) => {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+      <div
+        className={cn(
+          "grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4",
+          className,
+        )}
+      >
         {images.map((img) => (
           <div
             key={img.idx}

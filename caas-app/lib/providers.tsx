@@ -1,5 +1,5 @@
 "use client";
-import { ReactNode, useRef, useState } from "react";
+import { ReactNode } from "react";
 import {
   isServer,
   QueryClient,
@@ -9,7 +9,7 @@ import { Toaster } from "sonner";
 
 import * as React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
-import { User } from "./types";
+import { CurrentUserSettings, User } from "./types";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -38,6 +38,9 @@ type CurrentUser = User;
 
 const CurrentUserContext = React.createContext<CurrentUser | null>(null);
 
+const CurrentUserSettingsContext =
+  React.createContext<CurrentUserSettings | null>(null);
+
 export function CurrentUserProvider({
   user,
   children,
@@ -52,9 +55,27 @@ export function CurrentUserProvider({
   );
 }
 
+export function CurrentUserSettingsProvider({
+  settings,
+  children,
+}: {
+  settings: CurrentUserSettings | null;
+  children: React.ReactNode;
+}) {
+  return (
+    <CurrentUserSettingsContext.Provider value={settings}>
+      {children}
+    </CurrentUserSettingsContext.Provider>
+  );
+}
+
 export function useCurrentUser<TUser = CurrentUser>() {
   const context = React.useContext(CurrentUserContext);
   return context as TUser | null;
+}
+export function useCurrentUserSettings<TUserSettings = CurrentUserSettings>() {
+  const context = React.useContext(CurrentUserSettingsContext);
+  return context as TUserSettings | null;
 }
 
 export function ThemeProvider({
