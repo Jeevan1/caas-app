@@ -1,3 +1,4 @@
+import { EventJsonLd } from "@/components/EventJsonLd";
 import EventDetails from "@/components/events/EventDetails";
 import { EVENTS_QUERY_KEY, SINGLE_EVENT_QUERY_KEY } from "@/constants";
 import { serverFetch } from "@/lib/server-fetch";
@@ -103,9 +104,11 @@ const EventDetailsPage = async ({
       queryFn: () => getRelatedEvents(id),
     }),
   ]);
+  const eventData = queryClient.getQueryData<Event>(SINGLE_EVENT_QUERY_KEY(id));
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
+      {eventData && <EventJsonLd event={eventData} />}
       <EventDetails eventId={id} />
     </HydrationBoundary>
   );

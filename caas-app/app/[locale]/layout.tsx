@@ -31,13 +31,24 @@ export const metadata: Metadata = {
   },
   description:
     "Promote, Grow, and Track Your Business Easily. Affordable DIY marketing tools for small businesses, event organizers, and entrepreneurs.",
-  metadataBase: new URL("https://joinmyevent.com"),
+  metadataBase: new URL("https://joinyourevent.com"),
+  keywords: ["events", "kathmandu", "nepal", "event organizer"],
+  authors: [{ name: "Join Your Event" }],
+  creator: "Join Your Event",
   openGraph: {
     siteName: "Join Your Event",
     type: "website",
     images: [{ url: "/og-default.png", width: 1200, height: 630 }],
   },
-  twitter: { card: "summary_large_image" },
+  twitter: { card: "summary_large_image", site: "@joinyourevent" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
 };
 
 export const viewport: Viewport = { themeColor: "#2563eb" };
