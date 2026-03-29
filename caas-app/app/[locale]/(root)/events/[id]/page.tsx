@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     "Join this event on Join Your Event Platform.";
   const image =
     event.cover_image ?? "https://caas-app-pro.netlify.app/og-default.png";
-  const url = `https://joinmyevent.com/events/${id}`;
+  const url = `https://joinyourevent.com/events/${id}`;
 
   return {
     title,

@@ -34,7 +34,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 function staticRoutes(): MetadataRoute.Sitemap {
   const now = new Date();
   return [
-    { url: "https://joinmyevent.com", lastModified: now, priority: 1 },
-    { url: "https://joinmyevent.com/events", lastModified: now, priority: 0.9 },
+    { url: "https://joinyourevent.com", lastModified: now, priority: 1 },
+    {
+      url: "https://joinyourevent.com/events",
+      lastModified: now,
+      priority: 0.9,
+    },
   ];
 }
