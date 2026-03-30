@@ -65,12 +65,8 @@ function DateInput({
           name={field.name}
           type={isPass ? (show ? "text" : "password") : type}
           placeholder={placeholder}
-          value={
-            field.state.value instanceof Date
-              ? field.state.value.toISOString().slice(0, 16)
-              : String(field.state.value ?? "")
-          }
-          onChange={(e) => field.handleChange(new Date(e.target.value) as any)}
+          value={field.state.value ?? ""}
+          onChange={(e) => field.handleChange(e.target.value)}
           onBlur={field.handleBlur}
           className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
         />

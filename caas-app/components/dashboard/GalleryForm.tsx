@@ -64,7 +64,9 @@ const eventSchema = z
     max_attendees: z.string().regex(/^\d+$/, "Must be a number"),
     cover_image: z.any(),
     tags: z.array(z.string()).optional(),
+    status: z.any().optional(),
   })
+
   .superRefine(
     (
       {
@@ -499,6 +501,7 @@ export function EventForm({
         latitude: editing?.location?.latitude?.toString() ?? "",
         longitude: editing?.location?.longitude?.toString() ?? "",
       },
+      status: editing?.status ?? 0,
       is_paid: editing?.is_paid ?? false,
       price:
         editing?.price && editing.price > 0 ? editing.price.toString() : "",
@@ -862,6 +865,18 @@ export function EventForm({
                       field={f}
                       label="Tags"
                       placeholder="Type a tag and press Space…"
+                    />
+                  )}
+                </form.Field>
+                <form.Field name="status">
+                  {(f) => (
+                    <FieldSelect
+                      field={f}
+                      label="Status"
+                      options={[
+                        { label: "Draft", value: "1" },
+                        { label: "Published", value: "2" },
+                      ]}
                     />
                   )}
                 </form.Field>

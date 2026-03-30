@@ -40,11 +40,17 @@ const formatDate = (iso: string) =>
     year: "numeric",
   });
 
-const formatTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+const formatTime = (time: string) => {
+  const t = time.split("T")[1]?.slice(0, 5); // "HH:MM"
+  if (!t) return "";
+
+  let [hour, minute] = t.split(":").map(Number);
+
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12; // convert 0 → 12
+
+  return `${hour}:${minute.toString().padStart(2, "0")} ${ampm}`;
+};
 
 // ─── SCHEMAS ─────────────────────────────────────────────────────────────────
 
