@@ -17,7 +17,7 @@ import { EVENTS_QUERY_KEY } from "@/constants";
 import { Event, PaginatedAPIResponse } from "@/lib/types";
 import { DeleteAlertDialog } from "../DeleteAlertDialog";
 import { EventForm } from "./GalleryForm";
-import { statusFromDates } from "@/lib/helpers";
+import { formatDate, formatTime, statusFromDates } from "@/lib/helpers";
 import { useCurrentUser } from "@/lib/providers";
 import { hasPermission } from "@/lib/permissions/has-permissions";
 import { Link, redirect } from "@/i18n/navigation";
@@ -32,28 +32,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Section } from "../section";
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-
-const formatDate = (date: string) =>
-  new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-
-const formatTime = (time: string) => {
-  const t = time.split("T")[1]?.slice(0, 5); // "HH:MM"
-  if (!t) return "";
-
-  let [hour, minute] = t.split(":").map(Number);
-
-  const ampm = hour >= 12 ? "PM" : "AM";
-  hour = hour % 12 || 12; // convert 0 → 12
-
-  return `${hour}:${minute.toString().padStart(2, "0")} ${ampm}`;
-};
-
-// ─── COMPONENT ───────────────────────────────────────────────────────────────
 
 const ActionItem = ({
   ev,

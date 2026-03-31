@@ -26,6 +26,7 @@ import { redirect } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { CAN } from "@/lib/permissions/CAN";
+import { cleanImageUrl } from "@/lib/helpers";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
@@ -420,7 +421,7 @@ export function JoinRequestOverview({ id }: { id: string }) {
                         <div className="flex items-center gap-3">
                           {ev.user.image ? (
                             <Image
-                              src={ev.user.image}
+                              src={cleanImageUrl(ev.user.image)}
                               alt={ev.user.name}
                               width={36}
                               height={36}

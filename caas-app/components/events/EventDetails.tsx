@@ -36,6 +36,7 @@ import { OrganizerCard } from "./OrganizerCard";
 import EventFavorite from "./EventFaviorate";
 import { MapPicker } from "../MapPicker";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
+import { formatDate, formatTime } from "@/lib/helpers";
 
 // ─── API TYPES ────────────────────────────────────────────────────────────────
 
@@ -90,33 +91,6 @@ const FALLBACK = {
     { initials: "DT", name: "Devi T.", role: "Mentor", color: "accent" },
   ],
 };
-
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-NP", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-
-const formatTime = (iso: string) => {
-  const date = new Date(iso);
-  const h = date.getUTCHours();
-  const m = date.getUTCMinutes();
-  const ampm = h >= 12 ? "PM" : "AM";
-  const hour = h % 12 || 12;
-  return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
-};
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 // ─── SKELETON ────────────────────────────────────────────────────────────────
 

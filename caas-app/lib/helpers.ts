@@ -38,25 +38,28 @@ export function extractErrorMessage(data: any): string {
   return Object.values(errObj).flat().join(", ");
 }
 
-export function formatTime(time: string) {
-  const [hoursStr, minutesStr] = time.split(":");
-  let hours = parseInt(hoursStr, 10);
-  const minutes = parseInt(minutesStr, 10);
+export function formatTime(dateStr: string | Date): string {
+  const date = new Date(dateStr);
 
-  const ampm = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12 || 12;
+  if (isNaN(date.getTime())) return "";
 
-  return `${hours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 }
 
 export function formatDate(dateStr: string | Date): string {
   const date = new Date(dateStr);
 
+  if (isNaN(date.getTime())) return "N/A";
+
   const month = date.toLocaleString("en-US", { month: "short" });
   const day = date.getDate();
   const year = date.getFullYear();
 
-  return `${month}-${day}, ${year}`;
+  return `${month} ${day}, ${year}`;
 }
 
 export const selectValueSchema = (
@@ -245,3 +248,21 @@ export function cleanImageUrl(raw: string | null | undefined): string {
   const base = process.env.NEXT_PUBLIC_API_URL ?? "";
   return `${base}/${raw.replace(/^\/+/, "")}`;
 }
+
+export const formatToLocalInput = (utcString: string) => {
+  if (!utcString) return "";
+  const date = new Date(utcString);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+export const formatToUTC = (localValue: string) => {
+  if (!localValue) return "";
+  return new Date(localValue).toISOString();
+};

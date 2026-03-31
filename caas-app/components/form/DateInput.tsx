@@ -3,6 +3,7 @@ import { AnyFieldApi } from "@tanstack/react-form";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import FieldError from "./FIeldError";
+import { formatToLocalInput, formatToUTC } from "@/lib/helpers";
 
 // ── Combined label + input + error ────────────────────────────────────────────
 function DateInput({
@@ -63,11 +64,14 @@ function DateInput({
 
         <input
           name={field.name}
-          type={isPass ? (show ? "text" : "password") : type}
           placeholder={placeholder}
-          value={field.state.value ?? ""}
-          onChange={(e) => field.handleChange(e.target.value)}
           onBlur={field.handleBlur}
+          type="datetime-local"
+          value={formatToLocalInput(field.state.value)}
+          onChange={(e) => {
+            const utcValue = formatToUTC(e.target.value);
+            field.handleChange(utcValue);
+          }}
           className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
         />
 
