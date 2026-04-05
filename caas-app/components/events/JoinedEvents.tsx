@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useApiQuery } from "@/lib/hooks/use-api-query";
 import { PaginatedAPIResponse } from "@/lib/types";
+import { useCurrentUser } from "@/lib/providers";
 
 // ─── QUERY KEY ───────────────────────────────────────────────────────────────
 
@@ -128,9 +129,12 @@ function EmptyState() {
 // ─── MAIN EXPORT ─────────────────────────────────────────────────────────────
 
 const JoinedEventsOverview = () => {
+  const user = useCurrentUser();
   const { data, isLoading } = useApiQuery<PaginatedAPIResponse<JoinedEvent>>({
     url: "/api/event/events/joined-events/",
     queryKey: JOINED_EVENTS_QUERY_KEY,
+    enabled: !!user,
+    queryParams: { pagesize: 100 },
   });
 
   const events = data?.results ?? [];

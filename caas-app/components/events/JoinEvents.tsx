@@ -616,10 +616,12 @@ function CompactTrigger({
   event: Event;
   onOpen: () => void;
 }) {
+  const user = useCurrentUser();
   const { data: joinedEvents } = useApiQuery<PaginatedAPIResponse<Event>>({
     url: `/api/event/events/joined-events/`,
     queryKey: JOINED_EVENTS_QUERY_KEY,
     queryParams: { pagesize: 100 },
+    enabled: !!user,
   });
 
   const joined = joinedEvents?.results?.some((e) => e.idx === event.idx);

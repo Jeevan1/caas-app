@@ -13,12 +13,14 @@ import { LoginForm } from "./login-signup";
 import { OtpStep, RegisterStep, SetPasswordStep } from "./Signup";
 import { GoogleContactForm } from "./GoogleContactForm";
 import GoogleLoginButton from "./GoogleAuthButton";
+import { ForgotPasswordFlow } from "./ForgetPasswordFlow";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
 type View =
   | "login"
   | "signup"
+  | "forgot"
   | "google-contact"
   | "register"
   | "otp"
@@ -164,9 +166,7 @@ export function SignupFlow({
       {step === 0 && (
         <>
           <GoogleLoginButton
-            onNewUser={(email, name) => {
-              onGoogleUser?.({ email, name });
-            }}
+            onNewUser={(email, name) => onGoogleUser?.({ email, name })}
             onSuccess={onSuccess}
           />
           <p className="text-center text-xs text-muted-foreground">
@@ -184,6 +184,15 @@ export function SignupFlow({
   );
 }
 
+// ─── ACCENT CLASS ─────────────────────────────────────────────────────────────
+
+function accentClass(view: View) {
+  if (view === "login") return "from-primary via-secondary to-accent";
+  if (view === "forgot") return "from-amber-400 via-orange-400 to-red-400";
+  if (view === "signup") return "from-secondary via-accent to-primary";
+  return "from-[#4285F4] via-[#34A853] to-[#FBBC05]";
+}
+
 // ─── MODAL CONTENT ────────────────────────────────────────────────────────────
 
 export function ModalContent({
@@ -197,31 +206,21 @@ export function ModalContent({
   switchView: (v: View) => void;
   onClose: () => void;
 }) {
-  const router = useRouter();
   const [googleUser, setGoogleUser] = useState<{
     email: string;
     name: string;
   } | null>(null);
 
-  const handleLoginSuccess = () => {
-    onClose();
-  };
-
-  const accentClass =
-    view === "login"
-      ? "from-primary via-secondary to-accent"
-      : view === "signup"
-        ? "from-secondary via-accent to-primary"
-        : "from-[#4285F4] via-[#34A853] to-[#FBBC05]";
-
   return (
     <>
+      {/* Accent bar — color changes per view */}
       <div
         className={cn(
           "h-[2.5px] w-full bg-gradient-to-r transition-all duration-500",
-          accentClass,
+          accentClass(view),
         )}
       />
+
       <div
         className={cn(
           "px-7 pb-7 pt-5 transition-all duration-[220ms] ease-[ease]",
@@ -231,13 +230,14 @@ export function ModalContent({
         {view === "login" && (
           <LoginForm
             switchView={switchView}
-            onSuccess={handleLoginSuccess}
+            onSuccess={onClose}
             onGoogleUser={({ email, name }) => {
               setGoogleUser({ email, name });
               switchView("google-contact");
             }}
           />
         )}
+
         {view === "signup" && (
           <SignupFlow
             switchView={switchView}
@@ -247,6 +247,14 @@ export function ModalContent({
             }}
           />
         )}
+
+        {view === "forgot" && (
+          <ForgotPasswordFlow
+            onBack={() => switchView("login")}
+            onSuccess={() => switchView("login")}
+          />
+        )}
+
         {view === "google-contact" && (
           <GoogleContactForm
             switchView={switchView}
@@ -261,12 +269,6 @@ export function ModalContent({
 }
 
 // ─── CONTROLLED DIALOG ───────────────────────────────────────────────────────
-// Use this when you need to open the auth dialog imperatively (e.g. from
-// JoinEvent or a Follow button) without rendering the navbar buttons.
-//
-// Usage:
-//   const [authOpen, setAuthOpen] = useState(false);
-//   <AuthDialog open={authOpen} onOpenChange={setAuthOpen} defaultView="login" />
 
 export function AuthDialog({
   open,
@@ -277,16 +279,22 @@ export function AuthDialog({
   onOpenChange: (o: boolean) => void;
   defaultView?: View;
 }) {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const { view, animating, switchView } = useViewState(defaultView);
 
-  // Called when dialog is dismissed (X button, backdrop click, etc.)
-  // router.refresh() is NOT needed here — it fires in ModalContent.handleLoginSuccess
-  // right after the login API sets the cookie.
   const handleClose = () => {
     onOpenChange(false);
     queryClient.invalidateQueries({ queryKey: ["me"] });
+  };
+
+  const titles: Record<View, string> = {
+    login: "Sign in",
+    signup: "Create account",
+    forgot: "Reset password",
+    "google-contact": "Complete profile",
+    register: "Register",
+    otp: "Verify code",
+    "set-password": "Set password",
   };
 
   return (
@@ -299,13 +307,7 @@ export function AuthDialog({
         }}
       >
         <DialogContent className="overflow-hidden rounded-3xl border border-border bg-card p-0 shadow-2xl sm:max-w-sm">
-          <DialogTitle className="sr-only">
-            {view === "login"
-              ? "Sign in"
-              : view === "signup"
-                ? "Create account"
-                : "Complete profile"}
-          </DialogTitle>
+          <DialogTitle className="sr-only">{titles[view]}</DialogTitle>
           <ModalContent
             view={view}
             animating={animating}
@@ -314,7 +316,6 @@ export function AuthDialog({
           />
         </DialogContent>
       </Dialog>
-
       <style>{`
         @keyframes scaleIn {
           from { opacity: 0; transform: scale(0.85); }
@@ -325,11 +326,10 @@ export function AuthDialog({
   );
 }
 
-// ─── STANDALONE (navbar usage) ────────────────────────────────────────────────
+// ─── STANDALONE (navbar) ──────────────────────────────────────────────────────
 
 export default function AuthPopup() {
   const t = useTranslations("common");
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const { view, setView, animating, switchView } = useViewState("login");
@@ -338,10 +338,19 @@ export default function AuthPopup() {
     setView(v);
     setOpen(true);
   };
-
   const handleClose = () => {
     setOpen(false);
     queryClient.invalidateQueries({ queryKey: ["me"] });
+  };
+
+  const titles: Record<View, string> = {
+    login: "Sign in",
+    signup: "Create account",
+    forgot: "Reset password",
+    "google-contact": "Complete profile",
+    register: "Register",
+    otp: "Verify code",
+    "set-password": "Set password",
   };
 
   return (
@@ -363,13 +372,7 @@ export default function AuthPopup() {
         }}
       >
         <DialogContent className="overflow-hidden rounded-3xl border border-border bg-card p-0 shadow-2xl sm:max-w-sm">
-          <DialogTitle className="sr-only">
-            {view === "login"
-              ? "Sign in"
-              : view === "signup"
-                ? "Create account"
-                : "Complete profile"}
-          </DialogTitle>
+          <DialogTitle className="sr-only">{titles[view]}</DialogTitle>
           <ModalContent
             view={view}
             animating={animating}

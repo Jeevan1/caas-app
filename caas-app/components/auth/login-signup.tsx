@@ -15,6 +15,7 @@ import { SignupFlow } from "./AuthModel";
 import GoogleLoginButton from "./GoogleAuthButton";
 import { redirect } from "next/navigation";
 import { loginAction } from "@/actions/auth-action";
+import { ForgotPasswordFlow } from "./ForgetPasswordFlow";
 
 // ─── ZOD SCHEMAS ─────────────────────────────────────────────────────────────
 
@@ -31,6 +32,7 @@ const loginSchema = z.object({
 type View =
   | "login"
   | "signup"
+  | "forgot"
   | "google-contact"
   | "register"
   | "otp"
@@ -138,6 +140,7 @@ export function LoginForm({
         <div className="flex justify-end">
           <button
             type="button"
+            onClick={() => switchView("forgot")}
             className="text-[11px] font-semibold text-primary hover:underline"
           >
             Forgot password?
@@ -215,7 +218,9 @@ function FormContent({
       ? "from-primary via-secondary to-accent"
       : view === "signup"
         ? "from-secondary via-accent to-primary"
-        : "from-[#4285F4] via-[#34A853] to-[#FBBC05]";
+        : view === "forgot"
+          ? "from-amber-400 via-orange-400 to-red-400"
+          : "from-[#4285F4] via-[#34A853] to-[#FBBC05]";
 
   return (
     <>
@@ -234,6 +239,12 @@ function FormContent({
             switchView={switchView}
             onSuccess={onSuccess}
             onGoogleUser={handleGoogleUser} // ← use handler, no more duplicate switchView
+          />
+        )}
+        {view === "forgot" && (
+          <ForgotPasswordFlow
+            onBack={() => switchView("login")}
+            onSuccess={() => switchView("login")}
           />
         )}
         {view === "signup" && (
