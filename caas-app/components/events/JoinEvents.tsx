@@ -29,28 +29,7 @@ import { JOINED_EVENTS_QUERY_KEY, SINGLE_EVENT_QUERY_KEY } from "@/constants";
 import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import ImagePreview from "../ImagePreview";
-
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-
-const formatTime = (time: string) => {
-  const t = time.split("T")[1]?.slice(0, 5); // "HH:MM"
-  if (!t) return "";
-
-  let [hour, minute] = t.split(":").map(Number);
-
-  const ampm = hour >= 12 ? "PM" : "AM";
-  hour = hour % 12 || 12; // convert 0 → 12
-
-  return `${hour}:${minute.toString().padStart(2, "0")} ${ampm}`;
-};
+import { formatDate, formatTime } from "@/lib/helpers";
 
 // ─── SCHEMAS ─────────────────────────────────────────────────────────────────
 
@@ -455,10 +434,10 @@ function TriggerCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
   const startDate = event.start_datetime
     ? formatDate(event.start_datetime)
     : null;
-  const startTime = event.start_datetime
+  const startTime = event?.start_datetime
     ? formatTime(event.start_datetime)
-    : null;
-  const endTime = event.end_datetime ? formatTime(event.end_datetime) : null;
+    : "—";
+  const endTime = event?.end_datetime ? formatTime(event.end_datetime) : "—";
   const timeRange =
     startTime && endTime ? `${startTime} – ${endTime}` : startTime;
   const location = event.location?.name ?? null;
