@@ -369,7 +369,11 @@ export default function EventDetails({
                         )}
                       </div> */}
                       <MapPicker
-                        value={{ lat: lat ?? 0, lng: lng ?? 0 }}
+                        value={{
+                          lat: lat ?? 0,
+                          lng: lng ?? 0,
+                          name: locationName,
+                        }}
                         readOnly
                         height={200}
                         label="Event location"

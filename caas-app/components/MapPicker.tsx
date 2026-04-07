@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 interface LatLng {
   lat: number;
   lng: number;
+  name?: string;
 }
 
 interface MapPickerProps {
@@ -226,6 +227,7 @@ function MapReadOnly({
 
   useEffect(() => {
     if (!value) return;
+    if (value.name) return setLocationName(value.name);
     setGeocoding(true);
     reverseGeocode(value.lat, value.lng).then((name) => {
       setGeocoding(false);
