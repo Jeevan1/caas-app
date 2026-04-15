@@ -2,6 +2,7 @@ import { EventJsonLd } from "@/components/EventJsonLd";
 import EventDetails from "@/components/events/EventDetails";
 import { EVENTS_QUERY_KEY, SINGLE_EVENT_QUERY_KEY } from "@/constants";
 import { serverFetch } from "@/lib/server-fetch";
+import { stripHtml } from "@/lib/strip-html";
 import { Event, PaginatedAPIResponse } from "@/lib/types";
 import {
   dehydrate,
@@ -32,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = `${event.title} | Join Your Event`;
   const description =
-    event.description?.slice(0, 160) ??
+    stripHtml(event.description, 160) ||
     "Join this event on Join Your Event Platform.";
   const image =
     event.cover_image ?? "https://caas-app-pro.netlify.app/og-default.png";
