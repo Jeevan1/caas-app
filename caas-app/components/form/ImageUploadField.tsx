@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { AnyFieldApi } from "@tanstack/react-form";
 import FieldError from "./FIeldError";
 
+
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
 interface ImageUploadSingleProps {
@@ -254,7 +255,6 @@ export default function ImageUpload(props: ImageUploadProps) {
           ))}
         </div>
       )}
-
       {/* Drop zone */}
       <div
         onClick={() => inputRef.current?.click()}

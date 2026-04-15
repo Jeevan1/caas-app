@@ -15,7 +15,9 @@ import {
   Share2,
   Star,
   Users,
+  Video,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import JoinEvent from "./JoinEvents";
 import { useApiQuery } from "@/lib/hooks/use-api-query";
@@ -29,6 +31,8 @@ import { cn, useApiMutation } from "@/lib/utils";
 import Attendees from "./Attendees";
 import { Event, PaginatedAPIResponse } from "@/lib/types";
 import EventGallery from "./EventGallery";
+import EventVideoGallery from "./EventVideoGallery";
+
 import { EventCardGridLoader } from "../fallback/EventCardSkeleton";
 import { EventCard } from "./EventCard";
 import { ShareButtons } from "./ShareButtons";
@@ -111,9 +115,10 @@ export default function EventDetails({
 }) {
   const [liked, setLiked] = useState(false);
   const [joined, setJoined] = useState(false);
-  const [tab, setTab] = useState<"about" | "stats" | "attendees" | "gallery">(
+  const [tab, setTab] = useState<"about" | "attendees" | "gallery" | "videos">(
     "about",
   );
+
   const [showBar, setShowBar] = useState(false);
   const joinCardRef = useRef<HTMLDivElement>(null);
 
@@ -167,7 +172,8 @@ export default function EventDetails({
     return () => observer.disconnect();
   }, []);
 
-  const TABS = ["about", "attendees", "gallery"] as const;
+  const TABS = ["about", "attendees", "gallery", "videos"] as const;
+
 
   if (!event) return null;
 
@@ -323,7 +329,14 @@ export default function EventDetails({
                         : "text-muted-foreground hover:text-foreground",
                     )}
                   >
-                    {t}
+                    {t === "videos" ? (
+                      <span className="flex items-center justify-center gap-1">
+                        <Video className="h-3 w-3" />
+                        Videos
+                      </span>
+                    ) : (
+                      t
+                    )}
                   </button>
                 ))}
               </div>
@@ -503,6 +516,15 @@ export default function EventDetails({
               {tab === "gallery" && (
                 <div className="tc mt-5">
                   <EventGallery eventId={eventId} />
+                </div>
+              )}
+
+              {tab === "videos" && (
+                <div className="tc mt-5">
+                  <EventVideoGallery
+                    eventId={eventId}
+                    className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                  />
                 </div>
               )}
             </div>

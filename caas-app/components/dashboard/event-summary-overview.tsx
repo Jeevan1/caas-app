@@ -21,10 +21,14 @@ import {
   User,
   Pen,
   Pencil,
+  Video,
 } from "lucide-react";
+
 import { Section } from "../section";
 import EventGallery from "../events/EventGallery";
+import EventVideoGallery from "../events/EventVideoGallery";
 import Image from "next/image";
+
 import { Button } from "../ui/button";
 import { EventForm } from "./GalleryForm";
 import { useState } from "react";
@@ -141,7 +145,7 @@ export function EventsSummaryOverview({ id }: { id: string }) {
   });
 
   const { data: event, isLoading: isEventLoading } = useApiQuery<Event>({
-    url: `/api/event/events/${id}`,
+    url: `/api/event/events/my-events/${id}`,
     queryKey: EVENT_DETAILS_QUERY_KEY(id),
     enabled: !!id,
   });
@@ -534,7 +538,7 @@ export function EventsSummaryOverview({ id }: { id: string }) {
         </Section>
       )}
       <Section delay={0.4} className="col-span-1 sm:col-span-2">
-        <p className="text-md  font-medium text-muted-foreground pb-2">
+        <p className="text-md font-medium text-muted-foreground pb-2">
           Gallery
         </p>
         <EventGallery
@@ -542,6 +546,19 @@ export function EventsSummaryOverview({ id }: { id: string }) {
           className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-7"
         />
       </Section>
+
+      {/* ── Video section ── */}
+      <Section delay={0.5} className="col-span-1 sm:col-span-2">
+        <div className="flex items-center gap-2 pb-2">
+          <Video className="h-4 w-4 text-muted-foreground" />
+          <p className="text-md font-medium text-muted-foreground">Videos</p>
+        </div>
+        <EventVideoGallery
+          eventId={id}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+        />
+      </Section>
+
       {event && (
         <EventForm
           open={dialogOpen}

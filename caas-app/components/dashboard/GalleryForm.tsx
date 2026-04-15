@@ -17,13 +17,17 @@ import {
   Globe,
   X,
   Loader,
+  Video,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn, useApiMutation } from "@/lib/utils";
 import StyledInput from "@/components/form/FormInput";
 import FieldTextarea from "@/components/form/FieldTextarea";
 import ImageUpload, { FieldImageUpload } from "../form/ImageUploadField";
+import { VideoUploadField } from "../form/VideoUploadField";
+
 import { FieldSelect } from "../form/FieldSelect";
 import { EVENT_DETAILS_QUERY_KEY, EVENTS_QUERY_KEY } from "@/constants";
 import { Event, GalleryImage, PaginatedAPIResponse } from "@/lib/types";
@@ -154,6 +158,7 @@ function buildPatchPayload(
     "is_paid",
     "max_attendees",
     "tags",
+    "status",
   ] as const;
 
   for (const key of scalarKeys) {
@@ -207,6 +212,8 @@ function buildPatchPayload(
     patch["cover_image"] = values.cover_image;
   if (values.payment_qr instanceof File)
     patch["payment_qr"] = values.payment_qr;
+
+  if (values.status !== original.status) patch["status"] = values.status;
 
   // location — skip entirely for online events; otherwise compare each sub-field
   if (!values.is_online) {
@@ -267,9 +274,12 @@ export function GalleryStep({
   onSkip: () => void;
 }) {
   const [files, setFiles] = useState<File[]>([]);
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadedCount, setUploadedCount] = useState(0);
+  const [uploadedVideoCount, setUploadedVideoCount] = useState(0);
   const [deletingIdx, setDeletingIdx] = useState<string | null>(null);
+  const [deletingVideoIdx, setDeletingVideoIdx] = useState<string | null>(null);
 
   const { data: images } = useApiQuery<{
     results: { idx: string; image: string }[];
@@ -278,8 +288,19 @@ export function GalleryStep({
     queryKey: EVENT_DETAILS_QUERY_KEY(eventIdx),
   });
 
+  const { data: videos } = useApiQuery<{
+    results: { idx: string; video: string; title?: string }[];
+  }>({
+    url: `/api/event/events/${eventIdx}/videos/`,
+    queryKey: [...EVENT_DETAILS_QUERY_KEY(eventIdx), "videos"],
+  });
+
   const [existingImages, setExistingImages] = useState<
     { idx: string; image: string }[]
+  >([]);
+
+  const [existingVideos, setExistingVideos] = useState<
+    { idx: string; video: string; title?: string }[]
   >([]);
 
   useEffect(() => {
@@ -288,8 +309,21 @@ export function GalleryStep({
     }
   }, [images]);
 
+  useEffect(() => {
+    if (videos?.results) {
+      setExistingVideos(videos.results);
+    }
+  }, [videos]);
+
   const { mutateAsync: uploadImage } = useApiMutation({
     apiPath: `/api/event/events/${eventIdx}/images/`,
+    method: "POST",
+    queryKey: EVENTS_QUERY_KEY,
+    showSuccessuseToast: false,
+  });
+
+  const { mutateAsync: uploadVideo } = useApiMutation({
+    apiPath: `/api/event/events/${eventIdx}/videos/`,
     method: "POST",
     queryKey: EVENTS_QUERY_KEY,
     showSuccessuseToast: false,
@@ -300,6 +334,13 @@ export function GalleryStep({
     method: "DELETE",
     queryKey: EVENT_DETAILS_QUERY_KEY(eventIdx),
     successMessage: "Image deleted successfully!",
+  });
+
+  const { mutateAsync: deleteVideo } = useApiMutation({
+    apiPath: (idx) => `/api/event/events/${eventIdx}/videos/${idx}/`,
+    method: "DELETE",
+    queryKey: [...EVENT_DETAILS_QUERY_KEY(eventIdx), "videos"],
+    successMessage: "Video deleted successfully!",
   });
 
   const handleRemoveExisting = async (idx: string) => {
@@ -313,12 +354,27 @@ export function GalleryStep({
       setDeletingIdx(null);
     }
   };
+
+  const handleRemoveExistingVideo = async (idx: string) => {
+    try {
+      setDeletingVideoIdx(idx);
+      await deleteVideo(idx);
+      setExistingVideos((prev) => prev.filter((v) => v.idx !== idx));
+    } catch (err) {
+      console.error("Failed to delete video", err);
+    } finally {
+      setDeletingVideoIdx(null);
+    }
+  };
+
   const handleUpload = async () => {
-    if (!files.length) {
+    if (!files.length && !videoFiles.length) {
       onDone();
       return;
     }
     setUploading(true);
+    setUploadedCount(0);
+    setUploadedVideoCount(0);
     for (const file of files) {
       const fd = new FormData();
       fd.append("image", file);
@@ -327,83 +383,218 @@ export function GalleryStep({
         setUploadedCount((c) => c + 1);
       } catch {}
     }
+    for (const vid of videoFiles) {
+      const fd = new FormData();
+      fd.append("video", vid);
+      try {
+        await uploadVideo(fd as any);
+        setUploadedVideoCount((c) => c + 1);
+      } catch {}
+    }
     setUploading(false);
     onDone();
   };
 
+  const [activeTab, setActiveTab] = useState<"photos" | "video">("photos");
+
   return (
     <div className="flex flex-col gap-5">
+      {/* Header */}
       <div className="text-center">
         <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/10">
-          <Images className="h-5 w-5 text-secondary" />
+          {activeTab === "photos" ? (
+            <Images className="h-5 w-5 text-secondary" />
+          ) : (
+            <Video className="h-5 w-5 text-secondary" />
+          )}
         </div>
         <h2 className="font-heading text-xl font-bold text-foreground">
-          Add gallery photos
+          {activeTab === "photos" ? "Add gallery photos" : "Add event video"}
         </h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          Upload photos for your event — or skip to finish.
+          {activeTab === "photos"
+            ? "Upload photos for your event — or switch to video."
+            : "Upload a video for your event — or switch to photos."}
         </p>
       </div>
-
-      {/* Existing images from API */}
-      {existingImages.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {existingImages.map((img) => (
-            <div
-              key={img.image}
-              className="relative h-20 w-20 overflow-hidden rounded-xl border border-border"
-            >
-              {deletingIdx === img.idx && (
-                <span className="absolute inset-0 z-10 flex items-center justify-center bg-background/50">
-                  <Loader2 className="animate-spin text-primary" />
-                </span>
-              )}
-              <Image
-                src={img.image}
-                alt="existing"
-                width={80}
-                height={80}
-                className="h-full w-full object-cover"
-              />
-              <button
-                type="button"
-                onClick={() => handleRemoveExisting(img.idx)}
-                className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-foreground/70 text-background hover:bg-foreground"
-              >
-                <X className="h-3 w-3" />
-              </button>
+      {/* ── Tab switcher ── */}
+      <div className="flex rounded-xl border border-border bg-muted/30 p-1 gap-1">
+        {(["photos", "video"] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-sm font-semibold transition-all duration-200",
+              activeTab === tab
+                ? "text-primary-foreground shadow-sm bg-primary"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {tab === "photos" ? (
+              <>
+                <Images className="h-3.5 w-3.5" />
+                Photos
+                {existingImages.length + files.length > 0 && (
+                  <span
+                    className={cn(
+                      "ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold",
+                      activeTab === "photos"
+                        ? "bg-primary/15 text-primary"
+                        : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {existingImages.length + files.length}
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                <Video className="h-3.5 w-3.5" />
+                Video
+                {existingVideos.length + videoFiles.length > 0 && (
+                  <span
+                    className={cn(
+                      "ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold",
+                      activeTab === "video"
+                        ? "bg-primary/15 text-primary"
+                        : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {existingVideos.length + videoFiles.length}
+                  </span>
+                )}
+              </>
+            )}
+          </button>
+        ))}
+      </div>
+      {/* ── Photos tab ── */}
+      {activeTab === "photos" && (
+        <div className="flex flex-col gap-4">
+          {/* Existing images from API */}
+          {existingImages.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {existingImages.map((img) => (
+                <div
+                  key={img.image}
+                  className="relative h-20 w-20 overflow-hidden rounded-xl border border-border"
+                >
+                  {deletingIdx === img.idx && (
+                    <span className="absolute inset-0 z-10 flex items-center justify-center bg-background/50">
+                      <Loader2 className="animate-spin text-primary" />
+                    </span>
+                  )}
+                  <Image
+                    src={img.image}
+                    alt="existing"
+                    width={80}
+                    height={80}
+                    className="h-full w-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveExisting(img.idx)}
+                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-foreground/70 text-background hover:bg-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
+
+          {/* New image uploads */}
+          <ImageUpload
+            multiple
+            value={files}
+            onChange={setFiles}
+            label="Gallery images"
+            hint="PNG, JPG or WEBP · Max 5 MB each"
+            maxSizeMB={5}
+          />
+
+          {/* Image upload progress */}
+          {uploading && files.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Uploading photos…</span>
+                <span>
+                  {uploadedCount} / {files.length}
+                </span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-300"
+                  style={{ width: `${(uploadedCount / files.length) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
+      {/* ── Video tab ── */}
+      {activeTab === "video" && (
+        <div className="flex flex-col gap-4">
+          {/* Existing videos from API */}
+          {existingVideos.length > 0 && (
+            <div className="grid grid-cols-2 gap-2">
+              {existingVideos.map((v) => (
+                <div
+                  key={v.idx}
+                  className="relative overflow-hidden rounded-xl border border-border bg-black aspect-video"
+                >
+                  {deletingVideoIdx === v.idx && (
+                    <span className="absolute inset-0 z-10 flex items-center justify-center bg-background/50">
+                      <Loader2 className="animate-spin text-primary" />
+                    </span>
+                  )}
+                  <video src={v.video} controls className="w-full h-full" />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveExistingVideo(v.idx)}
+                    className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-foreground/70 text-background hover:bg-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
-      {/* New file uploads */}
-      <ImageUpload
-        multiple
-        value={files}
-        onChange={setFiles}
-        label="Gallery images"
-        hint="PNG, JPG or WEBP · Max 5 MB each"
-        maxSizeMB={5}
-      />
+          {/* New video upload */}
+          <VideoUploadField
+            multiple
+            id="gallery-video-upload"
+            value={videoFiles}
+            onChange={setVideoFiles}
+            label="Click to upload videos"
+            hint="MP4, WebM or Ogg · Max 500 MB · multiple allowed"
+            maxSizeMB={500}
+          />
 
-      {uploading && files.length > 0 && (
-        <div className="flex flex-col gap-1.5">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Uploading…</span>
-            <span>
-              {uploadedCount} / {files.length}
-            </span>
-          </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-300"
-              style={{ width: `${(uploadedCount / files.length) * 100}%` }}
-            />
-          </div>
+          {/* Video upload progress */}
+          {uploading && videoFiles.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Uploading videos…</span>
+                <span>
+                  {uploadedVideoCount} / {videoFiles.length}
+                </span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-300"
+                  style={{
+                    width: `${(uploadedVideoCount / videoFiles.length) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
-
+      {/* ── Footer actions ── */}
       <div className="flex gap-2">
         <Button
           type="button"
@@ -417,7 +608,7 @@ export function GalleryStep({
         <Button
           type="button"
           className="flex-1 gap-2 rounded-xl font-bold"
-          disabled={uploading || !files.length}
+          disabled={uploading || (!files.length && !videoFiles.length)}
           onClick={handleUpload}
         >
           {uploading ? (
@@ -427,7 +618,9 @@ export function GalleryStep({
           ) : (
             <>
               <ArrowRight className="h-4 w-4" /> Upload
-              {files.length > 0 ? ` (${files.length})` : ""}
+              {files.length + videoFiles.length > 0
+                ? ` (${files.length + videoFiles.length})`
+                : ""}
             </>
           )}
         </Button>
@@ -552,7 +745,7 @@ export function EventForm({
 
   // PATCH — payload is already diffed; just forward it as-is
   const { mutateAsync: updateEvent } = useApiMutation<Partial<EventValues>>({
-    apiPath: `/api/event/events/${editing?.idx}/`,
+    apiPath: `/api/event/events/my-events/${editing?.idx}/`,
     method: "PATCH",
     queryKey: EVENTS_QUERY_KEY,
   });

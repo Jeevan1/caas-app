@@ -8,6 +8,8 @@ import {
   Calendar,
   Users,
   ImageUp,
+  Globe,
+  FileText,
 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -16,8 +18,11 @@ import { useApiQuery } from "@/lib/hooks/use-api-query";
 import { EVENTS_QUERY_KEY } from "@/constants";
 import { Event, PaginatedAPIResponse } from "@/lib/types";
 import { DeleteAlertDialog } from "../DeleteAlertDialog";
+import { StatusUpdateAlertDialog } from "../StatusUpdateAlertDialog";
 import { EventForm } from "./GalleryForm";
-import { formatDate, formatTime, statusFromDates } from "@/lib/helpers";
+import { formatDate, formatTime } from "@/lib/helpers";
+import { useApiMutation } from "@/lib/utils";
+
 import { useCurrentUser } from "@/lib/providers";
 import { hasPermission } from "@/lib/permissions/has-permissions";
 import { Link, redirect } from "@/i18n/navigation";
@@ -33,6 +38,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Section } from "../section";
 
+const STATUS_MAP: Record<number, { label: string; className: string }> = {
+  1: { label: "Draft", className: "bg-muted text-muted-foreground" },
+  2: {
+    label: "Published",
+    className:
+      "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400",
+  },
+};
+
 const ActionItem = ({
   ev,
   openEdit,
@@ -41,54 +55,91 @@ const ActionItem = ({
   ev: Event;
   openEdit: (ev: Event) => void;
   openGallery: (ev: Event) => void;
-}) => (
-  <DropdownMenu>
-    <DropdownMenuTrigger asChild>
-      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg">
-        <MoreHorizontal className="h-4 w-4" />
-        <span className="sr-only">Open menu</span>
-      </Button>
-    </DropdownMenuTrigger>
+}) => {
+  const currentStatus = ev.status ?? 1;
+  const isDraft = currentStatus === 1;
+  const isPublished = currentStatus === 2;
+  const targetStatus = isDraft ? 2 : 1;
 
-    <DropdownMenuContent align="end" className="w-48">
-      <DropdownMenuItem onClick={() => openEdit(ev)}>
-        <Pencil className="h-3.5 w-3.5 mr-2" /> Edit
-      </DropdownMenuItem>
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg">
+          <MoreHorizontal className="h-4 w-4" />
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </DropdownMenuTrigger>
 
-      <DropdownMenuItem onClick={() => openGallery(ev)}>
-        <ImageUp className="h-3.5 w-3.5 mr-2" /> Gallery
-      </DropdownMenuItem>
-
-      <DropdownMenuItem asChild>
-        <Link href={`/dashboard/events/${ev.idx}/join-requests`}>
-          <ExternalLink className="h-3.5 w-3.5 mr-2" /> View Requests
-        </Link>
-      </DropdownMenuItem>
-      <DropdownMenuItem asChild>
-        <Link href={`/dashboard/events/${ev.idx}/summary`}>
-          <Calendar className="h-3.5 w-3.5 mr-2" /> View Summary
-        </Link>
-      </DropdownMenuItem>
-
-      <DropdownMenuSeparator />
-
-      <DeleteAlertDialog
-        url={`/api/event/events/${ev.idx}`}
-        queryKey={EVENTS_QUERY_KEY}
-        eventName={ev.title}
-        onSuccess={() => console.log("deleted!")}
-        trigger={(open) => (
-          <DropdownMenuItem
-            onClick={open}
-            className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/30"
-          >
-            <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
-          </DropdownMenuItem>
+      <DropdownMenuContent align="end" className="w-48">
+        {(isDraft || isPublished) && (
+          <>
+            <StatusUpdateAlertDialog
+              url={`/api/event/events/my-events/${ev.idx}`}
+              queryKey={EVENTS_QUERY_KEY}
+              eventName={ev.title}
+              newStatus={targetStatus}
+              trigger={(open) => (
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    open();
+                  }}
+                >
+                  {isDraft ? (
+                    <Globe className="h-3.5 w-3.5 mr-2 text-green-600" />
+                  ) : (
+                    <FileText className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                  )}
+                  {isDraft ? "Publish Event" : "Revert to Draft"}
+                </DropdownMenuItem>
+              )}
+            />
+            <DropdownMenuSeparator />
+          </>
         )}
-      />
-    </DropdownMenuContent>
-  </DropdownMenu>
-);
+
+        <DropdownMenuItem onClick={() => openEdit(ev)}>
+          <Pencil className="h-3.5 w-3.5 mr-2" /> Edit
+        </DropdownMenuItem>
+
+        <DropdownMenuItem onClick={() => openGallery(ev)}>
+          <ImageUp className="h-3.5 w-3.5 mr-2" /> Gallery
+        </DropdownMenuItem>
+
+        <DropdownMenuItem asChild>
+          <Link href={`/dashboard/events/${ev.idx}/join-requests`}>
+            <ExternalLink className="h-3.5 w-3.5 mr-2" /> View Requests
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={`/dashboard/events/${ev.idx}/summary`}>
+            <Calendar className="h-3.5 w-3.5 mr-2" /> View Summary
+          </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        <DeleteAlertDialog
+          url={`/api/event/events/my-events/${ev.idx}`}
+          queryKey={EVENTS_QUERY_KEY}
+          eventName={ev.title}
+          onSuccess={() => console.log("deleted!")}
+          trigger={(open) => (
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                open();
+              }}
+              className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/30"
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+            </DropdownMenuItem>
+          )}
+        />
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
 
 export function EventsOverview() {
   const user = useCurrentUser();
@@ -250,10 +301,7 @@ export function EventsOverview() {
                 </tr>
               ) : (
                 events.map((ev) => {
-                  const status = statusFromDates(
-                    ev.start_datetime,
-                    ev.end_datetime,
-                  );
+                  const statusCfg = STATUS_MAP[ev.status ?? 1] ?? STATUS_MAP[1];
                   return (
                     <tr
                       key={ev.idx}
@@ -304,15 +352,37 @@ export function EventsOverview() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span
-                          className={cn(
-                            "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
-                            status.cls,
-                          )}
-                        >
-                          {status.label}
-                        </span>
+                        {ev.status === 1 || ev.status === 2 || !ev.status ? (
+                          <StatusUpdateAlertDialog
+                            url={`/api/event/events/my-events/${ev.idx}`}
+                            queryKey={EVENTS_QUERY_KEY}
+                            eventName={ev.title}
+                            newStatus={ev.status === 1 || !ev.status ? 2 : 1}
+                            trigger={(open) => (
+                              <button
+                                type="button"
+                                onClick={open}
+                                className={cn(
+                                  "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium transition-all hover:opacity-80 active:scale-95 cursor-pointer",
+                                  statusCfg.className,
+                                )}
+                              >
+                                {statusCfg.label}
+                              </button>
+                            )}
+                          />
+                        ) : (
+                          <span
+                            className={cn(
+                              "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium cursor-default",
+                              statusCfg.className,
+                            )}
+                          >
+                            {statusCfg.label}
+                          </span>
+                        )}
                       </td>
+
                       <td className="px-6 py-4 text-right text-sm text-foreground">
                         {ev.max_attendees === 0 ? (
                           <span className="text-muted-foreground">

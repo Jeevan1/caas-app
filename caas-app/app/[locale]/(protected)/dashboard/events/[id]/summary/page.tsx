@@ -16,7 +16,7 @@ export async function getEventSummary(id: string) {
 }
 
 export async function getEventDetails(id: string) {
-  const res = await serverFetch(`/event/events/${id}`);
+  const res = await serverFetch(`/event/events/my-events/${id}`);
   return res;
 }
 

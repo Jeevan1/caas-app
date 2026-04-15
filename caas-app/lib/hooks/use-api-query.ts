@@ -28,6 +28,7 @@ export function useApiQuery<TQueryFnData, TData = TQueryFnData>(
 
   return useQuery<TQueryFnData, FetchError, TData>({
     queryKey: finalQueryKey,
+    retry: 1,
 
     queryFn: async () => {
       if (!url) {
