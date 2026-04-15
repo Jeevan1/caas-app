@@ -5,6 +5,13 @@ import { Images } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { Lightbox } from "../Lightbox";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 function GallerySkeleton() {
   return (
@@ -39,7 +46,7 @@ const EventGallery = ({
     queryKey: ["event", "gallery", eventId],
   });
 
-  const [lightbox, setLightbox] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<number | null>(null);
 
   if (isLoading) return <GallerySkeleton />;
 
@@ -56,37 +63,54 @@ const EventGallery = ({
 
   return (
     <>
-      <div
-        className={cn(
-          "grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4",
-          className,
-        )}
+      <Carousel
+        opts={{
+          align: "start",
+          loop: images.length > 4,
+        }}
+        className={cn("w-full px-8 sm:px-0", className)}
       >
-        {images.map((img) => (
-          <div
-            key={img.idx}
-            className="group relative cursor-zoom-in overflow-hidden rounded-xl bg-muted"
-            style={{ aspectRatio: "1/1" }}
-            onClick={() => setLightbox(img.image)}
-          >
-            <Image
-              src={img.image}
-              alt={img.caption ?? "Photo"}
-              fill
-              sizes="(max-width: 320px) 50vw, (max-width: 768px) 33vw, 25vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-            {img.caption && (
-              <div className="absolute inset-x-0 bottom-0 translate-y-full bg-black/60 px-2 py-1.5 text-[11px] text-white transition-transform duration-200 group-hover:translate-y-0">
-                {img.caption}
+        <CarouselContent className="-ml-2 md:-ml-4">
+          {images.map((img, idx) => (
+            <CarouselItem
+              key={img.idx}
+              className="pl-2 sm:basis-1/2 md:pl-4 lg:basis-1/3 xl:basis-1/4"
+            >
+              <div
+                className="group relative cursor-zoom-in overflow-hidden rounded-xl bg-muted"
+                style={{ aspectRatio: "1/1" }}
+                onClick={() => setLightbox(idx)}
+              >
+                <Image
+                  src={img.image}
+                  alt={img.caption ?? "Photo"}
+                  fill
+                  sizes="(max-width: 320px) 100vw, (max-width: 768px) 50vw, 25vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                {img.caption && (
+                  <div className="absolute inset-x-0 bottom-0 translate-y-full bg-black/60 px-2 py-1.5 text-[11px] text-white transition-transform duration-200 group-hover:translate-y-0">
+                    {img.caption}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        ))}
-      </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        {images.length > 1 && (
+          <>
+            <CarouselPrevious className="absolute -left-3 sm:-left-12" />
+            <CarouselNext className="absolute -right-3 sm:-right-12" />
+          </>
+        )}
+      </Carousel>
 
-      {lightbox && (
-        <Lightbox src={lightbox} onClose={() => setLightbox(null)} />
+      {lightbox !== null && (
+        <Lightbox
+          images={images}
+          initialIndex={lightbox}
+          onClose={() => setLightbox(null)}
+        />
       )}
     </>
   );
