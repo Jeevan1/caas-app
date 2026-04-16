@@ -200,7 +200,7 @@ const EventVideoGallery = ({
           >
             <video
               src={vid.video}
-              className="w-full h-full object-cover pointer-events-none"
+              className="w-full h-full object-contain pointer-events-none"
               muted
               preload="metadata"
             />

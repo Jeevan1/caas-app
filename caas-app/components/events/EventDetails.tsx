@@ -174,7 +174,6 @@ export default function EventDetails({
 
   const TABS = ["about", "attendees", "gallery", "videos"] as const;
 
-
   if (!event) return null;
 
   return (
@@ -523,7 +522,7 @@ export default function EventDetails({
                 <div className="tc mt-5">
                   <EventVideoGallery
                     eventId={eventId}
-                    className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                    className="grid grid-cols-2 sm:grid-cols-3 gap-3"
                   />
                 </div>
               )}

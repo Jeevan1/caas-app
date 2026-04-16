@@ -277,6 +277,7 @@ export function GalleryStep({
   const [videoFiles, setVideoFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadedCount, setUploadedCount] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadedVideoCount, setUploadedVideoCount] = useState(0);
   const [deletingIdx, setDeletingIdx] = useState<string | null>(null);
   const [deletingVideoIdx, setDeletingVideoIdx] = useState<string | null>(null);
@@ -368,30 +369,49 @@ export function GalleryStep({
   };
 
   const handleUpload = async () => {
+    setUploadError(null);
     if (!files.length && !videoFiles.length) {
       onDone();
       return;
     }
+
     setUploading(true);
     setUploadedCount(0);
     setUploadedVideoCount(0);
+
+    let hasError = false;
+
     for (const file of files) {
       const fd = new FormData();
       fd.append("image", file);
       try {
         await uploadImage(fd as any);
         setUploadedCount((c) => c + 1);
-      } catch {}
+      } catch (err) {
+        console.error("Image upload failed", err);
+        hasError = true;
+        setUploadError("Some uploads failed. Please try again.");
+      }
     }
+
     for (const vid of videoFiles) {
       const fd = new FormData();
       fd.append("video", vid);
       try {
         await uploadVideo(fd as any);
         setUploadedVideoCount((c) => c + 1);
-      } catch {}
+      } catch (err) {
+        console.error("Video upload failed", err);
+        hasError = true;
+      }
     }
+
     setUploading(false);
+
+    if (hasError) {
+      return;
+    }
+
     onDone();
   };
 
@@ -593,6 +613,9 @@ export function GalleryStep({
             </div>
           )}
         </div>
+      )}
+      {uploadError && (
+        <p className="text-xs text-red-500 text-center">{uploadError}</p>
       )}
       {/* ── Footer actions ── */}
       <div className="flex gap-2">
