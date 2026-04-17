@@ -3,6 +3,12 @@ import { EVENTS_QUERY_KEY } from "@/constants";
 import { serverFetch } from "@/lib/server-fetch";
 import { Event } from "@/lib/types";
 import { QueryClient } from "@tanstack/react-query";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Events",
+  description: "Browse and discover upcoming events on Join Your Event platform.",
+};
 
 const getEvents = async () => {
   const res = await serverFetch<Event>(`/event/events/`);

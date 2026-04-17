@@ -2,6 +2,13 @@ import { Mail, MessageSquare, HelpCircle, Phone } from "lucide-react";
 import PageBanner from "@/components/PageBanner";
 import { Section } from "@/components/section";
 import ContactForm from "@/components/contact/ContactForm";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Contact & Support",
+  description:
+    "Get in touch with the Join Your Event team. We're here to help you with any questions or support you need.",
+};
 
 const contactMethods = [
   {
