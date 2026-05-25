@@ -2,13 +2,16 @@ import { Mail, MessageSquare, HelpCircle, Phone } from "lucide-react";
 import PageBanner from "@/components/PageBanner";
 import { Section } from "@/components/section";
 import ContactForm from "@/components/contact/ContactForm";
-import { Metadata } from "next";
+import { FAQPageJsonLd } from "@/components/JsonLd";
+import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: "Contact & Support",
   description:
     "Get in touch with the Join Your Event team. We're here to help you with any questions or support you need.",
-};
+  path: "/contact",
+});
 
 const contactMethods = [
   {
@@ -53,6 +56,9 @@ const faqs = [
 export default function ContactPage() {
   return (
     <section>
+      <FAQPageJsonLd
+        questions={faqs.map((f) => ({ question: f.q, answer: f.a }))}
+      />
       <PageBanner
         heading={"Contact & Support"}
         title={"We're here to help"}

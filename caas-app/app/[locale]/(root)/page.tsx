@@ -1,14 +1,12 @@
 import { MeetupHomeSections } from "@/components/home/Meetuphomesections";
-import { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Home",
+export const metadata = buildPageMetadata({
+  title: "Discover & Join Events Near You",
   description:
-    "Promote, Grow, and Track Your Business Easily. Affordable DIY marketing tools for small businesses, event organizers, and entrepreneurs.",
-  alternates: {
-    canonical: "https://joinyourevent.com",
-  },
-};
+    "Find and join local meetups, concerts, workshops, and conferences in Nepal. Join Your Event — your go-to event discovery platform.",
+  path: "",
+});
 
 export default function Page() {
   return (

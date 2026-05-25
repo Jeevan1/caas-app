@@ -37,6 +37,7 @@ import { MapPicker } from "../MapPicker";
 import { useApiQuery } from "@/lib/hooks/use-api-query";
 import Image from "next/image";
 import DateInput from "../form/DateInput";
+import { FieldRichText } from "../form/CkInput";
 
 // ─── SCHEMA ──────────────────────────────────────────────────────────────────
 
@@ -866,11 +867,11 @@ export function EventForm({
 
                 <form.Field name="description">
                   {(f) => (
-                    <FieldTextarea
+                    <FieldRichText
                       field={f}
                       label="Description"
-                      maxLength={10000}
-                      placeholder="What's this event about? Include agenda, what to bring, etc."
+                      required
+                      placeholder="Describe the event — engine, comfort, use cases…"
                     />
                   )}
                 </form.Field>

@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Check, X, Sparkles } from "lucide-react";
+import { FAQPageJsonLd } from "@/components/JsonLd";
+import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Pricing - Join Your Event",
+export const metadata: Metadata = buildPageMetadata({
+  title: "Pricing",
   description:
-    "Choose the perfect plan for your business. Start free or upgrade for unlimited campaigns and premium features.",
-};
+    "Simple, transparent pricing for every organizer. Start free and scale as you grow — no hidden fees.",
+  path: "/pricing",
+});
 
 const plans = [
   {
@@ -92,6 +96,9 @@ const faqs = [
 export default function PricingPage() {
   return (
     <section>
+      <FAQPageJsonLd
+        questions={faqs.map((f) => ({ question: f.q, answer: f.a }))}
+      />
       {/* Hero */}
       <section className="bg-background py-14 md:py-20">
         <div className="mx-auto container text-center">

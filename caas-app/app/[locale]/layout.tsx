@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import { NextIntlClientProvider } from "next-intl";
+import Script from "next/script";
 import "../globals.css";
 import {
   CurrentUserProvider,
@@ -14,42 +15,94 @@ import { notFound } from "next/navigation";
 import { Locale, localeConfig, locales } from "@/i18n/config";
 import { getMessages } from "next-intl/server";
 import { getCurrentUserSettings } from "@/lib/auth/get-current-user-settings";
+import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/JsonLd";
+import {
+  SITE_URL,
+  SITE_NAME,
+  DEFAULT_OG_IMAGE,
+  OG_LOCALE_MAP,
+  LOCALES,
+} from "@/lib/seo";
 
-const _inter = Space_Grotesk({
+// ─── Fonts ───────────────────────────────────────────────────────────────────
+// font-sans → Inter  |  font-heading → Space Grotesk
+const _inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
 });
 const _spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-space-grotesk",
+  display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Join Your Event",
-    template: "%s | Join Your Event",
-  },
-  description:
-    "Promote, Grow, and Track Your Business Easily. Affordable DIY marketing tools for small businesses, event organizers, and entrepreneurs.",
-  metadataBase: new URL("https://joinyourevent.com"),
-  keywords: ["events", "kathmandu", "nepal", "event organizer"],
-  authors: [{ name: "Join Your Event" }],
-  creator: "Join Your Event",
-  openGraph: {
-    siteName: "Join Your Event",
-    type: "website",
-    images: [{ url: "/og-default.png", width: 1200, height: 630 }],
-  },
-  twitter: { card: "summary_large_image", site: "@joinyourevent" },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? "";
+
+// ─── Metadata ────────────────────────────────────────────────────────────────
+export async function generateMetadata({
+  params: paramsPromise,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await paramsPromise;
+  const canonicalRoot =
+    locale === "en" ? SITE_URL : `${SITE_URL}/${locale}`;
+
+  return {
+    title: {
+      default:  SITE_NAME,
+      template: `%s | ${SITE_NAME}`,
     },
-  },
-};
+    description:
+      "Discover and join events happening near you in Nepal. Browse concerts, workshops, festivals and more on Join Your Event.",
+    metadataBase: new URL(SITE_URL),
+    keywords: [
+      "events",
+      "kathmandu",
+      "nepal",
+      "event organizer",
+      "community events",
+      "local events",
+      "event discovery",
+    ],
+    authors:  [{ name: SITE_NAME }],
+    creator:  SITE_NAME,
+    openGraph: {
+      siteName: SITE_NAME,
+      type:     "website",
+      locale:   OG_LOCALE_MAP[locale as keyof typeof OG_LOCALE_MAP] ?? "en_US",
+      images:   [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      site: "@joinyourevent",
+    },
+    robots: {
+      index:  true,
+      follow: true,
+      googleBot: {
+        index:               true,
+        follow:              true,
+        "max-image-preview": "large",
+        "max-snippet":       -1,
+      },
+    },
+    verification: {
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ?? "",
+    },
+    alternates: {
+      canonical: canonicalRoot,
+      languages: {
+        ...LOCALES.reduce<Record<string, string>>((acc, l) => {
+          acc[l] = `${SITE_URL}/${l}`;
+          return acc;
+        }, {}),
+        "x-default": SITE_URL,
+      } as Record<string, string>,
+    },
+  };
+}
 
 export const viewport: Viewport = { themeColor: "#2563eb" };
 
@@ -57,22 +110,22 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
+// ─── Root layout ─────────────────────────────────────────────────────────────
 export default async function RootLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
-  if (!locales.includes(locale as Locale)) notFound();
+  const { locale: rawLocale } = await params;
+  if (!locales.includes(rawLocale as Locale)) notFound();
+  const locale = rawLocale as Locale;
 
   const messages = await getMessages();
-  const dir = localeConfig[locale as Locale].dir;
-  const user = await getCurrentUser();
+  const dir      = localeConfig[locale as Locale].dir;
+  const user     = await getCurrentUser();
   const settings = await getCurrentUserSettings();
-
-  // const needsPhone = !!user && !user.phone;
 
   return (
     <html
@@ -81,17 +134,42 @@ export default async function RootLayout({
       className={`${_inter.variable} ${_spaceGrotesk.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="preconnect" href="https://caas.joinyourevent.com" />
+        <link rel="dns-prefetch" href="https://caas.joinyourevent.com" />
+        {GA_ID && (
+          <>
+            <link rel="preconnect" href="https://www.googletagmanager.com" />
+            <link rel="preconnect" href="https://www.google-analytics.com" />
+          </>
+        )}
+        <OrganizationJsonLd />
+        <WebSiteJsonLd />
+      </head>
       <body className="font-sans antialiased">
+        {GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_ID}', { page_path: window.location.pathname });
+              `}
+            </Script>
+          </>
+        )}
+
         <NextTopLoader color="#2563eb" showSpinner={false} />
         <NextIntlClientProvider messages={messages} locale={locale}>
           <Providers>
             <CurrentUserProvider user={user}>
               <CurrentUserSettingsProvider settings={settings ?? null}>
                 {children}
-
-                {/* {needsPhone && (
-                <PhoneNumberGate userName={user.name ?? undefined} />
-              )} */}
               </CurrentUserSettingsProvider>
             </CurrentUserProvider>
           </Providers>

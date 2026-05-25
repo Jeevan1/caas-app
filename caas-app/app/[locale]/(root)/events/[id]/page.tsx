@@ -1,15 +1,17 @@
-import { EventJsonLd } from "@/components/EventJsonLd";
+import { EventJsonLd, BreadcrumbJsonLd } from "@/components/JsonLd";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import EventDetails from "@/components/events/EventDetails";
 import { EVENTS_QUERY_KEY, SINGLE_EVENT_QUERY_KEY } from "@/constants";
 import { serverFetch } from "@/lib/server-fetch";
 import { stripHtml } from "@/lib/strip-html";
 import { Event, PaginatedAPIResponse } from "@/lib/types";
+import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE, buildLocaleAlternates } from "@/lib/seo";
 import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -19,61 +21,45 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
 
   const res = await fetch(`${process.env.MASTER_URL}/event/events/${id}/`, {
-    cache: "force-cache",
+    next: { revalidate: 60 },
   });
 
   if (!res.ok) {
     return {
-      title: "Event | Join Your Event",
-      description: "Discover and join events on Join Your Event Platform.",
+      title: "Event",
+      description: `Discover and join events on ${SITE_NAME}.`,
     };
   }
 
   const event: Event = await res.json();
-
-  const title = `${event.title} | Join Your Event`;
+  const path        = `/events/${id}`;
+  const url         = `${SITE_URL}${path}`;
+  const title       = event.title;
   const description =
     stripHtml(event.description, 160) ||
-    "Join this event on Join Your Event Platform.";
-  const image =
-    event.cover_image ?? "https://caas-app-pro.netlify.app/og-default.png";
-  const url = `https://joinyourevent.com/events/${id}`;
+    `Join ${event.title} on ${SITE_NAME}.`;
+  const image = event.cover_image ?? DEFAULT_OG_IMAGE;
 
   return {
     title,
     description,
-
     openGraph: {
       title,
       description,
       url,
-      siteName: "Join Your Event",
+      siteName: SITE_NAME,
       type: "website",
-      images: [
-        {
-          url: image,
-          width: 1200,
-          height: 630,
-          alt: event.title,
-        },
-      ],
+      images: [{ url: image, width: 1200, height: 630, alt: title }],
     },
-
     twitter: {
-      card: "summary_large_image",
+      card:   "summary_large_image",
+      site:   "@joinyourevent",
       title,
       description,
       images: [image],
     },
-
-    alternates: {
-      canonical: url,
-    },
-
-    robots: {
-      index: true,
-      follow: true,
-    },
+    alternates: buildLocaleAlternates(path),
+    robots: { index: true, follow: true },
   };
 }
 
@@ -109,7 +95,28 @@ const EventDetailsPage = async ({
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      {eventData && <EventJsonLd event={eventData} />}
+      {eventData && (
+        <>
+          <EventJsonLd event={eventData} />
+          <BreadcrumbJsonLd
+            items={[
+              { name: "Events", url: "https://joinyourevent.com/events" },
+              {
+                name: eventData.title,
+                url: `https://joinyourevent.com/events/${id}`,
+              },
+            ]}
+          />
+        </>
+      )}
+      <div className="container mx-auto px-6 pt-6">
+        <Breadcrumbs
+          items={[
+            { name: "Events", href: "/events" },
+            { name: eventData?.title ?? "Event" },
+          ]}
+        />
+      </div>
       <EventDetails eventId={id} />
     </HydrationBoundary>
   );

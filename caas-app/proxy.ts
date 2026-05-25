@@ -1,8 +1,9 @@
-// proxy.ts
 import createIntlMiddleware from "next-intl/middleware";
 import { NextResponse, NextRequest } from "next/server";
 import { ROUTE_CONFIGS, RouteAccess, RouteConfig } from "@/config/routes";
 import { locales, defaultLocale, localePrefix, Locale } from "@/i18n/config";
+
+const SITE_URL = "https://joinyourevent.com";
 
 // ─── i18n ─────────────────────────────────────────────────────────────────────
 
@@ -98,54 +99,104 @@ const handlers: Record<
     return null;
   },
 
-  "guest-only": (req, config, session, locale) => {
-    if (session.isLoggedIn) {
-      // const next = req.nextUrl.searchParams.get("next");
-
-      // // NEVER redirect to login again
-      // if (req.nextUrl.pathname.endsWith("/login")) {
-      //   return toPath(req, `/${locale}`);
-      // }
-
-      // return toPath(req, next || config.redirectTo || `/${locale}`);
-      return null;
-    }
-    return null;
-  },
+  "guest-only": (req, _config, session, locale) => {
+  if (session.isLoggedIn) return toPath(req, `/${locale}`);
+  return null;
+},
 };
+
+// ─── SEO helpers ──────────────────────────────────────────────────────────────
+
+function enforceNonWww(req: NextRequest): NextResponse | null {
+  const host = req.headers.get("host") ?? "";
+  if (host.startsWith("www.")) {
+    const url = req.nextUrl.clone();
+    url.host = host.replace("www.", "");
+    url.protocol = "https";
+    return NextResponse.redirect(url, { status: 301 });
+  }
+  return null;
+}
+
+function enforceTrailingSlash(req: NextRequest): NextResponse | null {
+  const { pathname } = req.nextUrl;
+
+  if (
+    pathname === "/" ||
+    pathname.length < 2 ||
+    pathname.endsWith("/") ||
+    pathname.includes(".")
+  ) {
+    return null;
+  }
+
+  const url = req.nextUrl.clone();
+  url.pathname = `${pathname}/`;
+  return NextResponse.redirect(url, { status: 301 });
+}
+
+function addSecurityHeaders(response: NextResponse): void {
+  const headers = response.headers;
+
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("X-Frame-Options", "SAMEORIGIN");
+  headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+  );
+  headers.set(
+  "Strict-Transport-Security",
+  "max-age=63072000; includeSubDomains; preload"
+);
+}
 
 // ─── Proxy ────────────────────────────────────────────────────────────────────
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // 1. SEO: www → non-www redirect
+  const wwwRedirect = enforceNonWww(req);
+  if (wwwRedirect) return wwwRedirect;
+
+  // 2. SEO: trailing slash enforcement (skip for API and files)
+  if (!pathname.startsWith("/api/") && !pathname.includes(".")) {
+    const slashRedirect = enforceTrailingSlash(req);
+    if (slashRedirect) return slashRedirect;
+  }
+
+  // 3. Auth guard
   const locale = getLocale(req);
   const stripped = stripLocale(pathname);
   const route = matchRoute(stripped);
 
-  // 1. Auth guard first
   if (route) {
     const session = getSession(req);
     const redirect = handlers[route.access](req, route, session, locale);
-
     if (redirect) return redirect;
   }
 
-  // 2. i18n routing
+  // 4. i18n routing
   const handleI18n = createIntlMiddleware({
     locales,
-    defaultLocale, // ✅ always "en" — never dynamic
+    defaultLocale,
     localePrefix,
     localeDetection: true,
   });
 
   const response = handleI18n(req);
 
-  // 3. Persist locale cookie
+  // 5. Persist locale cookie
   response.cookies.set("locale", locale, {
     path: "/",
     maxAge: 60 * 60 * 24 * 365,
     sameSite: "lax",
+    secure: true, 
   });
+
+  // 6. Security headers
+  addSecurityHeaders(response);
 
   return response;
 }

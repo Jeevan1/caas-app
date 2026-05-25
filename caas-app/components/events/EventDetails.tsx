@@ -38,8 +38,15 @@ import { EventCard } from "./EventCard";
 import { ShareButtons } from "./ShareButtons";
 import { OrganizerCard } from "./OrganizerCard";
 import EventFavorite from "./EventFaviorate";
-import { MapPicker } from "../MapPicker";
+import dynamic from "next/dynamic";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
+
+const MapPicker = dynamic(() => import("../MapPicker").then((m) => ({ default: m.MapPicker })), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[200px] w-full animate-pulse rounded-2xl bg-muted" />
+  ),
+});
 import { formatDate, formatTime } from "@/lib/helpers";
 
 // ─── API TYPES ────────────────────────────────────────────────────────────────
@@ -214,8 +221,9 @@ export default function EventDetails({
               {coverImage ? (
                 <Image
                   src={coverImage}
-                  alt={title}
+                  alt={`Cover image for ${title}${locationName ? ` — ${locationName}` : ""}`}
                   fill
+                  sizes="(max-width: 1024px) 100vw, 66vw"
                   className="object-contain"
                   priority
                 />
@@ -349,7 +357,6 @@ export default function EventDetails({
                     // </p>
                     <div
                       dangerouslySetInnerHTML={{ __html: description }}
-                      className=" font-serif"
                     />
                   ) : (
                     <p className="text-sm italic text-muted-foreground/50">
@@ -640,6 +647,7 @@ export default function EventDetails({
                       alt={title}
                       width={32}
                       height={32}
+                      sizes="32px"
                       className="h-8 w-8 shrink-0 rounded-lg object-cover"
                     />
                   ) : (

@@ -3,21 +3,25 @@ import { Zap } from "lucide-react";
 import Image from "next/image";
 
 const footerLinks = {
-  Product: [
+  Discover: [
+    { href: "/events", label: "Browse Events" },
+    { href: "/category", label: "Categories" },
     { href: "/how-it-works", label: "How It Works" },
-    { href: "/templates", label: "Templates" },
     { href: "/pricing", label: "Pricing" },
-    { href: "/dashboard", label: "Dashboard" },
   ],
-  Resources: [
-    { href: "/blog", label: "Blog" },
-    { href: "/contact", label: "Contact" },
-    { href: "/contact", label: "FAQs" },
-    { href: "/contact", label: "Support" },
+  "For Organizers": [
+    { href: "/register", label: "List Your Event" },
+    { href: "/how-it-works", label: "Organizer Guide" },
+    { href: "/dashboard", label: "Dashboard" },
+    { href: "/pricing", label: "Plans & Pricing" },
   ],
   Company: [
-    { href: "#", label: "About Us" },
-    { href: "#", label: "Careers" },
+    { href: "/about", label: "About Us" },
+    { href: "/blog", label: "Blog" },
+    { href: "/contact", label: "Contact & Support" },
+    { href: "/how-it-works", label: "FAQ" },
+  ],
+  Legal: [
     { href: "#", label: "Privacy Policy" },
     { href: "#", label: "Terms of Service" },
   ],

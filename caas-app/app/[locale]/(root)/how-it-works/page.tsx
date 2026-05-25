@@ -15,12 +15,15 @@ import {
   Utensils,
   Trophy,
 } from "lucide-react";
+import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "How It Works - EventHub",
+export const metadata: Metadata = buildPageMetadata({
+  title: "How It Works",
   description:
-    "Learn how EventHub helps you create, manage, sell tickets, and grow your events in four simple steps.",
-};
+    "Learn how Join Your Event helps you create, manage, sell tickets, and grow your events in four simple steps.",
+  path: "/how-it-works",
+});
 
 const detailedSteps = [
   {

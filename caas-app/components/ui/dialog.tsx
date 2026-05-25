@@ -49,7 +49,7 @@ const DialogContent = React.forwardRef<
         // Position
         "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
         // Layout
-        "grid w-full max-w-lg gap-4",
+        "grid w-full max-w-4xl gap-4",
         // Shape
         "rounded-2xl",
         // Background — card token so it respects light/dark

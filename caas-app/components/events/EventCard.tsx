@@ -4,6 +4,7 @@ import { formatDate } from "@/lib/helpers";
 import { Event } from "@/lib/types";
 import { Calendar, Globe } from "lucide-react";
 import { useApiMutation } from "@/lib/utils";
+import { trackEventClick } from "@/lib/gtag";
 import Image from "next/image";
 
 function EventCard({
@@ -15,7 +16,7 @@ function EventCard({
   online?: boolean;
   index?: number;
 }) {
-  const { mutate: trackClick } = useApiMutation({
+  const { mutate: mutateClick } = useApiMutation({
     apiPath: `/api/event/events/${event.idx}/click/`,
     method: "POST",
     queryKey: `event-click-${event.idx}`,
@@ -25,7 +26,10 @@ function EventCard({
   return (
     <Link
       href={`/events/${event.idx}`}
-      onClick={() => trackClick({})}
+      onClick={() => {
+        mutateClick({});
+        trackEventClick(event.idx, event.title);
+      }}
       className="group flex flex-col rounded-2xl border border-border bg-card overflow-hidden transition-all hover:border-primary/40 hover:shadow-md"
       style={{ animationDelay: `${index && (index % 10) * 40}ms` }}
     >
@@ -34,10 +38,11 @@ function EventCard({
         {event.cover_image && (
           <Image
             src={event.cover_image}
-            alt={event.title}
-            height={156}
-            width={256}
-            className="h-full w-full object-contain"
+            alt={`${event.title} — ${event.location?.name ? `Held at ${event.location.name}` : "Event cover image"}`}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            priority={index !== undefined && index < 4}
           />
         )}
         <span className="absolute left-3 top-3 rounded-full bg-secondary/90 px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">

@@ -8,6 +8,14 @@ import {
 } from "@tanstack/react-query";
 import { CATEGORIES_QUERY_KEY } from "@/constants";
 import Categories from "@/components/category/Category";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Event Categories",
+  description:
+    "Browse event categories on Join Your Event. Find events by category — music, tech, sports, workshops, conferences, and more.",
+  path: "/category",
+});
 
 export async function getCategories() {
   const res =

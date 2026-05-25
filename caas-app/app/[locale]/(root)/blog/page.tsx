@@ -4,12 +4,15 @@ import Image from "next/image";
 import { ArrowRight, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageBanner from "@/components/PageBanner";
+import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Blog - Join Your Event",
+export const metadata: Metadata = buildPageMetadata({
+  title: "Blog & Resources",
   description:
-    "Marketing tips, case studies, and success stories to help you grow your business with Join Your Event.",
-};
+    "Event marketing tips, organizer success stories, and platform guides to help you run better events with Join Your Event.",
+  path: "/blog",
+});
 
 const featuredPost = {
   slug: "how-to-triple-leads",

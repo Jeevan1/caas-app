@@ -17,6 +17,7 @@ import { EmptyState } from "../EmptyState";
 import { FilterChips } from "../FilterChip";
 import { useThrottle } from "./use-throttle";
 import { Section } from "../section";
+import { trackSearch, trackFilter } from "@/lib/gtag";
 
 const PAGE_SIZE = 20;
 const BASE_URL = "/api/event/events/";
@@ -107,6 +108,7 @@ export default function Events() {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setApplied((p) => ({ ...p, search }));
+    if (search) trackSearch(search);
   };
 
   const handleRemoveChip = (key: keyof FilterState) => {
