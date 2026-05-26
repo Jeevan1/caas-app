@@ -559,7 +559,7 @@ export function GalleryStep({
         <div className="flex flex-col gap-4">
           {/* Existing videos from API */}
           {existingVideos.length > 0 && (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {existingVideos.map((v) => (
                 <div
                   key={v.idx}
@@ -811,7 +811,7 @@ export function EventForm({
           )}
         />
 
-        <div className="max-h-[85vh] overflow-y-auto px-6 pb-6 pt-4">
+        <div className="max-h-[85vh] overflow-y-auto px-4 sm:px-6 pb-6 pt-4">
           <StepDots step={step} />
 
           {step === "done" && <SuccessScreen isEdit={isEdit} />}
@@ -892,7 +892,7 @@ export function EventForm({
 
                 <Section label="Schedule" />
 
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <form.Field name="start_datetime">
                     {(f) => (
                       <DateInput

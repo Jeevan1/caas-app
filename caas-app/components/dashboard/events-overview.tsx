@@ -266,13 +266,14 @@ export function EventsOverview() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-muted/50 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <th className="px-6 py-3">Event</th>
                 <th className="px-6 py-3">Category</th>
-                <th className="px-6 py-3">Start</th>
+                <th className="px-6 py-3">Start Date</th>
+                <th className="px-6 py-3">End Date</th>
                 <th className="px-6 py-3">Location</th>
                 <th className="px-6 py-3">Status</th>
                 <th className="px-6 py-3 text-right">Seats</th>
@@ -284,7 +285,7 @@ export function EventsOverview() {
               {isLoading ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-6 py-16 text-center text-sm text-muted-foreground"
                   >
                     Loading…
@@ -292,7 +293,7 @@ export function EventsOverview() {
                 </tr>
               ) : events.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-16 text-center">
+                  <td colSpan={8} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-8 w-8 text-muted-foreground/40" />
                       <p>No events yet. Add one to get started.</p>
@@ -344,6 +345,14 @@ export function EventsOverview() {
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {formatTime(ev.start_datetime)}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-foreground">
+                          {formatDate(ev.end_datetime)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatTime(ev.end_datetime)}
                         </p>
                       </td>
                       <td className="max-w-[160px] px-6 py-4 text-sm text-muted-foreground">
@@ -414,6 +423,148 @@ export function EventsOverview() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View: Cards */}
+        <div className="md:hidden divide-y divide-border">
+          {isLoading ? (
+            <div className="px-6 py-16 text-center text-sm text-muted-foreground">
+              Loading…
+            </div>
+          ) : events.length === 0 ? (
+            <div className="px-6 py-16 text-center">
+              <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="h-8 w-8 text-muted-foreground/40" />
+                <p>No events yet. Add one to get started.</p>
+              </div>
+            </div>
+          ) : (
+            events.map((ev) => {
+              const statusCfg = STATUS_MAP[ev.status ?? 1] ?? STATUS_MAP[1];
+              return (
+                <div
+                  key={ev.idx}
+                  className="p-5 flex flex-col gap-4 hover:bg-muted/10 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <Link
+                      href={`/dashboard/events/${ev.idx}/summary`}
+                      className="flex items-center gap-3 group min-w-0"
+                    >
+                      {ev.cover_image ? (
+                        <Image
+                          src={ev.cover_image}
+                          alt={ev.title}
+                          width={44}
+                          height={44}
+                          className="h-11 w-11 shrink-0 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted text-lg">
+                          🚀
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <h4 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors truncate">
+                          {ev.title}
+                        </h4>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {ev.organizer?.name}
+                        </p>
+                      </div>
+                    </Link>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {ev.status === 1 || ev.status === 2 || !ev.status ? (
+                        <StatusUpdateAlertDialog
+                          url={`/api/event/events/my-events/${ev.idx}`}
+                          queryKey={EVENTS_QUERY_KEY}
+                          eventName={ev.title}
+                          newStatus={ev.status === 1 || !ev.status ? 2 : 1}
+                          trigger={(open) => (
+                            <button
+                              type="button"
+                              onClick={open}
+                              className={cn(
+                                "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium transition-all hover:opacity-80 active:scale-95 cursor-pointer",
+                                statusCfg.className,
+                              )}
+                            >
+                              {statusCfg.label}
+                            </button>
+                          )}
+                        />
+                      ) : (
+                        <span
+                          className={cn(
+                            "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium cursor-default",
+                            statusCfg.className,
+                          )}
+                        >
+                          {statusCfg.label}
+                        </span>
+                      )}
+                      <ActionItem
+                        ev={ev}
+                        openEdit={openEdit}
+                        openGallery={openGallery}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs bg-muted/30 dark:bg-muted/10 p-4 rounded-xl">
+                    <div>
+                      <p className="font-medium text-muted-foreground uppercase tracking-wider text-[10px]">
+                        Category
+                      </p>
+                      <p className="mt-1 font-medium text-foreground">
+                        {ev.category?.name || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-muted-foreground uppercase tracking-wider text-[10px]">
+                        Location
+                      </p>
+                      <p className="mt-1 font-medium text-foreground truncate">
+                        {ev.is_online ? "Online" : ev.location?.name || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-muted-foreground uppercase tracking-wider text-[10px]">
+                        Date & Time
+                      </p>
+                      <div className="mt-1 text-foreground">
+                        <p className="font-medium">{formatDate(ev.start_datetime)}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {formatTime(ev.start_datetime)}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="font-medium text-muted-foreground uppercase tracking-wider text-[10px]">
+                        End Date & Time
+                      </p>
+                      <div className="mt-1 text-foreground">
+                        <p className="font-medium">{formatDate(ev.end_datetime)}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {formatTime(ev.end_datetime)}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="font-medium text-muted-foreground uppercase tracking-wider text-[10px]">
+                        Seats / Attendees
+                      </p>
+                      <p className="mt-1 font-medium text-foreground">
+                        {ev.max_attendees === 0
+                          ? "Unlimited"
+                          : `${ev.joined_attendees} / ${ev.max_attendees}`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </Section>
 

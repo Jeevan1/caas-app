@@ -5,16 +5,10 @@ import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
-  ArrowRight,
   Calendar,
-  CheckCircle2,
   Clock,
-  Globe,
-  Heart,
   MapPin,
   Share2,
-  Star,
-  Users,
   Video,
 } from "lucide-react";
 
@@ -23,11 +17,9 @@ import JoinEvent from "./JoinEvents";
 import { useApiQuery } from "@/lib/hooks/use-api-query";
 import {
   EVENTS_QUERY_KEY,
-  FOLLOW_QUERY_KEY,
-  RELATED_EVENTS_QUERY_KEY,
   SINGLE_EVENT_QUERY_KEY,
 } from "@/constants";
-import { cn, useApiMutation } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import Attendees from "./Attendees";
 import { Event, PaginatedAPIResponse } from "@/lib/types";
 import EventGallery from "./EventGallery";
@@ -157,8 +149,12 @@ export default function EventDetails({
   const startTime = event?.start_datetime
     ? formatTime(event.start_datetime)
     : "—";
+  const endDate = event?.end_datetime
+    ? formatDate(event.end_datetime)
+    : "—";
   const endTime = event?.end_datetime ? formatTime(event.end_datetime) : "—";
   const timeRange = `${startTime} – ${endTime}`;
+  const dateRange = `${startDate} – ${endDate}`;
 
   const organizer = event?.organizer?.name ?? "";
   const organizerId = event?.organizer?.idx ?? "";
@@ -278,7 +274,7 @@ export default function EventDetails({
                     {[
                       {
                         icon: Calendar,
-                        text: startDate,
+                        text: startDate + " - " + endDate,
                         color: "text-primary",
                       },
                       { icon: Clock, text: timeRange, color: "text-secondary" },
@@ -673,7 +669,7 @@ export default function EventDetails({
                   {[
                     {
                       icon: Calendar,
-                      text: startDate,
+                      text: dateRange,
                       color: "text-primary",
                       delay: "0.06s",
                     },

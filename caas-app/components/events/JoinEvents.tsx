@@ -9,7 +9,6 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
-  Loader,
   Loader2,
   Loader2Icon,
   MapPin,
@@ -437,9 +436,13 @@ function TriggerCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
   const startTime = event?.start_datetime
     ? formatTime(event.start_datetime)
     : "—";
+  const endDate = event?.end_datetime
+    ? formatDate(event.end_datetime)
+    : "—";
   const endTime = event?.end_datetime ? formatTime(event.end_datetime) : "—";
   const timeRange =
     startTime && endTime ? `${startTime} – ${endTime}` : startTime;
+  const dateRange = `${startDate} - ${endDate}`;
   const location = event.location?.name ?? null;
   const maxSeats = event.max_attendees ?? 0;
 
@@ -447,7 +450,7 @@ function TriggerCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
     startDate && {
       icon: Calendar,
       color: "text-primary",
-      text: startDate,
+      text: dateRange,
       bold: true,
     },
     timeRange && {
@@ -540,7 +543,6 @@ function TriggerCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
                     </span>
                   </span>
                 </Button>
-
                 <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
                   {isPaid ? (
                     <>
