@@ -38,6 +38,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description =
     stripHtml(event.description, 160) ||
     `Join ${event.title} on ${SITE_NAME}.`;
+
+  // cover_image is always a full absolute URL from the backend
   const image = event.cover_image ?? DEFAULT_OG_IMAGE;
 
   return {
@@ -48,7 +50,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       url,
       siteName: SITE_NAME,
-      type: "website",
+      type: "article",
       images: [{ url: image, width: 1200, height: 630, alt: title }],
     },
     twitter: {
@@ -105,7 +107,7 @@ const EventDetailsPage = async ({
                 name: eventData.title,
                 url: `https://joinyourevent.com/events/${id}`,
               },
-            ]}
+            ]} 
           />
         </>
       )}

@@ -225,13 +225,11 @@ export function statusFromDates(start: string, end: string) {
 
 export function cleanImageUrl(raw: string | null | undefined): string {
   if (!raw) return "";
+  const masterUrl = process.env.MASTER_URL;
 
-  if (raw.includes("googleusercontent")) {
-    let url = raw.replace(
-      "http://caas.joinyourevent.com/media/https%3A/",
-      "https://",
-    );
-    url.replace("https://caas.joinyourevent.com/media/https%3A/", "https://");
+  if (masterUrl && raw.includes("googleusercontent")) {
+    let url = raw.replace(`${masterUrl}/media/https%3A/`, "https://");
+    url.replace(`${masterUrl}/media/https%3A/`, "https://");
     raw = url;
   }
 
