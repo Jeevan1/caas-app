@@ -126,6 +126,7 @@ export default async function RootLayout({
   const dir      = localeConfig[locale as Locale].dir;
   const user     = await getCurrentUser();
   const settings = await getCurrentUserSettings();
+  const masterUrl = process.env.MASTER_URL;
 
   return (
     <html
@@ -135,8 +136,8 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <link rel="preconnect" href="https://caas.joinyourevent.com" />
-        <link rel="dns-prefetch" href="https://caas.joinyourevent.com" />
+        <link rel="preconnect" href={masterUrl} />
+        <link rel="dns-prefetch" href={masterUrl} />
         {GA_ID && (
           <>
             <link rel="preconnect" href="https://www.googletagmanager.com" />
